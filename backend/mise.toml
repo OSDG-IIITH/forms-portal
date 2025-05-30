@@ -1,4 +1,4 @@
 [tools]
-go = "1.23"
+go = "1.24"
 "go:github.com/sqlc-dev/sqlc/cmd/sqlc" = "1.29"
 "go:golang.org/x/tools/gopls" = "latest"
