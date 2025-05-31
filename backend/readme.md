@@ -8,10 +8,12 @@ as the database service.
 This project uses [`mise`](https://github.com/jdx/mise) for managing tools.
 For running the database locally, `docker` is used.
 
-Before starting the server, copy the `.env.example` file to `.env`:
+Before starting the server, copy the `.env.example` file to `.env`, and generate
+the SQL binding code by running:
 
 ```
 cp .env.example .env
+sqlc generate
 ```
 
 The server can be started by running:
