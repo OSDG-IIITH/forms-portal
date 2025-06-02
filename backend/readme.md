@@ -35,5 +35,5 @@ yourself using your shell's syntax.
 To open up a `psql` shell, run:
 
 ```fish
-docker exec -it fdb -U field --dbname forms
+docker exec -it fdb psql -U field --dbname forms
 ```
