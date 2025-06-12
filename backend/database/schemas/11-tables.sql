@@ -99,3 +99,11 @@ CREATE TABLE files (
     mime_type TEXT,
     file_size BIGINT
 );
+
+-- SUGGESTIONS
+CREATE TABLE suggestions (
+  uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  form_uid UUID REFERENCES forms(uid),
+  user_uid UUID REFERENCES users(uid),
+  suggestions TEXT
+)
