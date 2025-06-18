@@ -8,6 +8,8 @@
   import MultipleChoiceEditor from '$lib/components/questions/editor/multiple-choice.svelte';
   import CheckboxEditor from '$lib/components/questions/editor/checkbox.svelte';
   import FileUploadEditor from '$lib/components/questions/editor/file-upload.svelte';
+  import SelectEditor from '$lib/components/questions/editor/select.svelte';
+  import DatePickerEditor from '$lib/components/questions/editor/date-picker.svelte';
   import ThemeToggle from '$lib/components/theme-toggle.svelte';
   import { 
     IconPlus, 
@@ -17,10 +19,11 @@
     IconChevronDown, 
     IconTrash, 
     IconSquareCheck, 
-    IconUpload 
+    IconUpload,
+    IconCalendar
   } from '@tabler/icons-svelte';
 
-  type QuestionType = 'text' | 'multiple_choice' | 'checkbox' | 'file_upload';
+  type QuestionType = 'text' | 'multiple_choice' | 'checkbox' | 'file_upload' | 'select' | 'date_picker';
 
   type Option = {
     uid: string;
@@ -55,14 +58,18 @@
     text: 'Text',
     multiple_choice: 'Multiple Choice',
     checkbox: 'Checkbox',
-    file_upload: 'File Upload'
+    file_upload: 'File Upload',
+    select: 'Select',
+    date_picker: 'Date Picker'
   };
 
   const questionTypeButtons = [
     { type: 'text' as QuestionType, icon: IconFileText, label: 'Text' },
     { type: 'multiple_choice' as QuestionType, icon: IconListCheck, label: 'Multiple Choice' },
     { type: 'checkbox' as QuestionType, icon: IconSquareCheck, label: 'Checkbox' },
-    { type: 'file_upload' as QuestionType, icon: IconUpload, label: 'File Upload' }
+    { type: 'file_upload' as QuestionType, icon: IconUpload, label: 'File Upload' },
+    { type: 'select' as QuestionType, icon: IconListCheck, label: 'Select' },
+    { type: 'date_picker' as QuestionType, icon: IconCalendar, label: 'Date Picker' }
   ];
 
   function addQuestion(type: QuestionType): void {
@@ -214,6 +221,10 @@
                       <CheckboxEditor bind:question={questions[i]} />
                     {:else if question.type === 'file_upload'}
                       <FileUploadEditor bind:question={questions[i]} />
+                    {:else if question.type === 'select'}
+                      <SelectEditor bind:question={questions[i]} />
+                    {:else if question.type === 'date_picker'}
+                      <DatePickerEditor bind:question={questions[i]} />
                     {/if}
                   </div>
                 </CardContent>

@@ -56,14 +56,12 @@
 
   function handleDrop(event: DragEvent, dropIndex: number): void {
     event.preventDefault();
-    
     if (draggedIndex !== null && draggedIndex !== dropIndex) {
       const newOptions = [...question.options];
       const [draggedOption] = newOptions.splice(draggedIndex, 1);
       newOptions.splice(dropIndex, 0, draggedOption);
       question.options = newOptions;
     }
-    
     draggedIndex = null;
     dragOverIndex = null;
   }
@@ -90,7 +88,7 @@
   </div>
 
   <div class="space-y-3">
-    <Label class="text-sm font-medium">Options (select multiple)</Label>
+    <Label class="text-sm font-medium">Options (dropdown)</Label>
     <div class="space-y-2">
       {#each question.options as option, i (option.uid)}
         <div 
@@ -124,7 +122,6 @@
         </div>
       {/each}
     </div>
-    
     <Button 
       variant="outline" 
       size="sm" 

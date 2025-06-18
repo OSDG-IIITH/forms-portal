@@ -105,7 +105,6 @@
           ondragend={handleDragEnd}
         >
           <IconGripVertical class="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
-          <div class="w-4 h-4 border-2 border-muted-foreground/40 rounded-full"></div>
           <Input
             placeholder="Enter option text"
             bind:value={option.text}
