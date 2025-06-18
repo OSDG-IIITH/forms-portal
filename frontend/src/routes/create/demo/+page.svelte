@@ -105,6 +105,42 @@
       questions = newQuestions.map((q, i) => ({ ...q, display_order: i }));
     }
   }
+
+  function saveFormAsJson() {
+    const data = {
+      form: {
+        title: form.title,
+        description: form.description,
+        visibility: form.visibility
+      },
+      questions: questions.map(q => ({
+        uid: q.uid,
+        type: q.type,
+        text: q.text,
+        required: q.required,
+        display_order: q.display_order,
+        options: q.options?.map(o => ({
+          uid: o.uid,
+          text: o.text,
+          type: o.type
+        })) ?? []
+      }))
+    };
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${form.title || "form"}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  }
 </script>
 
 <div class="min-h-screen bg-background">
@@ -293,7 +329,7 @@
               </div>
               <div class="flex gap-4">
                 <Button variant="outline" size="sm">Preview</Button>
-                <Button size="sm">Save Form</Button>
+                <Button size="sm" onclick={saveFormAsJson}>Save Form</Button>
               </div>
             </div>
           </CardContent>
