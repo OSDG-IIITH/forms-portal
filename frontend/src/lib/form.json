@@ -1,0 +1,131 @@
+{
+  "form": {
+    "title": "Demo Form",
+    "description": "This is a demo form to showcase the form viewer functionality",
+    "visibility": "private"
+  },
+  "questions": [
+    {
+      "uid": "0442c9e2-590b-401c-b6f9-2247316f517d",
+      "type": "text",
+      "text": "Full Name",
+      "required": true,
+      "display_order": 0,
+      "options": []
+    },
+    {
+      "uid": "6e840d03-077a-4f56-bf9f-4f8ada828b60",
+      "type": "text",
+      "text": "Email Address",
+      "required": true,
+      "display_order": 1,
+      "options": []
+    },
+    {
+      "uid": "5eae7cf0-25e1-4551-94dd-2bf897d4ad04",
+      "type": "select",
+      "text": "Batch",
+      "required": true,
+      "display_order": 2,
+      "options": [
+        {
+          "uid": "47353681-ed33-4aaf-9ffb-37b899b9411a",
+          "text": "UG1",
+          "type": "text"
+        },
+        {
+          "uid": "41aefe56-8dfb-4146-a616-52bf2a77e506",
+          "text": "UG2",
+          "type": "text"
+        },
+        {
+          "uid": "8e2b7a18-789a-46b2-bb48-530038abc88d",
+          "text": "UG3",
+          "type": "text"
+        },
+        {
+          "uid": "dfcb0bcc-5784-4d6d-b69f-863e500c22c4",
+          "text": "UG4+",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "uid": "34f14788-539f-4769-a560-3e844cf27bce",
+      "type": "text",
+      "text": "800 word essay (optional)",
+      "required": false,
+      "display_order": 3,
+      "options": []
+    },
+    {
+      "uid": "8061264b-2a3d-4e17-bab3-a8806e419685",
+      "type": "multiple_choice",
+      "text": "Choose one",
+      "required": false,
+      "display_order": 4,
+      "options": [
+        {
+          "uid": "48b4976d-7c30-43db-82b1-ce5307dc752f",
+          "text": "Option A",
+          "type": "text"
+        },
+        {
+          "uid": "73f34d3f-4a20-4586-a8b7-d93c82d3e473",
+          "text": "Option B",
+          "type": "text"
+        },
+        {
+          "uid": "3889a807-4bcd-4a44-90f1-969b71c0d651",
+          "text": "Option C",
+          "type": "text"
+        },
+        {
+          "uid": "3eb90352-1733-43b2-9092-063031a3576e",
+          "text": "Option D",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "uid": "9640d80d-0a5a-4c82-88c0-70a45cdefcc1",
+      "type": "checkbox",
+      "text": "Checkbox Time",
+      "required": false,
+      "display_order": 5,
+      "options": [
+        {
+          "uid": "cd8aba5a-cabc-48a5-95b1-0c526f0f051d",
+          "text": "click me",
+          "type": "text"
+        },
+        {
+          "uid": "82d8f6cd-778d-4cfd-a779-423a547f93f7",
+          "text": "don't click me",
+          "type": "text"
+        },
+        {
+          "uid": "1b0aef15-2028-4013-9301-605f05e9fe84",
+          "text": "idc",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "uid": "01f3dba3-6a91-4d7d-8825-3376d1837c1d",
+      "type": "file_upload",
+      "text": "Passport-sized photo",
+      "required": false,
+      "display_order": 6,
+      "options": []
+    },
+    {
+      "uid": "794af447-a67f-4b28-b2f2-038d25fde91e",
+      "type": "date_picker",
+      "text": "Birthday",
+      "required": true,
+      "display_order": 7,
+      "options": []
+    }
+  ]
+}
