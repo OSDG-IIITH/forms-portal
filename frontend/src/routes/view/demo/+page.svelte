@@ -8,7 +8,7 @@
   import FileUploadView from '$lib/components/questions/view/file-upload.svelte';
   import DatePickerView from '$lib/components/questions/view/date-picker.svelte';
   import SelectView from '$lib/components/questions/view/select.svelte';
-  import ThemeToggle from '$lib/components/theme-toggle.svelte';
+  import ThemeSwitcher from '$lib/components/theme-switcher.svelte';
 
   type QuestionType = 'text' | 'multiple_choice' | 'checkbox' | 'file_upload' | 'select' | 'date_picker';
 
@@ -221,9 +221,9 @@
     <div class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <h1 class="text-3xl tracking-tight">
-          forms <span class="font-semibold">iiit</span>
+          forms <span class="font-semibold text-accent-foreground">iiit</span>
         </h1>
-        <ThemeToggle />
+        <ThemeSwitcher />
       </div>
     </div>
   </header>
@@ -324,11 +324,7 @@
             <CardContent>
               <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div class="text-sm text-muted-foreground">
-                  {#if requiredFieldsCount > 0}
-                    <span class="font-medium">{requiredFieldsCount}</span> required field{requiredFieldsCount !== 1 ? 's' : ''}
-                  {:else}
-                    All fields are optional
-                  {/if}
+                  <span class="font-medium">{questions.length}</span> question{questions.length !== 1 ? 's' : ''}
                 </div>
                 <div class="flex gap-3 w-full sm:w-auto">
                   <Button 

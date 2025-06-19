@@ -4,6 +4,24 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- Prevent flash of wrong theme -->
+		<script>
+			const themeKey = 'selected-theme';
+			const savedTheme = localStorage.getItem(themeKey);
+			
+			if (savedTheme) {
+				if (savedTheme.startsWith('dark')) {
+					document.documentElement.classList.add('dark');
+				}
+				if (savedTheme.includes('purple')) {
+					document.documentElement.classList.add('theme-purple');
+				} else if (savedTheme.includes('green')) {
+					document.documentElement.classList.add('theme-green');
+				}
+			} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+				document.documentElement.classList.add('dark');
+			}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

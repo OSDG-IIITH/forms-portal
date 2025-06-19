@@ -38,7 +38,6 @@
     placeholder="Type your message here"
     required={question.required}
     rows={4}
-    class="resize-none"
   />
 {:else}
   <Input
