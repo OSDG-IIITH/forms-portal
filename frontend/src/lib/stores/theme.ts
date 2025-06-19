@@ -22,16 +22,19 @@ function createThemeStore() {
 
 	function applyTheme(theme: Theme) {
 		if (browser) {
-			document.documentElement.classList.remove('dark', 'theme-purple', 'theme-green', 'theme-lilac', 'theme-mint', 'theme-amethyst', 'theme-moss');
-			document.documentElement.classList.remove('theme-purple', 'theme-green');
+			document.documentElement.classList.remove('dark', 'theme-lilac', 'theme-mint', 'theme-amethyst', 'theme-moss');
 
-			if (theme === 'coal' || theme === 'amethyst' || theme === 'moss') {
+			if (theme === 'coal') {
 				document.documentElement.classList.add('dark');
-			}
-
-			if (theme === 'lilac' || theme === 'amethyst') {
+			} else if (theme === 'amethyst') {
+				document.documentElement.classList.add('dark');
 				document.documentElement.classList.add('theme-lilac');
-			} else if (theme === 'mint' || theme === 'moss') {
+			} else if (theme === 'moss') {
+				document.documentElement.classList.add('dark');
+				document.documentElement.classList.add('theme-mint');
+			} else if (theme === 'lilac') {
+				document.documentElement.classList.add('theme-lilac');
+			} else if (theme === 'mint') {
 				document.documentElement.classList.add('theme-mint');
 			}
 

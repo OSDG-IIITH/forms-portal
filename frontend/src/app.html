@@ -10,13 +10,13 @@
 			const savedTheme = localStorage.getItem(themeKey);
 			
 			if (savedTheme) {
-				if (savedTheme.startsWith('dark')) {
+				if (savedTheme === 'coal' || savedTheme === 'amethyst' || savedTheme === 'moss') {
 					document.documentElement.classList.add('dark');
 				}
-				if (savedTheme.includes('purple')) {
-					document.documentElement.classList.add('theme-purple');
-				} else if (savedTheme.includes('green')) {
-					document.documentElement.classList.add('theme-green');
+				if (savedTheme === 'lilac' || savedTheme === 'amethyst') {
+					document.documentElement.classList.add('theme-lilac');
+				} else if (savedTheme === 'mint' || savedTheme === 'moss') {
+					document.documentElement.classList.add('theme-mint');
 				}
 			} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
 				document.documentElement.classList.add('dark');
