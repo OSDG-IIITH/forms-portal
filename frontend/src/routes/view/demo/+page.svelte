@@ -8,7 +8,6 @@
   import FileUploadView from '$lib/components/questions/view/file-upload.svelte';
   import DatePickerView from '$lib/components/questions/view/date-picker.svelte';
   import SelectView from '$lib/components/questions/view/select.svelte';
-  import ThemeSwitcher from '$lib/components/theme-switcher.svelte';
 
   type QuestionType = 'text' | 'multiple_choice' | 'checkbox' | 'file_upload' | 'select' | 'date_picker';
 
@@ -203,7 +202,6 @@
     loadFormData();
   });
 
-  const requiredFieldsCount = $derived(questions.filter(q => q.required).length);
   const supportedQuestions = $derived(
     questions.filter(q => 
       ['text', 'multiple_choice', 'checkbox', 'file_upload', 'date_picker', 'select'].includes(q.type)
@@ -217,17 +215,6 @@
 </svelte:head>
 
 <div class="min-h-screen bg-background">
-  <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50">
-    <div class="container mx-auto px-6 py-4">
-      <div class="flex items-center justify-between">
-        <h1 class="text-3xl tracking-tight">
-          forms <span class="font-semibold text-accent-foreground">iiit</span>
-        </h1>
-        <ThemeSwitcher />
-      </div>
-    </div>
-  </header>
-
   <main class="container mx-auto max-w-4xl px-6 py-8 pt-24">
     {#if isLoading}
       <div class="flex items-center justify-center py-12">

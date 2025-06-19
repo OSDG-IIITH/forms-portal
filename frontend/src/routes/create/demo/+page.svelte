@@ -10,7 +10,6 @@
   import FileUploadEditor from '$lib/components/questions/editor/file-upload.svelte';
   import SelectEditor from '$lib/components/questions/editor/select.svelte';
   import DatePickerEditor from '$lib/components/questions/editor/date-picker.svelte';
-  import ThemeSwitcher from '$lib/components/theme-switcher.svelte';
   import { 
     IconPlus, 
     IconFileText, 
@@ -144,18 +143,6 @@
 </script>
 
 <div class="min-h-screen bg-background">
-  <!-- header bar -->
-  <header class="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 z-50">
-    <div class="container mx-auto px-6 py-4">
-      <div class="flex items-center justify-between">
-        <h1 class="text-3xl tracking-tight">
-          forms <span class="font-semibold text-accent-foreground">iiit</span>
-        </h1>
-        <ThemeSwitcher />
-      </div>
-    </div>
-  </header>
-
   <main class="container mx-auto max-w-4xl px-6 py-8 pt-24">
     <div class="space-y-8">
       <!-- configuration -->

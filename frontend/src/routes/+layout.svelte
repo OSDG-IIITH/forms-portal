@@ -1,4 +1,5 @@
 <script lang="ts">
+    import Header from '$lib/components/header.svelte';
 	import '../app.css';
 	import { ModeWatcher } from 'mode-watcher';
 	
@@ -6,4 +7,5 @@
 </script>
 
 <ModeWatcher />
+<Header />
 {@render children()}
