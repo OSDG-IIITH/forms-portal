@@ -6,7 +6,7 @@
     <div class="container mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <h1 class="text-3xl tracking-tight">
-          forms <span class="font-semibold text-accent-foreground">iiit</span>
+          <a href="/">forms <span class="font-semibold text-accent-foreground">iiit</span></a>
         </h1>
         <ThemeSwitcher />
       </div>
