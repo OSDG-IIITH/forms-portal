@@ -13,7 +13,7 @@
 		<div class="flex items-center gap-4">
 			<div class="flex gap-6">
 				<a
-					href="https://github.eadcom/osdg-iiith/forms-portal"
+					href="https://github.com/osdg-iiith/forms-portal"
 					target="_blank"
 					rel="noreferrer"
 					class="text-muted-foreground hover:text-foreground transition-colors"
