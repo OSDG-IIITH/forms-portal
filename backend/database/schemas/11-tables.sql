@@ -1,109 +1,84 @@
--- USERS
-CREATE TABLE users (
-    uid TEXT PRIMARY KEY NOT NULL, -- ULID vs first part of the mail id?
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE CHECK (email ~* '^[^@]+@([a-zA-Z0-9.-]+\\.)?iiit\\.ac\\.in$'),
-    role user_role NOT NULL
+create table if not exists users (
+    id text primary key default generate_ulid(),
+    handle text not null, -- cas user id
+    name text not null,
+    email text not null unique
 );
 
--- FORM SETTINGS
-CREATE TABLE form_settings (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    form_uid UUID REFERENCES forms(uid) ON DELETE CASCADE,
-    anonymity BOOLEAN DEFAULT FALSE,
-    max_responses INTEGER,
-    start_time TIMESTAMP,
-    end_time TIMESTAMP,
-    allowed_roles user_role[],
-    allow_editing BOOLEAN DEFAULT FALSE,
-    time_limit_seconds INTEGER
+create table if not exists forms (
+    id text primary key default generate_ulid(),
+    owner text not null references users(id) on delete cascade,
+    title text not null,
+    slug text not null,
+    description text,
+    specification jsonb not null,
+    salt uuid not null default gen_random_uuid(),
+    modified timestamptz not null default now(),
+    live boolean not null default false,
+    opens timestamptz,
+    closes timestamptz,
+    unique (owner, slug)
 );
 
--- FORMS
-CREATE TABLE forms (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_uid TEXT REFERENCES users(uid) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    description TEXT,
-    visibility form_visibility NOT NULL DEFAULT 'private', -- accessible only to the list shared
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    settings_id UUID REFERENCES form_settings(id)
+create table if not exists groups (
+    id text primary key default generate_ulid(),
+    owner text not null references users(id),
+    name text not null,
+    description text,
+    type group_type not null,
+    unique (owner, name)
 );
 
--- FORM PERMISSIONS - TO DISCUSS AND EDIT
-CREATE TABLE form_permissions (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    form_uid UUID REFERENCES forms(uid) ON DELETE CASCADE,
-    user_uid TEXT REFERENCES users(uid) ON DELETE CASCADE,
-    role TEXT CHECK (role IN ('respondent', 'editor', 'owner', 'commentator')),
-    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+create table if not exists group_domain_rules (
+    group_id text primary key references groups(id) on delete cascade,
+    domain text not null unique
 );
 
--- FORM ACCESS LOGS
-CREATE TABLE form_access_logs (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    form_uid UUID REFERENCES forms(uid) ON DELETE CASCADE,
-    user_uid TEXT REFERENCES users(uid),
-    action access_action NOT NULL,
-    performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+create table if not exists group_list_members (
+    group_id text not null references groups(id) on delete cascade,
+    user_id text not null references users(id) on delete cascade,
+    primary key (group_id, user_id)
 );
 
--- QUESTIONS
-CREATE TABLE questions (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    form_uid UUID REFERENCES forms(uid) ON DELETE CASCADE,
-    type question_type NOT NULL,
-    text TEXT NOT NULL,
-    required BOOLEAN DEFAULT FALSE,
-    display_order INTEGER,
-    conditional_logic JSONB
+create table if not exists form_permissions (
+    id text primary key default generate_ulid(),
+    form text not null references forms(id) on delete cascade,
+    role permission_role not null,
+    user int references users(id) on delete cascade,
+    group int references groups(id) on delete cascade,
+
+    constraint permit_user_or_group check (
+        (user is not null and group is null) or
+        (user is null and group is not null)
+    )
 );
 
--- OPTIONS
-CREATE TABLE options (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    question_uid UUID REFERENCES questions(uid) ON DELETE CASCADE,
-    type option_type NOT NULL,
-    text TEXT,
-    validation JSONB
+create table if not exists responses (
+    id text primary key, -- hashed value of (user.id + form.salt)
+    form text not null references forms(id) on delete cascade,
+    respondent text references users(id),
+    status response_status not null default 'in_progress',
+    started timestamptz not null default now(),
+    submitted timestamptz
 );
 
--- RESPONSES
-CREATE TABLE responses (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    form_uid UUID REFERENCES forms(uid) ON DELETE CASCADE,
-    user_uid TEXT REFERENCES users(uid),
-    submitted_at TIMESTAMP
+create table if not exists answers (
+    id text primary key default generate_ulid(),
+    response not null references responses(id) on delete cascade,
+    question text not null, -- id of question in forms.spec
+    value jsonb not null,
+    submitted timestamptz not null default now(),
+    modified timestamptz not null default now(),
+
+    unique (response, question)
 );
 
--- FORM ANSWERS
-CREATE TABLE form_answers (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    response_uid UUID REFERENCES responses(uid) ON DELETE CASCADE,
-    form_uid UUID REFERENCES forms(uid),
-    user_uid TEXT REFERENCES users(uid),
-    question_uid UUID REFERENCES questions(uid),
-    answer_value TEXT,
-    answer_array TEXT[],
-    submitted_at TIMESTAMP
+create table if not exists comments (
+    id text primary key default generate_ulid(),
+    form int not null references forms(id) on delete cascade,
+    user int not null references users(id) on delete cascade,
+    element text not null, -- id of question/section in forms.spec
+    body text not null,
+    parent int references comments(id) on delete cascade,
+    modified timestamptz not null default now(),
 );
-
--- FILES
-CREATE TABLE files (
-    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    response_uid UUID REFERENCES responses(uid) ON DELETE CASCADE,
-    question_uid UUID REFERENCES questions(uid),
-    path TEXT NOT NULL,
-    original_name TEXT,
-    mime_type TEXT,
-    file_size BIGINT
-);
-
--- SUGGESTIONS
-CREATE TABLE suggestions (
-  uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  form_uid UUID REFERENCES forms(uid),
-  user_uid UUID REFERENCES users(uid),
-  suggestions TEXT
-)

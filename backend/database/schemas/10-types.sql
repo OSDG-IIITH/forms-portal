@@ -1,22 +1,3 @@
--- USER ROLES
-CREATE TYPE user_role AS ENUM ('student', 'faculty', 'club', 'portal_admin');
-
--- FORM VISIBILITY
-CREATE TYPE form_visibility AS ENUM ('public', 'private');
-
--- QUESTION TYPES
-CREATE TYPE question_type AS ENUM (
-  'text',
-  'multiple_choice',
-  'checkbox',
-  'dropdown',
-  'file_upload',
-  'date_picker',
-  'rating_scale'
-);
-
--- OPTION TYPES
-CREATE TYPE option_type AS ENUM ('text', 'number', 'array', 'upload');
-
--- ACCESS ACTIONS
-CREATE TYPE access_action AS ENUM ('edited', 'deleted', 'submitted');
+begin; create type permission_role as enum ('respond', 'view', 'comment', 'analyze', 'edit', 'manage'); commit;
+begin; create type group_type as enum ('list', 'domain'); commit;
+begin; create type response_status as enum ('in_progress', 'completed'); commit;
