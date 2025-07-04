@@ -1,113 +1,1266 @@
-$schema: "https://spec.openapis.org/oas/3.1/schema/2022-10-07"
-
-openapi: "3.1.1"
-
+$schema: https://spec.openapis.org/oas/3.1/schema/2022-10-07
+openapi: 3.1.1
 info:
   title: Forms Portal API
-  version: "1"
+  version: 0.1.0
   summary: API Documentation for the Forms Portal
   contact:
     name: OSDG
-
 servers:
   - url: /api
     description: Production
-
 tags:
+  - name: Authentication
+    description: User authentication via CAS and session management
+  - name: Forms
+    description: Form lifecycle management
+  - name: Responses
+    description: Form response submission and retrieval
+  - name: Permissions
+    description: Role-based access control for forms
+  - name: Groups
+    description: User group management for bulk permission assignments
+  - name: Comments
+    description: Collaborative commenting on forms
+  - name: Users
+    description: User profile operations
+security:
+  - cookieAuth: []
 
 paths:
-  /users:
+  /auth/login:
     get:
-      summary: List users
-      security:
-        - JWTAuth: []
+      tags: [Authentication]
+      summary: Initiate CAS login
+      description: Redirects the user's browser to the Central Authentication System (CAS) login page.
+      operationId: initiateLogin
+      responses:
+        '302':
+          description: Redirect to CAS login page.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/callback:
+    get:
+      tags: [Authentication]
+      summary: Handle CAS callback
+      description: Processes the callback from CAS after successful authentication, validates the ticket, and establishes a user session.
+      operationId: handleCallback
+      parameters:
+        - name: ticket
+          in: query
+          required: true
+          description: CAS service ticket provided by the authentication server.
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the application frontend.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+            Set-Cookie:
+              description: Sets the session cookie.
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user
+      description: Invalidates the current session and clears the session cookie.
+      operationId: logoutUser
+      responses:
+        '204':
+          description: Successfully logged out.
+          headers:
+            Set-Cookie:
+              description: Instructs the browser to clear the session cookie.
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user profile
+      description: Returns the profile information of the currently authenticated user.
+      operationId: getCurrentUser
       responses:
         '200':
-          description: The list of all users.
+          description: Current user profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /forms:
+    get:
+      tags: [Forms]
+      summary: List forms
+      description: Retrieves forms accessible to the current user, with support for filtering, sorting, and pagination.
+      operationId: listForms
+      parameters:
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/PermissionRole'
+        - name: sort
+          in: query
+          description: Sort criteria.
+          schema:
+            type: string
+            enum: [modified, title]
+            default: modified
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: A paginated list of forms.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/User'
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Form'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    post:
+      tags: [Forms]
+      summary: Create form
+      description: Creates a new form with the authenticated user as the owner.
+      operationId: createForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormCreate'
+      responses:
+        '201':
+          description: Form created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Form'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /forms/resolve:
+    get:
+      tags: [Forms]
+      summary: Resolve form
+      description: Resolves a user-friendly URL path (`handle/slug`) to a full form object.
+      operationId: resolveForm
+      parameters:
+        - name: handle
+          in: query
+          required: true
+          description: The handle of the form owner.
+          schema:
+            type: string
+        - name: slug
+          in: query
+          required: true
+          description: The slug of the form.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Form resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Form'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /forms/{formId}:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+    get:
+      tags: [Forms]
+      summary: Get form by ID
+      description: Retrieves a form's complete definition. Requires VIEW permission or higher.
+      operationId: getForm
+      responses:
+        '200':
+          description: Form details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Form'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Forms]
+      summary: Update form
+      description: Updates a form's definition. Requires EDIT permission or higher.
+      operationId: updateForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormUpdate'
+      responses:
+        '200':
+          description: Form updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Form'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    delete:
+      tags: [Forms]
+      summary: Delete form
+      description: Permanently deletes a form and all associated data. This action cannot be undone. Requires MANAGE permission.
+      operationId: deleteForm
+      responses:
+        '204':
+          description: Form deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/responses:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+    get:
+      tags: [Responses]
+      summary: List form responses
+      description: Retrieves all completed responses for a form. Requires ANALYZE permission or higher.
+      operationId: listResponses
+      responses:
+        '200':
+          description: List of form responses.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Responses]
+      summary: Start response
+      description: Initiates a new response session for the form. Requires RESPOND permission.
+      operationId: startResponse
+      responses:
+        '201':
+          description: Response session created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/responses/{responseId}:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+      - $ref: '#/components/parameters/responseId'
+    get:
+      tags: [Responses]
+      summary: Get response details
+      description: Retrieves a specific response with all its answers. Requires ANALYZE permission or ownership of the response.
+      operationId: getResponse
+      responses:
+        '200':
+          description: Response details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/responses/{responseId}/answers:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+      - $ref: '#/components/parameters/responseId'
+    put:
+      tags: [Responses]
+      summary: Save answer
+      description: Creates or updates an answer for a specific question within a response session.
+      operationId: saveAnswer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerUpsert'
+      responses:
+        '200':
+          description: Answer saved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Answer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /forms/{formId}/responses/{responseId}/submit:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+      - $ref: '#/components/parameters/responseId'
+    post:
+      tags: [Responses]
+      summary: Submit response
+      description: Finalizes a response by changing its status to 'completed'.
+      operationId: submitResponse
+      responses:
+        '200':
+          description: Response submitted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/permissions:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+    get:
+      tags: [Permissions]
+      summary: List form permissions
+      description: Retrieves all active permission grants for a form. Requires MANAGE permission.
+      operationId: listPermissions
+      responses:
+        '200':
+          description: List of permission grants.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Permissions]
+      summary: Grant permission
+      description: Grants a role on a form to a user or a group. Requires MANAGE permission.
+      operationId: grantPermission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionCreate'
+      responses:
+        '201':
+          description: Permission granted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /forms/{formId}/permissions/{permissionId}:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+      - $ref: '#/components/parameters/permissionId'
+    delete:
+      tags: [Permissions]
+      summary: Revoke permission
+      description: Removes a permission grant from a user or group. Requires MANAGE permission.
+      operationId: revokePermission
+      responses:
+        '204':
+          description: Permission revoked successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List groups
+      description: Retrieves all groups owned by the current user.
+      operationId: listGroups
+      responses:
+        '200':
+          description: List of user groups.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Groups]
+      summary: Create group
+      description: Creates a new user group with the current user as the owner.
+      operationId: createGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Group created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /groups/{groupId}:
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+    get:
+      tags: [Groups]
+      summary: Get group details
+      description: Retrieves detailed information about a specific group. Requires ownership.
+      operationId: getGroup
+      responses:
+        '200':
+          description: Group details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Groups]
+      summary: Update group
+      description: Updates a group's name or description. Requires ownership.
+      operationId: updateGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Group updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Groups]
+      summary: Delete group
+      description: Permanently deletes a group. Requires ownership.
+      operationId: deleteGroup
+      responses:
+        '204':
+          description: Group deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups/{groupId}/domain:
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+    put:
+      tags: [Groups]
+      summary: Update group domain
+      description: Updates the domain for a group of 'DOMAIN' type. Requires ownership.
+      operationId: updateGroupDomain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupDomainUpdate'
+      responses:
+        '200':
+          description: Group domain updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /groups/{groupId}/members:
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+    post:
+      tags: [Groups]
+      summary: Add group member
+      description: Adds a user to a 'LIST' type group. Requires group ownership.
+      operationId: addGroupMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  format: ulid
+      responses:
+        '204':
+          description: Member added successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /groups/{groupId}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/groupId'
+      - $ref: '#/components/parameters/userId'
+    delete:
+      tags: [Groups]
+      summary: Remove group member
+      description: Removes a user from a 'LIST' type group. Requires group ownership.
+      operationId: removeGroupMember
+      responses:
+        '204':
+          description: Member removed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/comments:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+    get:
+      tags: [Comments]
+      summary: List form comments
+      description: Retrieves all comments for a form in a threaded format. Requires COMMENT permission.
+      operationId: listComments
+      responses:
+        '200':
+          description: List of form comments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Comments]
+      summary: Create comment
+      description: Adds a new comment to a form element or as a reply. Requires COMMENT permission.
+      operationId: createComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Comment created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /forms/{formId}/comments/{commentId}:
+    parameters:
+      - $ref: '#/components/parameters/formId'
+      - $ref: '#/components/parameters/commentId'
+    put:
+      tags: [Comments]
+      summary: Update comment
+      description: Updates the body of a comment. Requires ownership.
+      operationId: updateComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentUpdate'
+      responses:
+        '200':
+          description: Comment updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Comments]
+      summary: Delete comment
+      description: Deletes a comment. Requires ownership or MANAGE permission on the form.
+      operationId: deleteComment
+      responses:
+        '204':
+          description: Comment deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
 components:
   securitySchemes:
-    JWTAuth:
-      description: Bearer token using a JWT
-      type: http
-      scheme: Bearer
-      bearerFormat: JWT
+    cookieAuth:
+      type: cookie
+      in: cookie
+      name: session
 
-  schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
+  parameters:
+    formId:
+      name: formId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: ulid
+    responseId:
+      name: responseId
+      in: path
+      required: true
+      schema:
+        type: string
+    permissionId:
+      name: permissionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: ulid
+    groupId:
+      name: groupId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: ulid
+    userId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: ulid
+    commentId:
+      name: commentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: ulid
 
   responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     Unauthorized:
-      description: Authentication required or invalid credentials
+      description: Unauthorized
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     Forbidden:
-      description: Insufficient permissions
+      description: Forbidden
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: Invalid request parameters
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    InternalServerError:
-      description: Server error
+      description: Not Found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     Conflict:
-      description: Resource conflict
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    InternalServerError:
+      description: Internal Server Error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
 
+  schemas:
+    # --- ENUMS ---
+
+    PermissionRole:
+      type: string
+      enum: [view, respond, comment, analyze, edit, manage]
+
+    GroupType:
+      type: string
+      enum: [domain, list]
+
+    ResponseStatus:
+      type: string
+      enum: [in_progress, completed]
+
+    # --- CORE MODELS ---
+
+    User:
+      type: object
+      required:
+        - id
+        - handle
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          format: ulid
+        handle:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    Form:
+      type: object
+      required:
+        - id
+        - owner
+        - title
+        - slug
+        - specification
+        - modified
+        - live
+      properties:
+        id:
+          type: string
+          format: ulid
+        owner:
+          type: string
+          format: ulid
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        specification:
+          type: object
+        modified:
+          type: string
+          format: date-time
+        live:
+          type: boolean
+        opens:
+          type: string
+          format: date-time
+          nullable: true
+        closes:
+          type: string
+          format: date-time
+          nullable: true
+
+    FormCreate:
+      type: object
+      required:
+        - title
+        - slug
+        - specification
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        specification:
+          type: object
+        live:
+          type: boolean
+          default: false
+        opens:
+          type: string
+          format: date-time
+          nullable: true
+        closes:
+          type: string
+          format: date-time
+          nullable: true
+
+    FormUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        specification:
+          type: object
+        live:
+          type: boolean
+        opens:
+          type: string
+          format: date-time
+          nullable: true
+        closes:
+          type: string
+          format: date-time
+          nullable: true
+
+    Group:
+      type: object
+      required:
+        - id
+        - owner
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          format: ulid
+        owner:
+          type: string
+          format: ulid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/GroupType'
+
+    GroupCreate:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/GroupType'
+        domain:
+          type: string
+          format: hostname
+          description: Required if type is 'domain'.
+        users:
+          type: array
+          items:
+            type: string
+            format: ulid
+          description: Array of user IDs. Only applicable if type is 'list'.
+
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+
+    GroupDomainUpdate:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
+          type: string
+          format: hostname
+
+    Permission:
+      type: object
+      required:
+        - id
+        - form
+        - role
+      properties:
+        id:
+          type: string
+          format: ulid
+        form:
+          type: string
+          format: ulid
+        role:
+          $ref: '#/components/schemas/PermissionRole'
+        user:
+          type: string
+          format: ulid
+          nullable: true
+        group:
+          type: string
+          format: ulid
+          nullable: true
+
+    PermissionCreate:
+      type: object
+      required:
+        - role
+      oneOf:
+        - required: [user]
+        - required: [group]
+      properties:
+        role:
+          $ref: '#/components/schemas/PermissionRole'
+        user:
+          type: string
+          format: ulid
+        group:
+          type: string
+          format: ulid
+
+    Response:
+      type: object
+      required:
+        - id
+        - form
+        - status
+        - started
+      properties:
+        id:
+          type: string
+        form:
+          type: string
+          format: ulid
+        respondent:
+          type: string
+          format: ulid
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ResponseStatus'
+        started:
+          type: string
+          format: date-time
+        submitted:
+          type: string
+          format: date-time
+          nullable: true
+
+    Answer:
+      type: object
+      required:
+        - id
+        - response
+        - question
+        - value
+        - submitted
+        - modified
+      properties:
+        id:
+          type: string
+          format: ulid
+        response:
+          type: string
+        question:
+          type: string
+        value:
+          type: object
+          additionalProperties: true
+        submitted:
+          type: string
+          format: date-time
+        modified:
+          type: string
+          format: date-time
+
+    AnswerUpsert:
+      type: object
+      required:
+        - question
+        - value
+      properties:
+        question:
+          type: string
+        value:
+          type: object
+          additionalProperties: true
+
+    Comment:
+      type: object
+      required:
+        - id
+        - form
+        - user
+        - element
+        - body
+        - modified
+      properties:
+        id:
+          type: string
+          format: ulid
+        form:
+          type: string
+          format: ulid
+        user:
+          type: string
+          format: ulid
+        element:
+          type: string
+        body:
+          type: string
+        parent:
+          type: string
+          format: ulid
+          nullable: true
+        modified:
+          type: string
+          format: date-time
+
+    CommentCreate:
+      type: object
+      required:
+        - element
+        - body
+      properties:
+        element:
+          type: string
+        body:
+          type: string
+        parent:
+          type: string
+          format: ulid
+          nullable: true
+
+    CommentUpdate:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: string
+
+    # --- UTILITY SCHEMAS ---
+
     Error:
       type: object
-      description: An error returned by the API
+      required:
+        - code
+        - message
       properties:
         code:
-          $ref: '#/components/schemas/ErrorCode'
+          type: string
         message:
           type: string
-    ErrorCode:
-      type: string
-      description: A code describing the error
-      enum:
-        - bad-request
-        - unauthorized
-        - forbidden
-        - not-found
-        - conflict
-        - internal-server-error
+
+    ValidationError:
+      type: object
+      required:
+        - code
+        - message
+        - errors
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    Pagination:
+      type: object
+      required:
+        - offset
+        - limit
+        - total
+      properties:
+        offset:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
