@@ -1,14 +1,17 @@
 $schema: https://spec.openapis.org/oas/3.1/schema/2022-10-07
 openapi: 3.1.1
+
 info:
   title: Forms Portal API
   version: 0.1.0
   summary: API Documentation for the Forms Portal
   contact:
     name: OSDG
+
 servers:
   - url: /api
     description: Production
+
 tags:
   - name: Authentication
     description: User authentication via CAS and session management
@@ -24,6 +27,7 @@ tags:
     description: Collaborative commenting on forms
   - name: Users
     description: User profile operations
+
 security:
   - cookieAuth: []
 

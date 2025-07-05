@@ -1,8 +1,8 @@
 create table if not exists users (
     id text primary key default generate_ulid(),
-    handle text not null, -- cas user id
-    name text not null,
-    email text not null unique
+    handle text not null unique, -- cas user id
+    email text not null unique,
+    name text not null
 );
 
 create table if not exists forms (
@@ -30,26 +30,26 @@ create table if not exists groups (
 );
 
 create table if not exists group_domain_rules (
-    group_id text primary key references groups(id) on delete cascade,
+    "group" text primary key references groups(id) on delete cascade,
     domain text not null unique
 );
 
 create table if not exists group_list_members (
-    group_id text not null references groups(id) on delete cascade,
-    user_id text not null references users(id) on delete cascade,
-    primary key (group_id, user_id)
+    "group" text not null references groups(id) on delete cascade,
+    "user" text not null references users(id) on delete cascade,
+    primary key ("group", "user")
 );
 
 create table if not exists form_permissions (
     id text primary key default generate_ulid(),
     form text not null references forms(id) on delete cascade,
     role permission_role not null,
-    user int references users(id) on delete cascade,
-    group int references groups(id) on delete cascade,
+    "user" text references users(id) on delete cascade,
+    "group" text references groups(id) on delete cascade,
 
     constraint permit_user_or_group check (
-        (user is not null and group is null) or
-        (user is null and group is not null)
+        ("user" is not null and "group" is null) or
+        ("user" is null and "group" is not null)
     )
 );
 
@@ -64,7 +64,7 @@ create table if not exists responses (
 
 create table if not exists answers (
     id text primary key default generate_ulid(),
-    response not null references responses(id) on delete cascade,
+    response text not null references responses(id) on delete cascade,
     question text not null, -- id of question in forms.spec
     value jsonb not null,
     submitted timestamptz not null default now(),
@@ -75,10 +75,10 @@ create table if not exists answers (
 
 create table if not exists comments (
     id text primary key default generate_ulid(),
-    form int not null references forms(id) on delete cascade,
-    user int not null references users(id) on delete cascade,
+    form text not null references forms(id) on delete cascade,
+    commenter text not null references users(id) on delete cascade,
     element text not null, -- id of question/section in forms.spec
     body text not null,
-    parent int references comments(id) on delete cascade,
-    modified timestamptz not null default now(),
+    parent text references comments(id) on delete cascade,
+    modified timestamptz not null default now()
 );

@@ -15,6 +15,11 @@ type config struct {
 
 	DatabaseUri string
 	FrontendUrl string
+
+	CasBaseUrl    string
+	CasServiceUrl string
+
+	SessionSecret string
 }
 
 func defaultConfig() config {
@@ -26,7 +31,12 @@ func defaultConfig() config {
 		Domain: "localhost",
 
 		DatabaseUri: "postgres://user:pass@localhost:5432/forms",
-		FrontendUrl: "http://localhost:8647",
+		FrontendUrl: "http://localhost:8648",
+
+		CasBaseUrl:    "https://login.iiit.ac.in/cas",
+		CasServiceUrl: "http://localhost:8647/api/auth/login/callback",
+
+		SessionSecret: "quis-custodiet-ipsos-custodes",
 	}
 }
 
@@ -57,6 +67,20 @@ func LoadConfig() {
 	frontendUrl, ok := os.LookupEnv("FORMS_FRONTEND_URL")
 	if ok {
 		c.FrontendUrl = frontendUrl
+	}
+
+	casBaseUrl, ok := os.LookupEnv("FORMS_CAS_BASE_URL")
+	if ok {
+		c.CasBaseUrl = casBaseUrl
+	}
+	casServiceUrl, ok := os.LookupEnv("FORMS_CAS_SERVICE_URL")
+	if ok {
+		c.CasServiceUrl = casServiceUrl
+	}
+
+	sessionSecret, ok := os.LookupEnv("FORMS_SESSION_SECRET")
+	if ok {
+		c.SessionSecret = sessionSecret
 	}
 
 	Config = c

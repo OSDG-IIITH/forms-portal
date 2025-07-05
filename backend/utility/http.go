@@ -22,8 +22,8 @@ const (
 )
 
 type HttpError struct {
-	Code HttpErrorCode `json:"code"`
-	Msg  string        `json:"message"`
+	Code    HttpErrorCode `json:"code"`
+	Message string        `json:"message"`
 }
 
 type HttpResponse struct {
@@ -34,8 +34,8 @@ type HttpResponse struct {
 func FromError(code HttpErrorCode, err error) HttpResponse {
 	return HttpResponse{
 		Error: &HttpError{
-			Code: code,
-			Msg:  err.Error(),
+			Code:    code,
+			Message: err.Error(),
 		},
 		Data: nil,
 	}
