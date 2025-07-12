@@ -63,10 +63,10 @@ create table if not exists form_permissions (
 
 create table if not exists submission_records (
     form text not null references forms(id) on delete cascade,
-    user text not null references users(id) on delete cascade,
+    "user" text not null references users(id) on delete cascade,
     responses int not null default 1,
 
-    primary key (form, user)
+    primary key ("form", "user")
 );
 
 create table if not exists responses (
@@ -75,7 +75,7 @@ create table if not exists responses (
     respondent text references users(id),
     status response_status not null default 'draft',
     started timestamptz not null default now(),
-    submitted timestamptz
+    submitted timestamptz,
     edited timestamptz
 );
 
