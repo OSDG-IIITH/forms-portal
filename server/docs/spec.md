@@ -1,15 +1,12 @@
 # Form Specification
 
-A form specification file is written using [KDL](https://kdl.dev). It is used to describe a form's various questions and sections in a way that is easy for humans to write and programs to parse.
+A form specification file is written using [KDL](https://kdl.dev). It is used to describe a form's structure - its various questions and sections - in a way that is easy for humans to write and programs to parse.
 
 An example form spec is as follows:
 
 ```kdl
 form {
 	version 1
-
-	title "C Programming - Course Feedback"
-	description "Thank you for taking the time to provide feedback. Your responses are anonymous and will help us improve the course for future students."
 
 	question id="semester" type="input" required {
 		title "Which semester are you taking this course in?"

@@ -8,16 +8,22 @@ create table if not exists users (
 create table if not exists forms (
     id text primary key default generate_ulid(),
     owner text not null references users(id) on delete cascade,
-    title text not null,
     slug text not null,
+    title text not null,
     description text,
-    specification jsonb not null,
-    salt uuid not null default gen_random_uuid(),
+    structure jsonb not null,
     modified timestamptz not null default now(),
     live boolean not null default false,
     opens timestamptz,
     closes timestamptz,
-    unique (owner, slug)
+    max_responses int,
+    individual_limit int not null default 1,
+    editable_responses boolean not null default false,
+
+    unique (owner, slug),
+    constraint response_limits_check check (
+        individual_limit >= 1 and max_responses > individual_limit
+    )
 );
 
 create table if not exists groups (
@@ -26,6 +32,7 @@ create table if not exists groups (
     name text not null,
     description text,
     type group_type not null,
+
     unique (owner, name)
 );
 
@@ -37,6 +44,7 @@ create table if not exists group_domain_rules (
 create table if not exists group_list_members (
     "group" text not null references groups(id) on delete cascade,
     "user" text not null references users(id) on delete cascade,
+
     primary key ("group", "user")
 );
 
@@ -53,13 +61,22 @@ create table if not exists form_permissions (
     )
 );
 
+create table if not exists submission_records (
+    form text not null references forms(id) on delete cascade,
+    user text not null references users(id) on delete cascade,
+    responses int not null default 1,
+
+    primary key (form, user)
+);
+
 create table if not exists responses (
-    id text primary key, -- hashed value of (user.id + form.salt)
+    id text primary key,
     form text not null references forms(id) on delete cascade,
     respondent text references users(id),
-    status response_status not null default 'in_progress',
+    status response_status not null default 'draft',
     started timestamptz not null default now(),
     submitted timestamptz
+    edited timestamptz
 );
 
 create table if not exists answers (

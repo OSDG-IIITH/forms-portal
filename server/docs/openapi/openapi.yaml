@@ -897,7 +897,6 @@ components:
         - title
         - slug
         - specification
-        - modified
         - live
       properties:
         id:
@@ -915,9 +914,6 @@ components:
           nullable: true
         specification:
           type: object
-        modified:
-          type: string
-          format: date-time
         live:
           type: boolean
         opens:
@@ -934,6 +930,8 @@ components:
         individual_limit:
           type: integer
           minimum: 1
+        editable_responses:
+          type: boolean
 
     FormCreate:
       type: object
