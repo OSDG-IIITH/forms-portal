@@ -96,7 +96,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /auth/me:
+  /auth/info:
     get:
       tags: [Authentication]
       summary: Get current user profile
@@ -195,25 +195,15 @@ paths:
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
 
-  /forms/resolve:
+  /forms/{handle}/{slug}:
+    parameters:
+      - $ref: '#/components/parameters/handle'
+      - $ref: '#/components/parameters/slug'
     get:
       tags: [Forms]
       summary: Resolve form
-      description: Resolves a user-friendly URL path (`handle/slug`) to a full form object.
+      description: Resolves a user-friendly URL path (`/handle/slug`) to a full form object.
       operationId: resolveForm
-      parameters:
-        - name: handle
-          in: query
-          required: true
-          description: The handle of the form owner.
-          schema:
-            type: string
-        - name: slug
-          in: query
-          required: true
-          description: The slug of the form.
-          schema:
-            type: string
       responses:
         '200':
           description: Form resolved successfully.
@@ -221,10 +211,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Form'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /forms/{formId}:
     parameters:
@@ -245,8 +233,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
     put:
       tags: [Forms]
@@ -272,8 +258,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
 
@@ -289,8 +273,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /forms/{formId}/responses:
     parameters:
@@ -298,7 +280,7 @@ paths:
     get:
       tags: [Responses]
       summary: List form responses
-      description: Retrieves all completed responses for a form. Requires ANALYZE permission or higher.
+      description: Retrieves all completed and in-progress responses for a form. Requires ANALYZE permission or ownership of responses.
       operationId: listResponses
       responses:
         '200':
@@ -313,8 +295,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
     post:
       tags: [Responses]
@@ -332,8 +312,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /forms/{formId}/responses/{responseId}:
     parameters:
@@ -342,7 +320,7 @@ paths:
     get:
       tags: [Responses]
       summary: Get response details
-      description: Retrieves a specific response with all its answers. Requires ANALYZE permission or ownership of the response.
+      description: Retrieves a specific response. Requires ANALYZE permission or ownership of the response.
       operationId: getResponse
       responses:
         '200':
@@ -355,17 +333,34 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /forms/{formId}/responses/{responseId}/answers:
     parameters:
       - $ref: '#/components/parameters/formId'
       - $ref: '#/components/parameters/responseId'
+    get:
+      tags: [Responses]
+      summary: Get answers
+      description: Retrieves all the answers submitted as part of a specific response. Requires ANALYZE permission or ownership of the response.
+      operationId: getResponse
+      responses:
+        '200':
+          description: Response details.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Answer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
     put:
       tags: [Responses]
       summary: Save answer
-      description: Creates or updates an answer for a specific question within a response session.
+      description: Creates or updates an answer for a specific question within a response. Requires ownership of response.
       operationId: saveAnswer
       requestBody:
         required: true
@@ -386,8 +381,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
 
@@ -398,7 +391,7 @@ paths:
     post:
       tags: [Responses]
       summary: Submit response
-      description: Finalizes a response by changing its status to 'completed'.
+      description: Finalizes a response by changing its status to 'completed'. Requires ownership of response.
       operationId: submitResponse
       responses:
         '200':
@@ -407,14 +400,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /forms/{formId}/permissions:
     parameters:
@@ -437,8 +426,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
     post:
       tags: [Permissions]
@@ -464,10 +451,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
   /forms/{formId}/permissions/{permissionId}:
     parameters:
@@ -485,8 +472,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /groups:
     get:
@@ -530,6 +515,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
   /groups/{groupId}:
     parameters:
@@ -550,8 +537,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
     put:
       tags: [Groups]
@@ -577,8 +562,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
     delete:
       tags: [Groups]
@@ -592,8 +577,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /groups/{groupId}/domain:
     parameters:
@@ -622,8 +605,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
   /groups/{groupId}/members:
     parameters:
@@ -654,10 +637,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
   /groups/{groupId}/members/{userId}:
     parameters:
@@ -675,8 +658,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
   /forms/{formId}/comments:
     parameters:
@@ -699,8 +680,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
     post:
       tags: [Comments]
@@ -726,8 +705,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
   /forms/{formId}/comments/{commentId}:
     parameters:
@@ -757,8 +736,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
     delete:
       tags: [Comments]
@@ -772,17 +751,26 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
 
 components:
   securitySchemes:
     cookieAuth:
       type: cookie
-      in: cookie
       name: session
 
   parameters:
+    handle:
+      name: handle
+      in: path
+      required: true
+      schema:
+        type: string
+    slug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
     formId:
       name: formId
       in: path
@@ -870,8 +858,6 @@ components:
             $ref: '#/components/schemas/Error'
 
   schemas:
-    # --- ENUMS ---
-
     PermissionRole:
       type: string
       enum: [view, respond, comment, analyze, edit, manage]
@@ -883,8 +869,6 @@ components:
     ResponseStatus:
       type: string
       enum: [in_progress, completed]
-
-    # --- CORE MODELS ---
 
     User:
       type: object
@@ -944,6 +928,12 @@ components:
           type: string
           format: date-time
           nullable: true
+        max_responses:
+          type: integer
+          nullable: true
+        individual_limit:
+          type: integer
+          minimum: 1
 
     FormCreate:
       type: object
@@ -972,6 +962,12 @@ components:
           type: string
           format: date-time
           nullable: true
+        max_responses:
+          type: integer
+          nullable: true
+        individual_limit:
+          type: integer
+          minimum: 1
 
     FormUpdate:
       type: object
@@ -995,6 +991,12 @@ components:
           type: string
           format: date-time
           nullable: true
+        max_responses:
+          type: integer
+          nullable: true
+        individual_limit:
+          type: integer
+          minimum: 1
 
     Group:
       type: object
@@ -1220,8 +1222,6 @@ components:
       properties:
         body:
           type: string
-
-    # --- UTILITY SCHEMAS ---
 
     Error:
       type: object
