@@ -126,3 +126,8 @@ func Callback(c echo.Context) error {
 func Logout(c echo.Context) error {
 	return c.Redirect(http.StatusFound, getLogoutUrl())
 }
+
+func Info(c echo.Context) error {
+	user := c.Get("user").(db.User)
+	return c.JSON(http.StatusOK, user)
+}
