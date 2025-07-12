@@ -9,4 +9,5 @@ import (
 func RegisterAll(router *echo.Group) {
 	router.GET("/auth/login", auth.Login)
 	router.GET("/auth/login/callback", auth.Callback)
+	router.GET("/auth/logout", auth.Logout)
 }

@@ -80,10 +80,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /auth/logout:
-    post:
+    get:
       tags: [Authentication]
       summary: Logout user
-      description: Invalidates the current session and clears the session cookie.
+      description: Invalidates the session and redirects the user to the CAS logout page. Should be called in the same manner as the login endpoint.
       operationId: logoutUser
       responses:
         '204':

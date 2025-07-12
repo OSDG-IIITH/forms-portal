@@ -19,6 +19,10 @@ func getLoginUrl() string {
 		"/login?service=" + url.QueryEscape(utils.Config.CasServiceUrl)
 }
 
+func getLogoutUrl() string {
+	return utils.Config.CasBaseUrl + "/logout"
+}
+
 func getValidationUrl(ticket string) string {
 	return utils.Config.CasBaseUrl + "/serviceValidate?service=" +
 		url.QueryEscape(utils.Config.CasServiceUrl) +
@@ -117,4 +121,8 @@ func Callback(c echo.Context) error {
 	c.SetCookie(session.Cookie())
 
 	return c.Redirect(http.StatusFound, frontend.String())
+}
+
+func Logout(c echo.Context) error {
+	return c.Redirect(http.StatusFound, getLogoutUrl())
 }
