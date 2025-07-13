@@ -112,6 +112,26 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/userId'
+    get:
+      tags: [Users]
+      summary: Get user profile info by ID
+      description: Retrieves a user's name, email and handle from their ID.
+      operationId: getUser
+      responses:
+        '200':
+          description: The user's profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /forms:
     get:
       tags: [Forms]
