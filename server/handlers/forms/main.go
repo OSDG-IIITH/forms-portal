@@ -6,7 +6,6 @@ import (
 	"backend/utility"
 	"errors"
 	"net/http"
-	"sort"
 
 	"github.com/charmbracelet/log"
 	"github.com/jackc/pgerrcode"
@@ -20,7 +19,7 @@ func ListForms(c echo.Context) error {
 	user := c.Get("user").(db.User)
 
 	type Query struct {
-		Role   string `query:"role" validate:"omitempty,oneof=view comment analyze edit manage"`
+		Role   string `query:"role" validate:"omitempty,oneof=view respond comment analyze edit manage"`
 		Sort   string `query:"sort" validate:"oneof=modified title"`
 		Order  string `query:"order" validate:"oneof=asc desc"`
 		Limit  int32  `query:"limit" validate:"gte=1,lte=100"`
@@ -52,23 +51,25 @@ func ListForms(c echo.Context) error {
 		)
 	}
 
-	var role db.NullPermissionRole
+	var filterRole db.NullPermissionRole
 	if query.Role != "" {
-		err := role.PermissionRole.Scan(query.Role)
+		err := filterRole.PermissionRole.Scan(query.Role)
 		if err == nil {
-			role.Valid = true
+			filterRole.Valid = true
 		}
 	} else {
-		role.Valid = false
+		filterRole.Valid = false
 	}
 
 	forms, err := cc.Query.ListForms(
 		*cc.DbCtx,
 		db.ListFormsParams{
-			OwnerID:   user.ID,
-			Role:      role,
-			LimitVal:  query.Limit,
-			OffsetVal: query.Offset,
+			UserID:     user.ID,
+			FilterRole: filterRole,
+			SortBy:     query.Sort,
+			OrderBy:    query.Order,
+			LimitVal:   query.Limit,
+			OffsetVal:  query.Offset,
 		},
 	)
 	if err != nil {
@@ -79,13 +80,11 @@ func ListForms(c echo.Context) error {
 		)
 	}
 
-	sortForms(forms, query.Sort, query.Order)
-
 	total, err := cc.Query.CountForms(
 		*cc.DbCtx,
 		db.CountFormsParams{
-			OwnerID: user.ID,
-			Role:    role,
+			UserID:     user.ID,
+			FilterRole: filterRole,
 		},
 	)
 	if err != nil {
@@ -96,14 +95,12 @@ func ListForms(c echo.Context) error {
 		)
 	}
 
-	return c.JSON(http.StatusOK, utils.HttpResponse{
-		Data: map[string]interface{}{
-			"data": utils.EmptyArrayIfNull(forms),
-			"pagination": map[string]int64{
-				"offset": int64(query.Offset),
-				"limit":  int64(query.Limit),
-				"total":  total,
-			},
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": utils.EmptyArrayIfNull(forms),
+		"pagination": map[string]int64{
+			"offset": int64(query.Offset),
+			"limit":  int64(query.Limit),
+			"total":  total,
 		},
 	})
 }
@@ -148,9 +145,9 @@ func CreateForm(c echo.Context) error {
 		)
 	}
 
-	form, err := cc.Query.CreateForm(
+	form, err := cc.Query.CreateFormWithPermissions(
 		*cc.DbCtx,
-		db.CreateFormParams{
+		db.CreateFormWithPermissionsParams{
 			OwnerID:           user.ID,
 			Slug:              payload.Slug,
 			Title:             payload.Title,
@@ -184,30 +181,7 @@ func CreateForm(c echo.Context) error {
 		)
 	}
 
-	return c.JSON(http.StatusCreated, utils.HttpResponse{
-		Data: form,
-	})
-}
-
-func sortForms(forms []db.Form, sortBy, order string) {
-	sort.Slice(forms, func(i, j int) bool {
-		switch sortBy {
-		case "modified":
-			if order == "asc" {
-				return forms[i].Modified.Time.Before(forms[j].Modified.Time)
-			} else {
-				return forms[i].Modified.Time.After(forms[j].Modified.Time)
-			}
-		case "title":
-			if order == "asc" {
-				return forms[i].Title < forms[j].Title
-			} else {
-				return forms[i].Title > forms[j].Title
-			}
-		default:
-			return false
-		}
-	})
+	return c.JSON(http.StatusCreated, form)
 }
 
 func ResolveForm(c echo.Context) error {
@@ -242,7 +216,5 @@ func ResolveForm(c echo.Context) error {
 		)
 	}
 
-	return c.JSON(http.StatusOK, utils.HttpResponse{
-		Data: form,
-	})
+	return c.JSON(http.StatusOK, form)
 }

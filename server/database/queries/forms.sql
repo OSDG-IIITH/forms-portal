@@ -1,37 +1,21 @@
 -- name: ListForms :many
-select forms.* from forms
-left join form_permissions on forms.id = form_permissions.form
-where
-  forms.owner = sqlc.arg(owner_id)
-  or (
-    form_permissions.user = sqlc.arg(owner_id)
-    and (
-      sqlc.narg(role)::permission_role is null
-      or form_permissions.role = sqlc.narg(role)::permission_role
-    )
-  )
-limit sqlc.arg(limit_val) offset sqlc.arg(offset_val);
+select * from list_forms_for_user(
+    sqlc.arg(user_id),
+    sqlc.narg(filter_role)::permission_role,
+    sqlc.arg(sort_by),
+    sqlc.arg(order_by),
+    sqlc.arg(limit_val),
+    sqlc.arg(offset_val)
+);
 
 -- name: CountForms :one
-select count(distinct forms.id)
-from forms
-left join form_permissions on forms.id = form_permissions.form
-where
-  forms.owner = sqlc.arg(owner_id)
-  or (
-    form_permissions.user = sqlc.arg(owner_id)
-    and (
-      sqlc.narg(role)::permission_role is null
-      or form_permissions.role = sqlc.narg(role)::permission_role
-    )
-  )
-;
+select count_forms_for_user(
+    sqlc.arg(user_id),
+    sqlc.narg(filter_role)::permission_role
+);
 
--- name: CreateForm :one
-insert into forms (
-    owner, slug, title, description, structure,
-    live, opens, closes, max_responses, individual_limit, editable_responses
-) values (
+-- name: CreateFormWithPermissions :one
+select * from create_form_with_permissions(
     sqlc.arg(owner_id),
     sqlc.arg(slug),
     sqlc.arg(title),
@@ -43,7 +27,9 @@ insert into forms (
     sqlc.narg(max_responses),
     sqlc.arg(individual_limit),
     sqlc.arg(editable_responses)
-) returning *;
+);
 
 -- name: ResolveFormByHandleAndSlug :one
-select * from resolve_form_by_handle_and_slug(sqlc.arg(handle), sqlc.arg(slug), sqlc.arg(user_id));
+select * from resolve_form_by_handle_and_slug(
+    sqlc.arg(handle), sqlc.arg(slug), sqlc.arg(user_id)
+);

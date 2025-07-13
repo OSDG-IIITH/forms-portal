@@ -28,7 +28,6 @@ type HttpError struct {
 
 type HttpResponse struct {
 	Error *HttpError `json:"error,omitempty"`
-	Data  any        `json:"data,omitempty"`
 }
 
 func FromError(code HttpErrorCode, err error) HttpResponse {
@@ -37,7 +36,6 @@ func FromError(code HttpErrorCode, err error) HttpResponse {
 			Code:    code,
 			Message: err.Error(),
 		},
-		Data: nil,
 	}
 }
 
