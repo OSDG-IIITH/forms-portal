@@ -218,3 +218,36 @@ func ResolveForm(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, form)
 }
+
+func GetForm(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	formID := c.Param("formId")
+
+	form, err := cc.Query.GetFormByID(
+		*cc.DbCtx,
+		db.GetFormByIDParams{
+			ID:     formID,
+			UserID: user.ID,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to fetch form", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to retrieve form.")),
+		)
+	}
+
+	return c.JSON(http.StatusOK, form)
+}

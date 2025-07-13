@@ -17,4 +17,5 @@ func RegisterAll(router *echo.Group) {
 	router.GET("/forms", middleware.Auth(forms.ListForms))
 	router.POST("/forms", middleware.Auth(forms.CreateForm))
 	router.GET("/forms/:handle/:slug", middleware.Auth(forms.ResolveForm))
+	router.GET("/forms/:formId", middleware.Auth(forms.GetForm))
 }

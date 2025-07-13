@@ -105,3 +105,24 @@ begin
     return v_form;
 end;
 $$ language plpgsql;
+
+create or replace function get_form_by_id(
+    p_id text,
+    p_user_id text
+) returns forms as $$
+declare
+    v_form forms;
+begin
+    select * into v_form from forms where id = p_id;
+
+    if not found then
+        raise exception 'Form not found or you do not have permission to access it.' using hint = 'forbidden';
+    end if;
+
+    if not has_form_permission(p_user_id, v_form.id, 'view'::permission_role) then
+        raise exception 'Form not found or you do not have permission to access it.' using hint = 'forbidden';
+    end if;
+
+    return v_form;
+end;
+$$ language plpgsql;

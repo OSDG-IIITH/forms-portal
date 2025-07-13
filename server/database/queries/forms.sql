@@ -33,3 +33,8 @@ select * from create_form_with_permissions(
 select * from resolve_form_by_handle_and_slug(
     sqlc.arg(handle), sqlc.arg(slug), sqlc.arg(user_id)
 );
+
+-- name: GetFormByID :one
+select * from get_form_by_id(
+    sqlc.arg(id), sqlc.arg(user_id)
+);
