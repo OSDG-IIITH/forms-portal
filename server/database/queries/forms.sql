@@ -38,3 +38,19 @@ select * from resolve_form_by_handle_and_slug(
 select * from get_form_by_id(
     sqlc.arg(id), sqlc.arg(user_id)
 );
+
+-- name: UpdateFormByID :one
+select * from update_form_by_id(
+    sqlc.arg(id),
+    sqlc.arg(user_id),
+    sqlc.narg(slug),
+    sqlc.narg(title),
+    sqlc.narg(description),
+    sqlc.narg(structure),
+    sqlc.narg(live),
+    sqlc.narg(opens),
+    sqlc.narg(closes),
+    sqlc.narg(max_responses),
+    sqlc.narg(individual_limit),
+    sqlc.narg(editable_responses)
+);

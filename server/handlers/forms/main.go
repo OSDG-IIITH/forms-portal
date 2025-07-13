@@ -251,3 +251,82 @@ func GetForm(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, form)
 }
+
+func UpdateForm(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	formID := c.Param("formId")
+
+	type Payload struct {
+		Title             *string             `json:"title"`
+		Slug              *string             `json:"slug"`
+		Description       *string             `json:"description"`
+		Structure         *string             `json:"structure"`
+		Live              *bool               `json:"live"`
+		Opens             *pgtype.Timestamptz `json:"opens"`
+		Closes            *pgtype.Timestamptz `json:"closes"`
+		MaxResponses      *int32              `json:"max_responses"`
+		IndividualLimit   *int32              `json:"individual_limit" validate:"omitempty,gte=1"`
+		EditableResponses *bool               `json:"editable_responses"`
+	}
+
+	var payload Payload
+
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(
+			http.StatusBadRequest,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New("Failed to parse request payload."),
+			),
+		)
+	}
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		message := utils.FormatValidationErrors(err)
+		return c.JSON(
+			http.StatusUnprocessableEntity,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New(message),
+			),
+		)
+	}
+
+	form, err := cc.Query.UpdateFormByID(
+		*cc.DbCtx,
+		db.UpdateFormByIDParams{
+			ID:                formID,
+			UserID:            user.ID,
+			Slug:              payload.Slug,
+			Title:             payload.Title,
+			Description:       payload.Description,
+			Structure:         payload.Structure,
+			Live:              payload.Live,
+			Opens:             payload.Opens,
+			Closes:            payload.Closes,
+			MaxResponses:      payload.MaxResponses,
+			IndividualLimit:   payload.IndividualLimit,
+			EditableResponses: payload.EditableResponses,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to update form", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to update form.")),
+		)
+	}
+
+	return c.JSON(http.StatusOK, form)
+}

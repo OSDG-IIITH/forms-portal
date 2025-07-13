@@ -126,3 +126,30 @@ begin
     return v_form;
 end;
 $$ language plpgsql;
+
+create or replace function update_form_by_id(
+    p_id text, p_user_id text, p_slug text, p_title text, p_description text,
+    p_structure text, p_live boolean, p_opens timestamptz, p_closes timestamptz,
+    p_max_responses int, p_individual_limit int, p_editable_responses boolean
+) returns forms as $$
+declare
+    v_form forms;
+begin
+    if not has_form_permission(p_user_id, p_id, 'edit'::permission_role) then
+        raise exception 'You do not have permission to edit this form.' using hint = 'forbidden';
+    end if;
+
+    update forms set
+        slug = coalesce(p_slug, slug), title = coalesce(p_title, title),
+        description = coalesce(p_description, description),
+        structure = coalesce(p_structure, structure), live = coalesce(p_live, live),
+        opens = coalesce(p_opens, opens), closes = coalesce(p_closes, closes),
+        max_responses = coalesce(p_max_responses, max_responses),
+        individual_limit = coalesce(p_individual_limit, individual_limit),
+        editable_responses = coalesce(p_editable_responses, editable_responses)
+    where id = p_id
+    returning * into v_form;
+
+    return v_form;
+end;
+$$ language plpgsql;

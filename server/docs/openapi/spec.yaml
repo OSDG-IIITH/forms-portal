@@ -234,7 +234,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-    put:
+    patch:
       tags: [Forms]
       summary: Update form
       description: Updates a form's definition. Requires EDIT permission or higher.
@@ -538,7 +538,7 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-    put:
+    patch:
       tags: [Groups]
       summary: Update group
       description: Updates a group's name or description. Requires ownership.
@@ -581,7 +581,7 @@ paths:
   /groups/{groupId}/domain:
     parameters:
       - $ref: '#/components/parameters/groupId'
-    put:
+    patch:
       tags: [Groups]
       summary: Update group domain
       description: Updates the domain for a group of 'DOMAIN' type. Requires ownership.
@@ -712,7 +712,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/formId'
       - $ref: '#/components/parameters/commentId'
-    put:
+    patch:
       tags: [Comments]
       summary: Update comment
       description: Updates the body of a comment. Requires ownership.
