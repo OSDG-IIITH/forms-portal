@@ -10,7 +10,6 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
@@ -213,27 +212,30 @@ func sortForms(forms []db.Form, sortBy, order string) {
 
 func ResolveForm(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
 
 	handle := c.Param("handle")
 	slug := c.Param("slug")
 
-	form, err := cc.Query.GetFormByHandleAndSlug(
+	form, err := cc.Query.ResolveFormByHandleAndSlug(
 		*cc.DbCtx,
-		db.GetFormByHandleAndSlugParams{
+		db.ResolveFormByHandleAndSlugParams{
 			Handle: handle,
 			Slug:   slug,
+			UserID: user.ID,
 		},
 	)
 
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
-				http.StatusNotFound,
-				utils.FromError(utils.ErrorNotFound, errors.New("Form not found.")),
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
 			)
 		}
 
-		log.Error("failed to fetch form by handle and slug", "error", err)
+		log.Error("failed to resolve form", "error", err)
 		return c.JSON(
 			http.StatusInternalServerError,
 			utils.FromError(utils.ErrorInternal, errors.New("Failed to retrieve form.")),
