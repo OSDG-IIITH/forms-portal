@@ -11,7 +11,7 @@ create table if not exists forms (
     slug text not null,
     title text not null,
     description text,
-    structure jsonb not null,
+    structure text not null,
     modified timestamptz not null default now(),
     live boolean not null default false,
     opens timestamptz,

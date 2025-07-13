@@ -896,7 +896,7 @@ components:
         - owner
         - title
         - slug
-        - specification
+        - structure
         - live
       properties:
         id:
@@ -912,8 +912,9 @@ components:
         description:
           type: string
           nullable: true
-        specification:
-          type: object
+        structure:
+          type: string
+          format: kdl
         live:
           type: boolean
         opens:
@@ -938,7 +939,7 @@ components:
       required:
         - title
         - slug
-        - specification
+        - structure
       properties:
         title:
           type: string
@@ -947,8 +948,9 @@ components:
         description:
           type: string
           nullable: true
-        specification:
-          type: object
+        structure:
+          type: string
+          format: kdl
         live:
           type: boolean
           default: false
@@ -966,6 +968,10 @@ components:
         individual_limit:
           type: integer
           minimum: 1
+          default: 1
+        editable_responses:
+          type: boolean
+          default: false
 
     FormUpdate:
       type: object
@@ -977,8 +983,9 @@ components:
         description:
           type: string
           nullable: true
-        specification:
-          type: object
+        structure:
+          type: string
+          format: kdl
         live:
           type: boolean
         opens:
