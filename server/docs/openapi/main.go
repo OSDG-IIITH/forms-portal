@@ -16,7 +16,7 @@ var js string
 //go:embed stoplight.min.css
 var css string
 
-//go:embed openapi.yaml
+//go:embed spec.yaml
 var schema string
 
 func RegisterRoutes(e *echo.Group) {
@@ -35,7 +35,7 @@ func RegisterRoutes(e *echo.Group) {
 		c.Response().Header().Set("Content-Type", "text/css; charset=utf-8")
 		return c.String(http.StatusOK, css)
 	})
-	e.GET("/openapi.yaml", func(c echo.Context) error {
+	e.GET("/spec.yaml", func(c echo.Context) error {
 		c.Response().Header().Set("Content-Type", "application/yaml; charset=utf-8")
 		return c.String(http.StatusOK, schema)
 	})
