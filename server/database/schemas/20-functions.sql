@@ -160,3 +160,16 @@ begin
     delete from forms where id = p_id;
 end;
 $$ language plpgsql;
+
+create or replace function list_form_permissions(
+    p_form_id text,
+    p_user_id text
+) returns setof form_permissions as $$
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'manage'::permission_role) then
+        raise exception 'You do not have permission to manage this form.' using hint = 'forbidden';
+    end if;
+
+    return query select * from form_permissions where form = p_form_id;
+end;
+$$ language plpgsql;
