@@ -54,3 +54,9 @@ select * from update_form_by_id(
     sqlc.narg(individual_limit),
     sqlc.narg(editable_responses)
 );
+
+-- name: DeleteFormByID :exec
+select delete_form_by_id(
+    sqlc.arg(id),
+    sqlc.arg(user_id)
+);

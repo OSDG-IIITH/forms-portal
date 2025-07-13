@@ -19,4 +19,5 @@ func RegisterAll(router *echo.Group) {
 	router.GET("/forms/:handle/:slug", middleware.Auth(forms.ResolveForm))
 	router.GET("/forms/:formId", middleware.Auth(forms.GetForm))
 	router.PATCH("/forms/:formId", middleware.Auth(forms.UpdateForm))
+	router.DELETE("/forms/:formId", middleware.Auth(forms.DeleteForm))
 }

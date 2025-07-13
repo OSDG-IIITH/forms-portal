@@ -330,3 +330,36 @@ func UpdateForm(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, form)
 }
+
+func DeleteForm(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	formID := c.Param("formId")
+
+	err := cc.Query.DeleteFormByID(
+		*cc.DbCtx,
+		db.DeleteFormByIDParams{
+			ID:     formID,
+			UserID: user.ID,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to delete form", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to delete form.")),
+		)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}

@@ -4,14 +4,8 @@ create or replace function has_form_permission(
     p_required_role permission_role
 ) returns boolean as $$
 declare
-    form_owner_id text;
     has_permission boolean;
 begin
-    select owner into form_owner_id from forms where id = p_form_id;
-    if form_owner_id = p_user_id then
-        return true;
-    end if;
-
     select exists (
         select 1 from form_permissions
         where form = p_form_id and "user" = p_user_id and role = p_required_role
@@ -151,5 +145,18 @@ begin
     returning * into v_form;
 
     return v_form;
+end;
+$$ language plpgsql;
+
+create or replace function delete_form_by_id(
+    p_id text,
+    p_user_id text
+) returns void as $$
+begin
+    if not has_form_permission(p_user_id, p_id, 'manage'::permission_role) then
+        raise exception 'You do not have permission to delete this form.' using hint = 'forbidden';
+    end if;
+
+    delete from forms where id = p_id;
 end;
 $$ language plpgsql;
