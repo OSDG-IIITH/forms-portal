@@ -26,7 +26,7 @@ func FormatValidationErrors(err error) string {
 		message = strings.Join(messages, ", ")
 	}
 
-	return "Bad request payload: " + message + "."
+	return "Failed to process payload - " + message + "."
 }
 
 func formatValidationError(e validator.FieldError) string {

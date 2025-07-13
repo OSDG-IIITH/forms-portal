@@ -18,6 +18,7 @@ import (
 
 func main() {
 	utils.LoadConfig()
+	utils.LoadValidator()
 	utils.SetupLogger()
 
 	ctx := context.Background()
