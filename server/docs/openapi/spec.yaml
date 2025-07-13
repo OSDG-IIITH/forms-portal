@@ -1002,6 +1002,8 @@ components:
         individual_limit:
           type: integer
           minimum: 1
+        editable_responses:
+          type: boolean
 
     Group:
       type: object

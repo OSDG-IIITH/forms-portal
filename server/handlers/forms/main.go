@@ -9,6 +9,8 @@ import (
 	"sort"
 
 	"github.com/charmbracelet/log"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
@@ -19,7 +21,7 @@ func ListForms(c echo.Context) error {
 	user := c.Get("user").(db.User)
 
 	type Query struct {
-		Role   string `query:"role" validate:"omitempty,oneof=view respond comment analyze edit manage"`
+		Role   string `query:"role" validate:"omitempty,oneof=view comment analyze edit manage"`
 		Sort   string `query:"sort" validate:"oneof=modified title"`
 		Order  string `query:"order" validate:"oneof=asc desc"`
 		Limit  int32  `query:"limit" validate:"gte=1,lte=100"`
@@ -166,7 +168,7 @@ func CreateForm(c echo.Context) error {
 
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.SQLState() == "23514" {
+		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.CheckViolation {
 			return c.JSON(
 				http.StatusUnprocessableEntity,
 				utils.FromError(
@@ -206,5 +208,39 @@ func sortForms(forms []db.Form, sortBy, order string) {
 		default:
 			return false
 		}
+	})
+}
+
+func ResolveForm(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+
+	handle := c.Param("handle")
+	slug := c.Param("slug")
+
+	form, err := cc.Query.GetFormByHandleAndSlug(
+		*cc.DbCtx,
+		db.GetFormByHandleAndSlugParams{
+			Handle: handle,
+			Slug:   slug,
+		},
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return c.JSON(
+				http.StatusNotFound,
+				utils.FromError(utils.ErrorNotFound, errors.New("Form not found.")),
+			)
+		}
+
+		log.Error("failed to fetch form by handle and slug", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to retrieve form.")),
+		)
+	}
+
+	return c.JSON(http.StatusOK, utils.HttpResponse{
+		Data: form,
 	})
 }

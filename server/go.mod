@@ -5,6 +5,7 @@ go 1.23.4
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/log v0.4.2
+	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/labstack/echo/v4 v4.13.3
 )
 
