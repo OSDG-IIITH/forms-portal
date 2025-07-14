@@ -36,7 +36,7 @@ function handleValueChange(newDateValue: DateValue | undefined) {
   <div class={cn("flex w-full max-w-sm flex-col gap-1.5", className)}>
     <DatePicker.Input
       class={cn(
-        "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs",
+        "flex h-9 w-full items-center rounded-md border border-input bg-background dark:bg-input/30 px-3 py-1 text-sm shadow-xs",
         disabled && "cursor-not-allowed opacity-50"
       )}
     >
@@ -50,7 +50,7 @@ function handleValueChange(newDateValue: DateValue | undefined) {
             {:else}
               <DatePicker.Segment
                 {part}
-                class="rounded-sm hover:bg-accent aria-[valuetext=Empty]:text-muted-foreground px-1 py-1 focus:outline-none sm:focus:outline-none focus:sm:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 sm:focus:ring-0 sm:focus:ring-offset-0"
+                class="rounded-sm hover:bg-accent aria-[valuetext=Empty]:text-muted-foreground px-1 py-1 focus:outline-none focus:ring-1 focus:ring-border"
               >
                 {value}
               </DatePicker.Segment>

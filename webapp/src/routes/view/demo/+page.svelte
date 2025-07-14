@@ -240,7 +240,7 @@
         <form on:submit|preventDefault={handleSubmit}>
           <div class="space-y-6">
             {#each questions as question (question.id)}
-              <div class="p-6 border rounded-lg bg-card space-y-2">
+              <div class="p-6 border rounded-lg bg-card shadow-xs space-y-2">
                 <div class="font-medium text-base mb-4">
                   {question.title}{#if question.required}<span class="text-destructive ml-1">*</span>{/if}
                 </div>
