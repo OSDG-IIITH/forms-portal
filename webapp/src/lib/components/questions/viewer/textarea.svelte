@@ -8,8 +8,6 @@
     validations?: {
       'max-chars'?: number;
       'min-chars'?: number;
-      regex?: string;
-      email?: boolean;
     };
   };
   export let value: string = '';

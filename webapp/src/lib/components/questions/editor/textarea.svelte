@@ -5,9 +5,7 @@
   import { Toggle } from '$lib/components/ui/toggle';
   import {
     IconSquareLetterA,
-    IconViewportTall,
-    IconRegex,
-    IconAt
+    IconViewportTall
   } from '@tabler/icons-svelte';
   import { slide } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
@@ -22,8 +20,6 @@
       validations?: {
         'max-chars'?: number;
         'min-chars'?: number;
-        regex?: string;
-        email?: boolean;
       };
     };
   }
@@ -33,15 +29,11 @@
   if (!question.validations) {
     question.validations = {};
   }
-  if (typeof question.validations.email !== 'boolean') {
-    question.validations.email = false;
-  }
 
   let showPlaceholder = !!question.placeholder;
   let showCharLimit =
     question.validations?.['min-chars'] !== undefined ||
     question.validations?.['max-chars'] !== undefined;
-  let showRegex = !!question.validations?.regex;
 
   $: if (!showPlaceholder) {
     question.placeholder = undefined;
@@ -51,11 +43,6 @@
     if (question.validations) {
       question.validations['min-chars'] = undefined;
       question.validations['max-chars'] = undefined;
-    }
-  }
-  $: if (!showRegex) {
-    if (question.validations) {
-      question.validations.regex = undefined;
     }
   }
 
@@ -95,20 +82,6 @@
       <IconViewportTall class="size-4" />
       <span class="text-sm font-medium">Character Limit</span>
     </Toggle>
-    <Toggle bind:pressed={showRegex} aria-label="Toggle regex" variant="outline">
-      <IconRegex class="size-4" />
-      <span class="text-sm font-medium">Regex</span>
-    </Toggle>
-    {#if question.validations}
-      <Toggle
-        bind:pressed={question.validations.email}
-        aria-label="Toggle email validation"
-        variant="outline"
-      >
-        <IconAt class="size-4" />
-        <span class="text-sm font-medium">Email</span>
-      </Toggle>
-    {/if}
   </div>
 
   {#if showPlaceholder}
@@ -139,16 +112,6 @@
             id="max-chars-{question.id}"
             placeholder="Maximum Character Limit"
             bind:value={question.validations['max-chars']}
-          />
-        </div>
-      {/if}
-      {#if showRegex}
-        <div class="space-y-2 col-span-2" transition:slide={transitionOpts}>
-          <Label for="regex-{question.id}">Regex Pattern</Label>
-          <Input
-            id="regex-{question.id}"
-            placeholder="Regex Pattern"
-            bind:value={question.validations.regex}
           />
         </div>
       {/if}
