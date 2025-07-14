@@ -24,7 +24,7 @@
   updateVisibleForms(1);
 </script>
 
-<Card class="h-full flex flex-col gap-4">
+<Card class="h-full flex flex-col gap-4 shadow-none">
   <CardHeader>
     <CardTitle>Recently Created</CardTitle>
   </CardHeader>

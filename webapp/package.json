@@ -17,7 +17,7 @@
 		"@dnd-kit-svelte/sortable": "^0.0.8",
 		"@dnd-kit-svelte/utilities": "^0.0.8",
 		"@internationalized/date": "^3.8.2",
-		"@lucide/svelte": "^0.515.0",
+		"@lucide/svelte": "^0.525.0",
 		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -27,7 +27,7 @@
 		"@tanstack/table-core": "^8.21.3",
 		"@types/d3-scale": "^4.0.9",
 		"@types/d3-shape": "^3.1.7",
-		"bits-ui": "^2.8.5",
+		"bits-ui": "^2.8.10",
 		"clsx": "^2.1.1",
 		"d3-scale": "^4.0.2",
 		"d3-shape": "^3.2.0",
@@ -45,6 +45,8 @@
 		"zod": "^3.25.67"
 	},
 	"dependencies": {
-		"mode-watcher": "^1.0.8"
+		"kdljs": "^0.3.0",
+		"mode-watcher": "^1.0.8",
+		"ulid": "^3.0.1"
 	}
 }

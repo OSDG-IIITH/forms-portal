@@ -2,35 +2,26 @@
   import * as RadioGroup from '$lib/components/ui/radio-group';
   import { Label } from '$lib/components/ui/label';
 
-  interface Option {
-    uid: string;
-    text: string;
-    type: 'text';
-  }
-
-  interface Props {
-    question: {
-      uid: string;
-      text: string;
-      required: boolean;
-      options: Option[];
-    };
-    value?: string;
-  }
-
-  let { question, value = $bindable('') }: Props = $props();
+  export let question: {
+    id: string;
+    title: string;
+    required: boolean;
+    options: { id: string; value: string; label: string }[];
+  };
+  export let value: string = '';
+  export let disabled: boolean = false;
 </script>
 
 {#if question.options.length > 0}
-  <RadioGroup.Root bind:value class="space-y-3">
-    {#each question.options as option (option.uid)}
+  <RadioGroup.Root bind:value disabled={disabled}>
+    {#each question.options as option (option.id)}
       <div class="flex items-center space-x-3">
-        <RadioGroup.Item value={option.uid} id="option-{option.uid}" />
+        <RadioGroup.Item value={option.id} id={`option-${option.id}`} />
         <Label 
-          for="option-{option.uid}" 
+          for={`option-${option.id}`}
           class="text-sm font-normal cursor-pointer flex-1"
         >
-          {option.text}
+          {option.label}
         </Label>
       </div>
     {/each}

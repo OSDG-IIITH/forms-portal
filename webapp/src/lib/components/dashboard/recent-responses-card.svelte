@@ -25,7 +25,7 @@
   updateVisibleResponses(1);
 </script>
 
-<Card class="h-full flex flex-col gap-4">
+<Card class="h-full flex flex-col gap-4 shadow-none">
   <CardHeader>
     <CardTitle>Recent Responses</CardTitle>
   </CardHeader>

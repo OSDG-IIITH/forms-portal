@@ -4,39 +4,51 @@
   import { Input } from '$lib/components/ui/input';
   import { Textarea } from '$lib/components/ui/textarea';
   import { Label } from '$lib/components/ui/label';
-  import TextQuestionEditor from '$lib/components/questions/editor/text.svelte';
-  import MultipleChoiceEditor from '$lib/components/questions/editor/multiple-choice.svelte';
+  import InputEditor from '$lib/components/questions/editor/input.svelte';
+  import TextareaEditor from '$lib/components/questions/editor/textarea.svelte';
+  import RadioEditor from '$lib/components/questions/editor/radio.svelte';
   import CheckboxEditor from '$lib/components/questions/editor/checkbox.svelte';
   import FileUploadEditor from '$lib/components/questions/editor/file-upload.svelte';
   import SelectEditor from '$lib/components/questions/editor/select.svelte';
   import DatePickerEditor from '$lib/components/questions/editor/date-picker.svelte';
-  import { 
-    IconPlus, 
-    IconFileText, 
-    IconListCheck, 
-    IconChevronUp, 
-    IconChevronDown, 
-    IconTrash, 
-    IconSquareCheck, 
+  import { ulid } from 'ulid';
+  import * as kdljs from 'kdljs';
+  import {
+    IconPlus,
+    IconFileText,
+    IconListCheck,
+    IconChevronUp,
+    IconChevronDown,
+    IconTrash,
+    IconSquareCheck,
     IconUpload,
     IconCalendar
   } from '@tabler/icons-svelte';
 
-  type QuestionType = 'text' | 'multiple_choice' | 'checkbox' | 'file_upload' | 'select' | 'date_picker';
+  type QuestionType = 'input' | 'textarea' | 'radio' | 'checkbox' | 'file' | 'select' | 'date';
 
   type Option = {
-    uid: string;
-    text: string;
-    type: 'text';
+    id: string;
+    value: string;
+    label: string;
   };
 
   type Question = {
-    uid: string;
+    id: string;
     type: QuestionType;
-    text: string;
+    title: string;
     required: boolean;
-    display_order: number;
-    options: Option[];
+    options?: Option[];
+    placeholder?: string;
+    validations?: {
+      'max-chars'?: number;
+      'min-chars'?: number;
+      regex?: string;
+      email?: boolean;
+    };
+    'max-file-size'?: number;
+    'max-files'?: number;
+    'allowed-types'?: string[];
   };
 
   type FormData = {
@@ -54,46 +66,56 @@
   let questions = $state<Question[]>([]);
 
   const questionTypeLabels: Record<QuestionType, string> = {
-    text: 'Text',
-    multiple_choice: 'Multiple Choice',
+    input: 'Input',
+    textarea: 'Textarea',
+    radio: 'Multiple Choice',
     checkbox: 'Checkbox',
-    file_upload: 'File Upload',
+    file: 'File Upload',
     select: 'Select',
-    date_picker: 'Date Picker'
+    date: 'Date Picker'
   };
 
   const questionTypeButtons = [
-    { type: 'text' as QuestionType, icon: IconFileText, label: 'Text' },
-    { type: 'multiple_choice' as QuestionType, icon: IconListCheck, label: 'Multiple Choice' },
+    { type: 'input' as QuestionType, icon: IconFileText, label: 'Text' },
+    { type: 'textarea' as QuestionType, icon: IconFileText, label: 'Long Text' },
+    { type: 'radio' as QuestionType, icon: IconListCheck, label: 'Multiple Choice' },
     { type: 'checkbox' as QuestionType, icon: IconSquareCheck, label: 'Checkbox' },
-    { type: 'file_upload' as QuestionType, icon: IconUpload, label: 'File Upload' },
+    { type: 'file' as QuestionType, icon: IconUpload, label: 'File Upload' },
     { type: 'select' as QuestionType, icon: IconListCheck, label: 'Select' },
-    { type: 'date_picker' as QuestionType, icon: IconCalendar, label: 'Date Picker' }
+    { type: 'date' as QuestionType, icon: IconCalendar, label: 'Date Picker' }
   ];
 
   function addQuestion(type: QuestionType): void {
     const newQuestion: Question = {
-      uid: crypto.randomUUID(),
+      id: ulid(),
       type,
-      text: '',
-      required: false,
-      display_order: questions.length,
-      options: []
+      title: '',
+      required: false
     };
+    if (type === 'radio' || type === 'checkbox' || type === 'select') {
+      newQuestion.options = [];
+    }
+    if (type === 'input' || type === 'textarea') {
+      newQuestion.placeholder = '';
+      newQuestion.validations = {};
+    }
+    if (type === 'file') {
+      newQuestion['max-file-size'] = 10;
+      newQuestion['max-files'] = -1;
+      newQuestion['allowed-types'] = [];
+    }
     questions = [...questions, newQuestion];
   }
 
-  function removeQuestion(uid: string): void {
-    questions = questions
-      .filter(q => q.uid !== uid)
-      .map((q, index) => ({ ...q, display_order: index }));
+  function removeQuestion(id: string): void {
+    questions = questions.filter((q) => q.id !== id);
   }
 
   function moveQuestionUp(index: number): void {
     if (index > 0) {
       const newQuestions = [...questions];
       [newQuestions[index - 1], newQuestions[index]] = [newQuestions[index], newQuestions[index - 1]];
-      questions = newQuestions.map((q, i) => ({ ...q, display_order: i }));
+      questions = newQuestions;
     }
   }
 
@@ -101,38 +123,79 @@
     if (index < questions.length - 1) {
       const newQuestions = [...questions];
       [newQuestions[index], newQuestions[index + 1]] = [newQuestions[index + 1], newQuestions[index]];
-      questions = newQuestions.map((q, i) => ({ ...q, display_order: i }));
+      questions = newQuestions;
     }
   }
 
-  function saveFormAsJson() {
-    const data = {
-      form: {
-        title: form.title,
-        description: form.description,
-        visibility: form.visibility
-      },
-      questions: questions.map(q => ({
-        uid: q.uid,
-        type: q.type,
-        text: q.text,
-        required: q.required,
-        display_order: q.display_order,
-        options: q.options?.map(o => ({
-          uid: o.uid,
-          text: o.text,
-          type: o.type
-        })) ?? []
-      }))
-    };
+  function escapeKdlString(str: string): string {
+    return '"' + str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  }
 
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
+  function questionToKdl(q: Question): string {
+    let kdl = `  question id=${escapeKdlString(q.id)} type=${escapeKdlString(q.type)}${q.required ? ' required' : ''} {\n`;
+    kdl += `    title ${escapeKdlString(q.title)}\n`;
+    if (q.placeholder) {
+      kdl += `    placeholder ${escapeKdlString(q.placeholder)}\n`;
+    }
+    if (q.options && q.options.length > 0) {
+      for (const opt of q.options) {
+        kdl += `    option value=${escapeKdlString(opt.value)} label=${escapeKdlString(opt.label)}\n`;
+      }
+    }
+    if (q['max-file-size'] || q['max-files'] || q['allowed-types']?.length) {
+      if (q['max-file-size']) {
+        kdl += `    "max-file-size" ${q['max-file-size']} mb\n`;
+      }
+      if (q['max-files'] && q['max-files'] !== -1) {
+        kdl += `    "max-files" ${q['max-files']}\n`;
+      }
+      if (q['allowed-types'] && q['allowed-types'].length > 0) {
+        const typesString = q['allowed-types'].map(t => escapeKdlString(t)).join(' ');
+        kdl += `    "allowed-types" ${typesString}\n`;
+      }
+    }
+    if (q.validations && (q.validations['max-chars'] || q.validations['min-chars'] || q.validations.regex || q.validations.email)) {
+      kdl += '    validations {\n';
+      if (q.validations.regex) {
+        kdl += `      regex ${escapeKdlString(q.validations.regex)}\n`;
+      }
+      if (q.validations['min-chars']) {
+        kdl += `      "min-chars" ${q.validations['min-chars']}\n`;
+      }
+      if (q.validations['max-chars']) {
+        kdl += `      "max-chars" ${q.validations['max-chars']}\n`;
+      }
+      if (q.validations.email) {
+        kdl += `      email true\n`;
+      }
+      kdl += '    }\n';
+    }
+    kdl += `  }\n`;
+    return kdl;
+  }
+
+  function saveFormAsKdl() {
+    let kdl = 'form {\n';
+    kdl += `  version 1\n`;
+    kdl += `  title ${escapeKdlString(form.title)}\n`;
+    kdl += `  description ${escapeKdlString(form.description)}\n`;
+    for (const q of questions) {
+      kdl += questionToKdl(q);
+    }
+    kdl += '}\n';
+
+    try {
+      kdljs.parse(kdl);
+    } catch (e) {
+      alert('Failed to generate valid KDL: ' + (e instanceof Error ? e.message : e));
+      return;
+    }
+
+    const blob = new Blob([kdl], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = `${form.title || "form"}.json`;
+    a.download = `${form.title || 'form'}.kdl`;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
@@ -188,7 +251,7 @@
           </div>
           
           <div class="space-y-4">
-            {#each questions as question, i (question.uid)}
+            {#each questions as question, i (question.id)}
               <Card>
                 <CardContent class="space-y-6">
                   <!-- header -->
@@ -199,35 +262,32 @@
                       </div>
                       <span class="font-medium">{questionTypeLabels[question.type]}</span>
                     </div>
-                    
+
                     <!-- controls -->
                     <div class="flex items-center gap-1">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        class="h-8 w-8 p-0"
+                        size="icon"
+                        class="h-8 w-8"
                         onclick={() => moveQuestionUp(i)}
                         disabled={i === 0}
-                        aria-label="Move question up"
                       >
                         <IconChevronUp class="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        class="h-8 w-8 p-0"
+                        size="icon"
+                        class="h-8 w-8"
                         onclick={() => moveQuestionDown(i)}
                         disabled={i === questions.length - 1}
-                        aria-label="Move question down"
                       >
                         <IconChevronDown class="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        class="h-8 w-8 p-0 ml-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        onclick={() => removeQuestion(question.uid)}
-                        aria-label="Delete question"
+                        size="icon"
+                        class="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                        onclick={() => removeQuestion(question.id)}
                       >
                         <IconTrash class="h-4 w-4" />
                       </Button>
@@ -236,17 +296,19 @@
 
                   <!-- editor container -->
                   <div class="pl-4">
-                    {#if question.type === 'text'}
-                      <TextQuestionEditor bind:question={questions[i]} />
-                    {:else if question.type === 'multiple_choice'}
-                      <MultipleChoiceEditor bind:question={questions[i]} />
+                    {#if question.type === 'input'}
+                      <InputEditor bind:question={questions[i]} />
+                    {:else if question.type === 'textarea'}
+                      <TextareaEditor bind:question={questions[i]} />
+                    {:else if question.type === 'radio'}
+                      <RadioEditor bind:question={questions[i]} />
                     {:else if question.type === 'checkbox'}
                       <CheckboxEditor bind:question={questions[i]} />
-                    {:else if question.type === 'file_upload'}
+                    {:else if question.type === 'file'}
                       <FileUploadEditor bind:question={questions[i]} />
                     {:else if question.type === 'select'}
                       <SelectEditor bind:question={questions[i]} />
-                    {:else if question.type === 'date_picker'}
+                    {:else if question.type === 'date'}
                       <DatePickerEditor bind:question={questions[i]} />
                     {/if}
                   </div>
@@ -287,7 +349,7 @@
               <p class="text-muted-foreground mb-6 max-w-sm">
                 Get started by adding a question to your form
               </p>
-              <div class="flex flex-wrap gap-2">
+              <div class="flex flex-wrap justify-center gap-2">
                 {#each questionTypeButtons as { type, icon: Icon, label }}
                   <Button 
                     variant="outline" 
@@ -316,7 +378,7 @@
               </div>
               <div class="flex gap-4">
                 <Button variant="outline" size="sm">Preview</Button>
-                <Button size="sm" onclick={saveFormAsJson}>Save Form</Button>
+                <Button size="sm" onclick={saveFormAsKdl}>Save Form</Button>
               </div>
             </div>
           </CardContent>

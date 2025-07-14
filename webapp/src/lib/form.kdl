@@ -1,0 +1,48 @@
+form {
+  version 1
+  title "demo form but it exports to kdl"
+  description "description"
+  question id="01JZMVE1ZPTE5KE89ZSGMXKAS9" type="input" required {
+    title "What is your name?"
+    placeholder "kdl"
+    validations {
+      "max-chars" 10
+    }
+  }
+  question id="01JZMVEW9CR9VAXQM1B41DY8F4" type="textarea" {
+    title "Write a 500 word essay on kdl"
+    placeholder "what"
+    validations {
+      "min-chars" 5000
+    }
+  }
+  question id="01JZMVFAT564R1JD6TP31J45NE" type="radio" required {
+    title "Choose one"
+    option value="kdl" label="kdl"
+    option value="ini" label="ini"
+    option value="json" label="json"
+    option value="s-expressions" label="s-expressions"
+  }
+  question id="01JZMVGVMG0W73TGB844RZTHYN" type="checkbox" {
+    title "This is a checkbox-type question"
+    option value="you can check me" label="you can check me"
+    option value="you can check me too" label="you can check me too"
+    option value="dont check me" label="dont check me"
+  }
+  question id="01JZMVHSFTS3EA631CW3DWD2YD" type="file" {
+    title "Upload a photo of yourself"
+    "max-file-size" 0.29
+    "max-files" 3
+  }
+  question id="01JZMVJ5GTBMKKEE133BS37K90" type="select" {
+    title "Select"
+    option value="a" label="a"
+    option value="b" label="b"
+    option value="c" label="c"
+    option value="d" label="d"
+    option value="e" label="e"
+  }
+  question id="01JZMVJNXEE5WY4BSEZPREB580" type="date" required {
+    title "Birthday"
+  }
+}

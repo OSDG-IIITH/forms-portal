@@ -106,9 +106,7 @@
           <div
             role="button"
             tabindex="0"
-            class="flex items-center gap-3 p-3 border rounded-md transition-colors {dragOverIndex === i
-              ? 'border-primary bg-primary/5'
-              : ''} {draggedIndex === i ? 'opacity-50' : ''}"
+            class="flex items-center gap-3 p-3 border rounded-md transition-colors {dragOverIndex === i ? 'border-primary bg-primary/5' : ''} {draggedIndex === i ? 'opacity-50' : ''}"
             draggable="true"
             ondragstart={(e) => handleDragStart(e, i)}
             ondragover={(e) => handleDragOver(e, i)}
@@ -138,8 +136,14 @@
   </Button>
 
   <div class="flex items-center gap-2">
-    <Checkbox id="required-{question.id}" bind:checked={question.required} />
-    <Label for="required-{question.id}" class="text-sm">
+    <Checkbox
+      id="required-{question.id}"
+      bind:checked={question.required}
+    />
+    <Label
+      for="required-{question.id}"
+      class="text-sm"
+    >
       Required
     </Label>
   </div>

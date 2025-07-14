@@ -41,7 +41,7 @@
   });
 </script>
 
-<Card class="h-full gap-2">
+<Card class="h-full gap-2 shadow-none">
   <CardHeader>
     <CardTitle>Form Templates</CardTitle>
   </CardHeader>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { ulid } from 'ulid';
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
   import { Checkbox } from '$lib/components/ui/checkbox';
@@ -6,17 +7,17 @@
   import { IconPlus, IconGripVertical, IconTrash } from '@tabler/icons-svelte';
 
   interface Option {
-    uid: string;
-    text: string;
-    type: 'text';
+    id: string;
+    value: string;
+    label: string;
   }
 
   interface Props {
     question: {
-      uid: string;
-      text: string;
+      id: string;
+      title: string;
       required: boolean;
-      options: Option[];
+      options?: Option[];
     };
   }
 
@@ -25,14 +26,14 @@
   let dragOverIndex = $state<number | null>(null);
 
   function addOption(): void {
-    question.options = [
-      ...question.options,
-      { uid: crypto.randomUUID(), text: '', type: 'text' }
-    ];
+    if (!question.options) question.options = [];
+    const newId = ulid();
+    question.options = [...question.options, { id: newId, value: '', label: '' }];
   }
 
-  function removeOption(uid: string): void {
-    question.options = question.options.filter(option => option.uid !== uid);
+  function removeOption(id: string): void {
+    if (!question.options) return;
+    question.options = question.options.filter((option) => option.id !== id);
   }
 
   function handleDragStart(event: DragEvent, index: number): void {
@@ -56,7 +57,7 @@
 
   function handleDrop(event: DragEvent, dropIndex: number): void {
     event.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+    if (draggedIndex !== null && draggedIndex !== dropIndex && question.options) {
       const newOptions = [...question.options];
       const [draggedOption] = newOptions.splice(draggedIndex, 1);
       newOptions.splice(dropIndex, 0, draggedOption);
@@ -71,78 +72,71 @@
     dragOverIndex = null;
   }
 
-  if (question.options.length === 0) {
+  $effect(() => {
+    if (question.options) {
+      question.options.forEach((option) => {
+        option.value = option.label;
+      });
+    }
+  });
+
+  if (!question.options || question.options.length === 0) {
     addOption();
     addOption();
   }
 </script>
 
 <div class="space-y-4">
-  <div class="space-y-2">
-    <Label for="question-{question.uid}">Question Text</Label>
-    <Input
-      id="question-{question.uid}"
-      placeholder="Enter your question here"
-      bind:value={question.text}
-    />
-  </div>
+	<div class="space-y-2">
+		<Label for="question-{question.id}">Question Text</Label>
+		<Input
+			id="question-{question.id}"
+			placeholder="Enter your question here"
+			bind:value={question.title}
+		/>
+	</div>
 
-  <div class="space-y-3">
-    <Label class="text-sm font-medium">Options (dropdown)</Label>
-    <div class="space-y-2">
-      {#each question.options as option, i (option.uid)}
-        <div 
-          role="button"
-          tabindex="0"
-          class="flex items-center gap-3 p-3 border rounded-md transition-colors {dragOverIndex === i ? 'border-primary bg-primary/5' : ''} {draggedIndex === i ? 'opacity-50' : ''}"
-          draggable="true"
-          ondragstart={(e) => handleDragStart(e, i)}
-          ondragover={(e) => handleDragOver(e, i)}
-          ondragleave={handleDragLeave}
-          ondrop={(e) => handleDrop(e, i)}
-          ondragend={handleDragEnd}
-        >
-          <IconGripVertical class="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
-          <Input
-            placeholder="Enter option text"
-            bind:value={option.text}
-            class="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
-          {#if question.options.length > 1}
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              onclick={() => removeOption(option.uid)}
-              aria-label="Remove option"
-            >
-              <IconTrash class="h-4 w-4" />
-            </Button>
-          {/if}
-        </div>
-      {/each}
-    </div>
-    <Button 
-      variant="outline" 
-      size="sm" 
-      class="w-full"
-      onclick={addOption}
-    >
-      <IconPlus class="h-4 w-4 mr-2" />
-      Add Option
-    </Button>
-  </div>
+	<div class="space-y-3">
+		<Label class="text-sm font-medium">Options (dropdown)</Label>
+		<div class="space-y-2">
+			{#if question.options}
+				{#each question.options as option, i (option.id)}
+					<div
+						role="button"
+						tabindex="0"
+						class="flex items-center gap-3 p-3 border rounded-md transition-colors {dragOverIndex === i ? 'border-primary bg-primary/5' : ''} {draggedIndex === i ? 'opacity-50' : ''}"
+						draggable="true"
+						ondragstart={(e) => handleDragStart(e, i)}
+						ondragover={(e) => handleDragOver(e, i)}
+						ondragleave={handleDragLeave}
+						ondrop={(e) => handleDrop(e, i)}
+						ondragend={handleDragEnd}
+					>
+						<IconGripVertical class="cursor-grab" />
+						<Input placeholder="Option" bind:value={option.label} />
+						<Button
+							variant="ghost"
+							size="icon"
+							class="text-destructive-foreground hover:text-destructive-foreground hover:bg-destructive/80"
+							onclick={() => removeOption(option.id)}
+						>
+							<IconTrash />
+						</Button>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	</div>
 
-  <div class="flex items-center space-x-2">
-    <Checkbox 
-      id="required-{question.uid}" 
-      bind:checked={question.required}
-    />
-    <Label 
-      for="required-{question.uid}" 
-      class="text-sm font-normal cursor-pointer"
-    >
-      Required field
-    </Label>
-  </div>
+	<Button variant="outline" class="w-full" onclick={addOption}>
+		<IconPlus class="mr-2" />
+		Add Option
+	</Button>
+
+	<div class="flex items-center gap-2 pt-4 border-t">
+		<Checkbox id="required-{question.id}" bind:checked={question.required} />
+		<Label for="required-{question.id}" class="text-sm">
+			Required
+		</Label>
+	</div>
 </div>
