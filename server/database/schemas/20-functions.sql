@@ -98,7 +98,8 @@ $$ language plpgsql;
 create or replace function create_form_with_permissions(
     p_owner_id text, p_slug text, p_title text, p_description text,
     p_structure text, p_live boolean, p_opens timestamptz, p_closes timestamptz,
-    p_max_responses int, p_individual_limit int, p_editable_responses boolean
+    p_anonymous boolean, p_max_responses int, p_individual_limit int,
+    p_editable_responses boolean
 ) returns forms as $$
 declare
     v_form forms;
@@ -106,10 +107,11 @@ declare
 begin
     insert into forms (
         owner, slug, title, description, structure,
-        live, opens, closes, max_responses, individual_limit, editable_responses
+        live, opens, closes, anonymous, max_responses, individual_limit,
+        editable_responses
     ) values (
         p_owner_id, p_slug, p_title, p_description,
-        p_structure, p_live, p_opens, p_closes,
+        p_structure, p_live, p_opens, p_closes, p_anonymous
         p_max_responses, p_individual_limit, p_editable_responses
     ) returning * into v_form;
 
@@ -168,7 +170,8 @@ $$ language plpgsql;
 create or replace function update_form_by_id(
     p_id text, p_user_id text, p_slug text, p_title text, p_description text,
     p_structure text, p_live boolean, p_opens timestamptz, p_closes timestamptz,
-    p_max_responses int, p_individual_limit int, p_editable_responses boolean
+    p_anonymous boolean, p_max_responses int, p_individual_limit int,
+    p_editable_responses boolean
 ) returns forms as $$
 declare
     v_form forms;
@@ -182,6 +185,7 @@ begin
         description = coalesce(p_description, description),
         structure = coalesce(p_structure, structure), live = coalesce(p_live, live),
         opens = coalesce(p_opens, opens), closes = coalesce(p_closes, closes),
+        anonymous = coalesce(p_anonymous, anonymous),
         max_responses = coalesce(p_max_responses, max_responses),
         individual_limit = coalesce(p_individual_limit, individual_limit),
         editable_responses = coalesce(p_editable_responses, editable_responses)
@@ -205,7 +209,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function list_form_permissions(
+create or replace function list_permissions_for_form(
     p_form_id text,
     p_user_id text
 ) returns setof form_permissions as $$
@@ -218,7 +222,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function grant_permission(
+create or replace function grant_permission_on_form(
     p_form_id text,
     p_user_id text,
     p_target_user text,
@@ -249,7 +253,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function revoke_permission(
+create or replace function revoke_permission_by_id(
     p_form_id text, p_user_id text, p_permission_id text
 ) returns void as $$
 begin
@@ -297,7 +301,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function create_group(
+create or replace function create_group_of_type(
     p_owner_id text,
     p_name text,
     p_description text,
@@ -345,7 +349,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function get_group_for_user(
+create or replace function get_group_by_id(
     p_id text,
     p_user_id text
 ) returns group_with_details as $$
@@ -371,7 +375,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function update_group_for_user(
+create or replace function update_group_by_id(
     p_id text,
     p_user_id text,
     p_name text,
@@ -394,7 +398,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function update_group_domain_for_user(
+create or replace function update_domain_for_group(
     p_id text,
     p_user_id text,
     p_domain text
@@ -408,7 +412,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function delete_group_for_user(
+create or replace function delete_group_by_id(
     p_id text,
     p_user_id text
 ) returns void as $$
@@ -421,7 +425,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function add_group_member_for_user(
+create or replace function add_group_member_by_email(
     p_group_id text,
     p_user_id text,
     p_target_user text
@@ -443,7 +447,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function remove_group_member_for_user(
+create or replace function remove_group_member_by_id(
     p_group_id text,
     p_user_id text,
     p_target_user_id text
@@ -458,7 +462,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function list_comments_for_user(
+create or replace function list_comments_for_form(
     p_form_id text,
     p_user_id text
 ) returns setof comments as $$
@@ -472,7 +476,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function create_comment(
+create or replace function create_comment_on_form(
     p_form_id text, p_user_id text,
     p_body text, p_element text, p_parent text
 ) returns comments as $$
@@ -491,7 +495,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function update_comment(
+create or replace function update_comment_by_id(
     p_id text, p_form_id text, p_user_id text,
     p_body text, p_state comment_state
 ) returns comments as $$
@@ -520,7 +524,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function delete_comment(
+create or replace function delete_comment_by_id(
     p_id text, p_form_id text, p_user_id text
 ) returns void as $$
 declare
@@ -537,5 +541,222 @@ begin
     end if;
 
     delete from comments where id = p_id;
+end;
+$$ language plpgsql;
+
+create or replace function list_responses_for_form(
+    p_form_id text,
+    p_user_id text,
+    p_status response_status,
+    p_sort_by text,
+    p_order text,
+    p_limit int,
+    p_offset int
+) returns setof responses as $$
+begin
+    if has_form_permission(p_user_id, p_form_id, 'analyze'::permission_role) then
+        return query select * from responses r where r.form = p_form_id
+        and r.status = p_status order by
+            case when p_sort_by = 'submitted' and p_order = 'asc' then r.submitted end asc,
+            case when p_sort_by = 'submitted' and p_order = 'desc' then r.submitted end desc,
+            case when p_sort_by = 'started' and p_order = 'asc' then r.started end asc,
+            case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc
+        limit p_limit offset p_offset;
+
+        return;
+    end if;
+
+    if has_form_permission(p_user_id, p_form_id, 'respond'::permission_role) then
+        return query select * from responses r where r.form = p_form_id
+        and r.status = p_status and r.respondent = p_user_id order by
+            case when p_sort_by = 'submitted' and p_order = 'asc' then r.submitted end asc,
+            case when p_sort_by = 'submitted' and p_order = 'desc' then r.submitted end desc,
+            case when p_sort_by = 'started' and p_order = 'asc' then r.started end asc,
+            case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc
+        limit p_limit offset p_offset;
+
+        return;
+    end if;
+
+    raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+end;
+$$ language plpgsql;
+
+create or replace function count_responses_for_form(
+    p_form_id text,
+    p_user_id text,
+    p_status response_status
+) returns bigint as $$
+declare
+    v_count bigint;
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'analyze'::permission_role) then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    select count(distinct r.id) into v_count from responses r
+    where r.form = p_form_id and r.status = p_status;
+
+    return v_count;
+end;
+$$ language plpgsql;
+
+create or replace function start_response_for_form(
+    p_form_id text,
+    p_user_id text
+) returns responses as $$
+declare
+    v_form forms;
+    v_response responses;
+    v_existing_count int;
+    v_total_count int;
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'respond'::permission_role) then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    select * into v_form from forms f where f.id = p_form_id;
+
+    select sr.responses into v_existing_count from submission_records sr
+    where sr.form = p_form_id and sr."user" = p_user_id;
+    select sum(sr.responses) into v_total_count from submission_records sr
+    where sr.form = p_form_id and sr."user" = p_user_id;
+
+    if v_form.opens > now() then
+        raise exception 'Form not yet open.' using hint = 'form-closed';
+    end if;
+
+    if v_form.closes < now() then
+        raise exception 'Form closed.' using hint = 'form-closed';
+    end if;
+
+    if v_form.max_responses is not null and v_form.max_responses <= v_total_count then
+        raise exception 'Form reached maximum responses.' using hint = 'form-closed';
+    end if;
+
+    if v_existing_count is not null and v_form.individual_limit <= v_existing_count then
+        raise exception 'Maximum responses submitted.' using hint = 'form-closed';
+    end if;
+
+    insert into responses (form, respondent) values (p_form_id, p_user_id)
+    returning * into v_response;
+
+    insert into submission_records (form, "user", responses)
+    values (p_form_id, p_user_id, 1) on conflict (form, "user") do update
+    set responses = submission_records.responses + excluded.responses;
+
+    return v_response;
+end;
+$$ language plpgsql;
+
+create or replace function get_response_by_id(
+    p_id text,
+    p_form_id text,
+    p_user_id text
+) returns responses as $$
+declare
+    v_response responses;
+begin
+    select * into v_response from responses where id = p_id;
+    if not found then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if not has_form_permission(p_user_id, p_form_id, 'analyze'::permission_role) then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    elsif v_response.respondent != p_user_id then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    return v_response;
+end;
+$$ language plpgsql;
+
+create or replace function get_answers_for_response(
+    p_id text,
+    p_form_id text,
+    p_user_id text
+) returns setof answers as $$
+declare
+    v_respondent text;
+begin
+    select respondent into v_respondent from responses r where r.id = p_id;
+    if not found then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if not has_form_permission(p_user_id, p_form_id, 'analyze'::permission_role) then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    elsif v_respondent != p_user_id then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    return query select * from answers a where a.response = p_id; 
+end;
+$$ language plpgsql;
+
+create or replace function add_answer_to_response(
+    p_id text,
+    p_form_id text,
+    p_user_id text,
+    p_question text,
+    p_value text
+) returns answers as $$
+declare
+    v_answer answers;
+    v_respondent text;
+begin
+    select respondent into v_respondent from responses r where r.id = p_id;
+    if not found then
+        raise exception 'Response not found or you do not have permission do this 1.' using hint = 'forbidden';
+    end if;
+
+    if not has_form_permission(p_user_id, p_form_id, 'respond'::permission_role) then
+        raise exception 'Response not found or you do not have permission do this 2.' using hint = 'forbidden';
+    end if;
+
+    if v_respondent is not null and v_respondent != p_user_id then
+        raise exception 'Response not found or you do not have permission do this 3.' using hint = 'forbidden';
+    end if;
+
+    insert into answers (response, question, value) values (
+        p_id, p_question, p_value::jsonb
+    ) on conflict (response, question) do update
+    set value = excluded.value returning * into v_answer;
+
+    return v_answer;
+end;
+$$ language plpgsql;
+
+create or replace function submit_response_by_id(
+    p_id text,
+    p_form_id text,
+    p_user_id text
+) returns responses as $$
+declare
+    v_response responses;
+begin
+    select * into v_response from responses r where r.id = p_id;
+    if not found then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if not has_form_permission(p_user_id, p_form_id, 'respond'::permission_role) then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if v_response.respondent is not null and v_response.respondent != p_user_id then
+        raise exception 'Response not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if v_response.submitted is not null then
+        update responses set status = 'edited', edited = now()
+        where responses.id = p_id returning * into v_response;
+    else
+        update responses set status = 'completed', submitted = now()
+        where responses.id = p_id returning * into v_response;
+    end if;
+
+    return v_response;
 end;
 $$ language plpgsql;

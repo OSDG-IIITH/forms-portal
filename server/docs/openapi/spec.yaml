@@ -302,6 +302,38 @@ paths:
       summary: List form responses
       description: Retrieves all completed and in-progress responses for a form. Requires ANALYZE permission or ownership of responses.
       operationId: listResponses
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ResponseStatus'
+            default: completed
+        - name: sort
+          in: query
+          description: Sort criteria.
+          schema:
+            type: string
+            enum: [started, submitted]
+            default: submitted
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
           description: List of form responses.
@@ -362,7 +394,7 @@ paths:
       tags: [Responses]
       summary: Get answers
       description: Retrieves all the answers submitted as part of a specific response. Requires ANALYZE permission or ownership of the response.
-      operationId: getResponse
+      operationId: getAnswers
       responses:
         '200':
           description: Response details.
@@ -975,6 +1007,7 @@ components:
           format: kdl
         live:
           type: boolean
+          default: false
         opens:
           type: string
           format: date-time
@@ -983,14 +1016,19 @@ components:
           type: string
           format: date-time
           nullable: true
+        anonymous:
+          type: boolean
+          default: false
         max_responses:
           type: integer
           nullable: true
         individual_limit:
           type: integer
           minimum: 1
+          default: 1
         editable_responses:
           type: boolean
+          default: false
 
     FormCreate:
       type: object
@@ -1020,6 +1058,8 @@ components:
           type: string
           format: date-time
           nullable: true
+        anonymous:
+          type: boolean
         max_responses:
           type: integer
           nullable: true
@@ -1054,6 +1094,8 @@ components:
           type: string
           format: date-time
           nullable: true
+        anonymous:
+          type: boolean
         max_responses:
           type: integer
           nullable: true
@@ -1201,6 +1243,10 @@ components:
           type: string
           format: date-time
         submitted:
+          type: string
+          format: date-time
+          nullable: true
+        edited:
           type: string
           format: date-time
           nullable: true

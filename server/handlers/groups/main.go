@@ -172,12 +172,12 @@ func GetGroup(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
 	user := c.Get("user").(db.User)
 
-	groupId := c.Param("groupId")
+	groupID := c.Param("groupId")
 
 	group, err := cc.Query.GetGroup(
 		*cc.DbCtx,
 		db.GetGroupParams{
-			ID:     groupId,
+			ID:     groupID,
 			UserID: user.ID,
 		},
 	)
@@ -187,7 +187,7 @@ func GetGroup(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -205,7 +205,7 @@ func UpdateGroup(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
 	user := c.Get("user").(db.User)
 
-	groupId := c.Param("groupId")
+	groupID := c.Param("groupId")
 
 	type Payload struct {
 		Name        *string `json:"name"`
@@ -227,7 +227,7 @@ func UpdateGroup(c echo.Context) error {
 	group, err := cc.Query.UpdateGroup(
 		*cc.DbCtx,
 		db.UpdateGroupParams{
-			ID:          groupId,
+			ID:          groupID,
 			UserID:      user.ID,
 			Name:        payload.Name,
 			Description: payload.Description,
@@ -239,7 +239,7 @@ func UpdateGroup(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -257,12 +257,12 @@ func DeleteGroup(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
 	user := c.Get("user").(db.User)
 
-	groupId := c.Param("groupId")
+	groupID := c.Param("groupId")
 
 	err := cc.Query.DeleteGroup(
 		*cc.DbCtx,
 		db.DeleteGroupParams{
-			ID:     groupId,
+			ID:     groupID,
 			UserID: user.ID,
 		},
 	)
@@ -272,7 +272,7 @@ func DeleteGroup(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -290,7 +290,7 @@ func UpdateGroupDomain(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
 	user := c.Get("user").(db.User)
 
-	groupId := c.Param("groupId")
+	groupID := c.Param("groupId")
 
 	type Payload struct {
 		Domain string `json:"domain" validate:"required,fqdn"`
@@ -322,7 +322,7 @@ func UpdateGroupDomain(c echo.Context) error {
 	err := cc.Query.UpdateGroupDomain(
 		*cc.DbCtx,
 		db.UpdateGroupDomainParams{
-			ID:     groupId,
+			ID:     groupID,
 			UserID: user.ID,
 			Domain: payload.Domain,
 		},
@@ -333,7 +333,7 @@ func UpdateGroupDomain(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -351,7 +351,7 @@ func AddGroupMember(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
 	user := c.Get("user").(db.User)
 
-	groupId := c.Param("groupId")
+	groupID := c.Param("groupId")
 
 	type Payload struct {
 		Email string `json:"email" validate:"required,email"`
@@ -383,7 +383,7 @@ func AddGroupMember(c echo.Context) error {
 	err := cc.Query.AddGroupMember(
 		*cc.DbCtx,
 		db.AddGroupMemberParams{
-			GroupID:    groupId,
+			GroupID:    groupID,
 			UserID:     user.ID,
 			TargetUser: payload.Email,
 		},
@@ -401,7 +401,7 @@ func AddGroupMember(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -419,15 +419,15 @@ func RemoveGroupMember(c echo.Context) error {
 	cc := c.(*dbcontext.Context)
 	user := c.Get("user").(db.User)
 
-	groupId := c.Param("groupId")
-	targetUserId := c.Param("userId")
+	groupID := c.Param("groupId")
+	targetUserID := c.Param("userId")
 
 	err := cc.Query.RemoveGroupMember(
 		*cc.DbCtx,
 		db.RemoveGroupMemberParams{
-			GroupID:      groupId,
+			GroupID:      groupID,
 			UserID:       user.ID,
-			TargetUserID: targetUserId,
+			TargetUserID: targetUserID,
 		},
 	)
 
@@ -436,7 +436,7 @@ func RemoveGroupMember(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 

@@ -16,13 +16,14 @@ create table if not exists forms (
     live boolean not null default false,
     opens timestamptz,
     closes timestamptz,
+    anonymous boolean default false,
     max_responses int,
     individual_limit int not null default 1,
     editable_responses boolean not null default false,
 
     unique (owner, slug),
     constraint response_limits_check check (
-        individual_limit >= 1 and max_responses > individual_limit
+        individual_limit >= 1 and max_responses >= individual_limit
     )
 );
 
@@ -82,7 +83,7 @@ create table if not exists submission_records (
 );
 
 create table if not exists responses (
-    id text primary key,
+    id text primary key default generate_ulid(),
     form text not null references forms(id) on delete cascade,
     respondent text references users(id),
     status response_status not null default 'draft',

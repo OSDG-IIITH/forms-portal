@@ -24,6 +24,7 @@ select * from create_form_with_permissions(
     sqlc.arg(live),
     sqlc.narg(opens),
     sqlc.narg(closes),
+    sqlc.arg(anonymous),
     sqlc.narg(max_responses),
     sqlc.arg(individual_limit),
     sqlc.arg(editable_responses)
@@ -50,6 +51,7 @@ select * from update_form_by_id(
     sqlc.narg(live),
     sqlc.narg(opens),
     sqlc.narg(closes),
+    sqlc.narg(anonymous),
     sqlc.narg(max_responses),
     sqlc.narg(individual_limit),
     sqlc.narg(editable_responses)

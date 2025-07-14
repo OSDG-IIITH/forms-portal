@@ -117,12 +117,18 @@ func CreateForm(c echo.Context) error {
 		Live              bool                `json:"live"`
 		Opens             *pgtype.Timestamptz `json:"opens"`
 		Closes            *pgtype.Timestamptz `json:"closes"`
+		Anonymous         bool                `json:"anonymous"`
 		MaxResponses      *int32              `json:"max_responses"`
 		IndividualLimit   int32               `json:"individual_limit" validate:"gte=1"`
 		EditableResponses bool                `json:"editable_responses"`
 	}
 
-	payload := Payload{Live: false, IndividualLimit: 1, EditableResponses: false}
+	payload := Payload{
+		Live:              false,
+		Anonymous:         false,
+		IndividualLimit:   1,
+		EditableResponses: false,
+	}
 
 	if err := c.Bind(&payload); err != nil {
 		return c.JSON(
@@ -156,6 +162,7 @@ func CreateForm(c echo.Context) error {
 			Live:              payload.Live,
 			Opens:             payload.Opens,
 			Closes:            payload.Closes,
+			Anonymous:         payload.Anonymous,
 			MaxResponses:      payload.MaxResponses,
 			IndividualLimit:   payload.IndividualLimit,
 			EditableResponses: payload.EditableResponses,
@@ -217,7 +224,7 @@ func ResolveForm(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -250,7 +257,7 @@ func GetForm(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -278,6 +285,7 @@ func UpdateForm(c echo.Context) error {
 		Live              *bool               `json:"live"`
 		Opens             *pgtype.Timestamptz `json:"opens"`
 		Closes            *pgtype.Timestamptz `json:"closes"`
+		Anonymous         *bool               `json:"anonymous"`
 		MaxResponses      *int32              `json:"max_responses"`
 		IndividualLimit   *int32              `json:"individual_limit" validate:"omitempty,gte=1"`
 		EditableResponses *bool               `json:"editable_responses"`
@@ -318,6 +326,7 @@ func UpdateForm(c echo.Context) error {
 			Live:              payload.Live,
 			Opens:             payload.Opens,
 			Closes:            payload.Closes,
+			Anonymous:         payload.Anonymous,
 			MaxResponses:      payload.MaxResponses,
 			IndividualLimit:   payload.IndividualLimit,
 			EditableResponses: payload.EditableResponses,
@@ -329,7 +338,7 @@ func UpdateForm(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -362,7 +371,7 @@ func DeleteForm(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 

@@ -5,6 +5,7 @@ import (
 	"backend/handlers/comments"
 	"backend/handlers/forms"
 	"backend/handlers/groups"
+	"backend/handlers/responses"
 	"backend/handlers/users"
 	"backend/middleware"
 
@@ -22,8 +23,6 @@ func RegisterAll(router *echo.Group) {
 	router.GET("/forms", middleware.Auth(forms.ListForms))
 	router.POST("/forms", middleware.Auth(forms.CreateForm))
 
-	router.GET("/forms/:handle/:slug", middleware.Auth(forms.ResolveForm))
-
 	router.GET("/forms/:formId", middleware.Auth(forms.GetForm))
 	router.PATCH("/forms/:formId", middleware.Auth(forms.UpdateForm))
 	router.DELETE("/forms/:formId", middleware.Auth(forms.DeleteForm))
@@ -36,6 +35,16 @@ func RegisterAll(router *echo.Group) {
 	router.POST("/forms/:formId/comments", middleware.Auth(comments.CreateComment))
 	router.PATCH("/forms/:formId/comments/:commentId", middleware.Auth(comments.UpdateComment))
 	router.DELETE("/forms/:formId/comments/:commentId", middleware.Auth(comments.DeleteComment))
+
+	router.GET("/forms/:formId/responses", middleware.Auth(responses.ListResponses))
+	router.POST("/forms/:formId/responses", middleware.Auth(responses.StartResponse))
+	router.GET("/forms/:formId/responses/:responseId", middleware.Auth(responses.GetResponse))
+	router.GET("/forms/:formId/responses/:responseId/answers", middleware.Auth(responses.GetAnswers))
+	router.PUT("/forms/:formId/responses/:responseId/answers", middleware.Auth(responses.SaveAnswer))
+	router.POST("/forms/:formId/responses/:responseId/submit", middleware.Auth(responses.SubmitResponse))
+
+	// This route is placed later so it gets checked last.
+	router.GET("/forms/:handle/:slug", middleware.Auth(forms.ResolveForm))
 
 	router.GET("/groups", middleware.Auth(groups.ListGroups))
 	router.POST("/groups", middleware.Auth(groups.CreateGroup))

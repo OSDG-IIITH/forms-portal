@@ -11,7 +11,7 @@ select * from list_groups_for_user(
 select count_groups_for_user(sqlc.arg(user_id));
 
 -- name: CreateGroup :one
-select * from create_group(
+select * from create_group_of_type(
     sqlc.arg(owner_id),
     sqlc.arg(name),
     sqlc.narg(description),
@@ -21,10 +21,10 @@ select * from create_group(
 );
 
 -- name: GetGroup :one
-select * from get_group_for_user(sqlc.arg(id), sqlc.arg(user_id));
+select * from get_group_by_id(sqlc.arg(id), sqlc.arg(user_id));
 
 -- name: UpdateGroup :one
-select * from update_group_for_user(
+select * from update_group_by_id(
     sqlc.arg(id),
     sqlc.arg(user_id),
     sqlc.narg(name),
@@ -32,19 +32,19 @@ select * from update_group_for_user(
 );
 
 -- name: DeleteGroup :exec
-select delete_group_for_user(sqlc.arg(id), sqlc.arg(user_id));
+select delete_group_by_id(sqlc.arg(id), sqlc.arg(user_id));
 
 -- name: UpdateGroupDomain :exec
-select update_group_domain_for_user(
+select update_domain_for_group(
     sqlc.arg(id), sqlc.arg(user_id), sqlc.arg(domain)
 );
 
 -- name: AddGroupMember :exec
-select add_group_member_for_user(
+select add_group_member_by_email(
     sqlc.arg(group_id), sqlc.arg(user_id), sqlc.arg(target_user)
 );
 
 -- name: RemoveGroupMember :exec
-select remove_group_member_for_user(
+select remove_group_member_by_id(
     sqlc.arg(group_id), sqlc.arg(user_id), sqlc.arg(target_user_id)
 );

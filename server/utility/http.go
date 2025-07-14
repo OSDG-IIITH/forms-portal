@@ -19,6 +19,8 @@ const (
 	ErrorInvalidRange HttpErrorCode = "invalid-range"
 	ErrorRateLimited  HttpErrorCode = "rate-limited"
 	ErrorInternal     HttpErrorCode = "internal-server-error"
+
+	ErrorFormClosed HttpErrorCode = "form-closed"
 )
 
 type HttpError struct {

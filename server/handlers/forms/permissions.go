@@ -32,7 +32,7 @@ func ListPermissions(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
@@ -151,7 +151,7 @@ func RevokePermission(c echo.Context) error {
 		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
 			return c.JSON(
 				http.StatusForbidden,
-				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 			)
 		}
 
