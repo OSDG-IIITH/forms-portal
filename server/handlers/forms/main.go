@@ -164,14 +164,26 @@ func CreateForm(c echo.Context) error {
 
 	if err != nil {
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.CheckViolation {
-			return c.JSON(
-				http.StatusUnprocessableEntity,
-				utils.FromError(
-					utils.ErrorBadRequest,
-					errors.New("Failed to process payload - max_responses must be greater than individual_limit"),
-				),
-			)
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == pgerrcode.CheckViolation {
+				return c.JSON(
+					http.StatusUnprocessableEntity,
+					utils.FromError(
+						utils.ErrorBadRequest,
+						errors.New("Failed to process payload - max_responses must be greater than individual_limit"),
+					),
+				)
+			}
+
+			if pgErr.Code == pgerrcode.UniqueViolation {
+				return c.JSON(
+					http.StatusConflict,
+					utils.FromError(
+						utils.ErrorConflict,
+						errors.New("Form with the same slug already exists."),
+					),
+				)
+			}
 		}
 
 		log.Error("failed to create form", "error", err)

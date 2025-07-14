@@ -106,8 +106,9 @@ create table if not exists comments (
     id text primary key default generate_ulid(),
     form text not null references forms(id) on delete cascade,
     commenter text not null references users(id) on delete cascade,
-    element text not null, -- id of question/section in forms.spec
     body text not null,
+    state comment_state not null default 'visible',
+    element text not null, -- id of question/section in forms.spec
     parent text references comments(id) on delete cascade,
     modified timestamptz not null default now()
 );

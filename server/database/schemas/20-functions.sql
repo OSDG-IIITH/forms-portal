@@ -133,11 +133,11 @@ begin
     where u.handle = p_handle and f.slug = p_slug;
 
     if not found then
-        raise exception 'Form not found or you do not have permission to access it.' using hint = 'forbidden';
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
     if not has_form_permission(p_user_id, v_form.id, 'respond'::permission_role) then
-        raise exception 'Form not found or you do not have permission to access it.' using hint = 'forbidden';
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
     return v_form;
@@ -154,11 +154,11 @@ begin
     select * into v_form from forms where id = p_id;
 
     if not found then
-        raise exception 'Form not found or you do not have permission to access it.' using hint = 'forbidden';
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
     if not has_form_permission(p_user_id, v_form.id, 'view'::permission_role) then
-        raise exception 'Form not found or you do not have permission to access it.' using hint = 'forbidden';
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
     return v_form;
@@ -353,7 +353,7 @@ declare
     v_group group_with_details;
 begin
     if not has_group_permission(p_user_id, p_id) then
-        raise exception 'Group not found or you do not have permission to access it.' using hint = 'forbidden';
+        raise exception 'Group not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
     select g.*, d.domain, array_agg(m."user" order by m."user")
@@ -364,7 +364,7 @@ begin
     group by g.id, g.owner, g.name, g.description, g.type, d.domain;
 
     if not found then
-        raise exception 'Group not found or you do not have permission to access it.' using hint = 'forbidden';
+        raise exception 'Group not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
     return v_group;
@@ -455,5 +455,87 @@ begin
 
     delete from group_list_members
     where "group" = p_group_id and "user" = p_target_user_id;
+end;
+$$ language plpgsql;
+
+create or replace function list_comments_for_user(
+    p_form_id text,
+    p_user_id text
+) returns setof comments as $$
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'comment'::permission_role) then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    return query select * from comments where form = p_form_id
+    order by modified desc;
+end;
+$$ language plpgsql;
+
+create or replace function create_comment(
+    p_form_id text, p_user_id text,
+    p_body text, p_element text, p_parent text
+) returns comments as $$
+declare
+    v_comment comments;
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'comment'::permission_role) then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    insert into comments (form, commenter, body, element, parent)
+    values (p_form_id, p_user_id, p_body, p_element, p_parent)
+    returning * into v_comment;
+
+    return v_comment;
+end;
+$$ language plpgsql;
+
+create or replace function update_comment(
+    p_id text, p_form_id text, p_user_id text,
+    p_body text, p_state comment_state
+) returns comments as $$
+declare
+    v_comment comments;
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'comment'::permission_role) then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    select * into v_comment from comments where id = p_id and form = p_form_id;
+    if not found then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if v_comment.commenter != p_user_id then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    update comments set
+        body = coalesce(p_body, body),
+        state = coalesce(p_state, state)
+    where id = p_id returning * into v_comment;
+
+    return v_comment;
+end;
+$$ language plpgsql;
+
+create or replace function delete_comment(
+    p_id text, p_form_id text, p_user_id text
+) returns void as $$
+declare
+    v_comment comments;
+begin
+    select * into v_comment from comments where id = p_id and form = p_form_id;
+
+    if not found then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    if v_comment.commenter != p_user_id and not has_form_permission(p_user_id, p_form_id, 'manage'::permission_role) then
+        raise exception 'Form not found or you do not have permission do this.' using hint = 'forbidden';
+    end if;
+
+    delete from comments where id = p_id;
 end;
 $$ language plpgsql;

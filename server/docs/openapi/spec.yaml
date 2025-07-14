@@ -719,7 +719,7 @@ paths:
     get:
       tags: [Comments]
       summary: List form comments
-      description: Retrieves all comments for a form in a threaded format. Requires COMMENT permission.
+      description: Retrieves all comments for a form. Requires COMMENT permission.
       operationId: listComments
       responses:
         '200':
@@ -769,7 +769,7 @@ paths:
     patch:
       tags: [Comments]
       summary: Update comment
-      description: Updates the body of a comment. Requires ownership.
+      description: Updates the body or state of a comment. Requires ownership.
       operationId: updateComment
       requestBody:
         required: true
@@ -922,7 +922,11 @@ components:
 
     ResponseStatus:
       type: string
-      enum: [in_progress, completed]
+      enum: [draft, completed, edited]
+
+    CommentState:
+      type: string
+      enum: [hidden, visible]
 
     User:
       type: object
@@ -1259,9 +1263,11 @@ components:
         user:
           type: string
           format: ulid
-        element:
-          type: string
         body:
+          type: string
+        state:
+          $ref: '#/components/schemas/CommentState'
+        element:
           type: string
         parent:
           type: string
@@ -1288,11 +1294,11 @@ components:
 
     CommentUpdate:
       type: object
-      required:
-        - body
       properties:
         body:
           type: string
+        state:
+          $ref: '#/components/schemas/CommentState'
 
     Error:
       type: object
