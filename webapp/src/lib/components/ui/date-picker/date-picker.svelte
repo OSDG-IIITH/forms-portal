@@ -26,6 +26,12 @@ let dateValue: DateValue | undefined = $state(value ? (() => {
   }
 })() : undefined);
 
+$effect(() => {
+  if (value === "" && dateValue !== undefined) {
+    dateValue = undefined;
+  }
+});
+
 function handleValueChange(newDateValue: DateValue | undefined) {
   dateValue = newDateValue;
   value = newDateValue ? newDateValue.toString() : "";
