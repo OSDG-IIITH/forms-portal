@@ -41,6 +41,8 @@
   --sidebar-accent-foreground: oklch(0.18 0 0);
   --sidebar-border: oklch(0.91 0 0);
   --sidebar-ring: oklch(0.18 0 0);
+  --selection-background: var(--foreground);
+  --selection-foreground: var(--background);
 }
 
 .theme-lilac:not(.dark) {
@@ -80,6 +82,8 @@
   --sidebar-accent-foreground: oklch(0.38 0.16 285);
   --sidebar-border: oklch(0.88 0.035 285);
   --sidebar-ring: oklch(0.45 0.18 285);
+  --selection-background: oklch(0.925 0.04 285);
+  --selection-foreground: oklch(0.38 0.16 285);
 }
 
 .theme-mint:not(.dark) {
@@ -119,6 +123,8 @@
   --sidebar-accent-foreground: oklch(0.32 0.14 145);
   --sidebar-border: oklch(0.88 0.03 145);
   --sidebar-ring: oklch(0.4 0.16 145);
+  --selection-background: oklch(0.925 0.035 145);
+  --selection-foreground: oklch(0.32 0.14 145);
 }
 
 .dark {
@@ -158,6 +164,8 @@
   --sidebar-accent-foreground: oklch(0.9 0.015 85);
   --sidebar-border: oklch(0.27 0.03 240);
   --sidebar-ring: oklch(0.9 0.015 85);
+  --selection-background: var(--foreground);
+  --selection-foreground: var(--background);
 }
 
 .dark:not(.theme-lilac):not(.theme-mint) {
@@ -197,6 +205,8 @@
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.3 0 0);
   --sidebar-ring: oklch(0.7 0 0);
+  --selection-background: var(--foreground);
+  --selection-foreground: var(--background);
 }
 
 .dark.theme-lilac {
@@ -236,6 +246,8 @@
   --sidebar-accent-foreground: oklch(0.8 0.18 285);
   --sidebar-border: oklch(0.28 0.04 285);
   --sidebar-ring: oklch(0.78 0.2 285);
+  --selection-background: oklch(0.22 0.045 285);
+  --selection-foreground: oklch(0.8 0.18 285);
 }
 
 .dark.theme-mint {
@@ -275,6 +287,8 @@
   --sidebar-accent-foreground: oklch(0.75 0.14 145);
   --sidebar-border: oklch(0.28 0.035 145);
   --sidebar-ring: oklch(0.72 0.16 145);
+  --selection-background: oklch(0.22 0.04 145);
+  --selection-foreground: oklch(0.75 0.14 145);
 }
 
 @theme inline {
@@ -327,4 +341,15 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* use theme accent for text selection highlight */
+::selection {
+  background: var(--selection-background);
+  color: var(--selection-foreground);
+}
+
+::-moz-selection {
+  background: var(--selection-background);
+  color: var(--selection-foreground);
 }
