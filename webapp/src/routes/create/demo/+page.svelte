@@ -185,6 +185,8 @@
     return base;
   }
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8647';
+
   async function saveFormAsKdl() {
     let kdl = 'form {\n';
     kdl += `  version 1\n`;
@@ -236,7 +238,7 @@
       };
       let res, text = '';
       try {
-        res = await fetch('http://localhost:8647/api/forms', {
+        res = await fetch(`${BACKEND_URL}/api/forms`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
