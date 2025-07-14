@@ -111,7 +111,7 @@ begin
         editable_responses
     ) values (
         p_owner_id, p_slug, p_title, p_description,
-        p_structure, p_live, p_opens, p_closes, p_anonymous
+        p_structure, p_live, p_opens, p_closes, p_anonymous,
         p_max_responses, p_individual_limit, p_editable_responses
     ) returning * into v_form;
 
