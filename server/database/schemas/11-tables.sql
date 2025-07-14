@@ -61,6 +61,12 @@ create table if not exists form_permissions (
     )
 );
 
+create unique index form_permissions_user_unique
+on form_permissions (form, "user", role) where "group" is null;
+
+create unique index form_permissions_group_unique
+on form_permissions (form, "group", role) where "user" is null;
+
 create table if not exists submission_records (
     form text not null references forms(id) on delete cascade,
     "user" text not null references users(id) on delete cascade,

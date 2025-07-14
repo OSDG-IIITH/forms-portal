@@ -173,3 +173,39 @@ begin
     return query select * from form_permissions where form = p_form_id;
 end;
 $$ language plpgsql;
+
+create or replace function grant_permission(
+    p_form_id text,
+    p_user_id text,
+    p_target_user text,
+    p_target_group text,
+    p_role permission_role
+) returns setof form_permissions as $$
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'manage'::permission_role) then
+        raise exception 'You do not have permission to manage this form.' using hint = 'forbidden';
+    end if;
+
+    return query select * from form_permissions
+    where form = p_form_id and role = p_role
+      and "user" is not distinct from p_target_user
+      and "group" is not distinct from p_target_group;
+
+    if not found then
+        return query insert into form_permissions (form, role, "user", "group")
+        values (p_form_id, p_role, p_target_user, p_target_group) returning *;
+    end if;
+end;
+$$ language plpgsql;
+
+create or replace function revoke_permission(
+    p_form_id text, p_user_id text, p_permission_id text
+) returns void as $$
+begin
+    if not has_form_permission(p_user_id, p_form_id, 'manage'::permission_role) then
+        raise exception 'You do not have permission to manage this form.' using hint = 'forbidden';
+    end if;
+
+    delete from form_permissions where id = p_permission_id;
+end;
+$$ language plpgsql;
