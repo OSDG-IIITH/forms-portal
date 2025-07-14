@@ -20,7 +20,9 @@ func RegisterAll(router *echo.Group) {
 
 	router.GET("/forms", middleware.Auth(forms.ListForms))
 	router.POST("/forms", middleware.Auth(forms.CreateForm))
+
 	router.GET("/forms/:handle/:slug", middleware.Auth(forms.ResolveForm))
+
 	router.GET("/forms/:formId", middleware.Auth(forms.GetForm))
 	router.PATCH("/forms/:formId", middleware.Auth(forms.UpdateForm))
 	router.DELETE("/forms/:formId", middleware.Auth(forms.DeleteForm))
@@ -31,4 +33,12 @@ func RegisterAll(router *echo.Group) {
 
 	router.GET("/groups", middleware.Auth(groups.ListGroups))
 	router.POST("/groups", middleware.Auth(groups.CreateGroup))
+
+	router.GET("/groups/:groupId", middleware.Auth(groups.GetGroup))
+	router.PATCH("/groups/:groupId", middleware.Auth(groups.UpdateGroup))
+	router.DELETE("/groups/:groupId", middleware.Auth(groups.DeleteGroup))
+
+	router.PUT("/groups/:groupId/domain", middleware.Auth(groups.UpdateGroupDomain))
+	router.POST("/groups/:groupId/members", middleware.Auth(groups.AddGroupMember))
+	router.DELETE("/groups/:groupId/members/:userId", middleware.Auth(groups.RemoveGroupMember))
 }

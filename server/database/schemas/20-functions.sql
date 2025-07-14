@@ -3,12 +3,56 @@ create or replace function has_form_permission(
     p_form_id text,
     p_required_role permission_role
 ) returns boolean as $$
+begin
+    return exists (
+        select 1 from form_permissions
+        where
+            form = p_form_id and
+            role = p_required_role and
+            "user" = p_user_id
+
+        union all
+
+        select 1 from form_permissions as fp
+        join groups as g on fp."group" = g.id
+        join group_list_members as glm on g.id = glm."group"
+        where
+            fp.form = p_form_id and
+            fp.role = p_required_role and
+            g.type = 'list' and
+            glm."user" = p_user_id
+
+        union all
+
+        select 1 from form_permissions as fp
+        join groups as g on fp."group" = g.id
+        join group_domain_rules as gdr on g.id = gdr."group"
+        where
+            fp.form = p_form_id and
+            fp.role = p_required_role and
+            g.type = 'domain' and
+            gdr.domain = (
+                select substring(email from '@(.*)$')
+                from users
+                where id = p_user_id
+            )
+    );
+end;
+$$ language plpgsql;
+
+create or replace function has_group_permission(
+    p_user_id text,
+    p_group_id text,
+    p_required_type group_type
+) returns boolean as $$
 declare
     has_permission boolean;
 begin
     select exists (
-        select 1 from form_permissions
-        where form = p_form_id and "user" = p_user_id and role = p_required_role
+        select 1 from groups
+        where id = p_group_id and owner = p_user_id and (
+            type is null or type = p_required_type
+        )
     ) into has_permission;
 
     return has_permission;
@@ -181,19 +225,26 @@ create or replace function grant_permission(
     p_target_group text,
     p_role permission_role
 ) returns setof form_permissions as $$
+declare
+    v_target_user_id text;
 begin
     if not has_form_permission(p_user_id, p_form_id, 'manage'::permission_role) then
         raise exception 'You do not have permission to manage this form.' using hint = 'forbidden';
     end if;
 
+    select u.id into v_target_user_id from users u where u.email = p_target_user;
+    if not found and p_target_user is not null then
+        raise exception 'User with email % does not exist.', p_target_user using hint = 'not-found';
+    end if;
+
     return query select * from form_permissions
     where form = p_form_id and role = p_role
-      and "user" is not distinct from p_target_user
+      and "user" is not distinct from v_target_user_id
       and "group" is not distinct from p_target_group;
 
     if not found then
         return query insert into form_permissions (form, role, "user", "group")
-        values (p_form_id, p_role, p_target_user, p_target_group) returning *;
+        values (p_form_id, p_role, v_target_user_id, p_target_group) returning *;
     end if;
 end;
 $$ language plpgsql;
@@ -291,5 +342,118 @@ begin
     group by g.id, g.owner, g.name, g.description, g.type, d.domain;
 
     return v_group;
+end;
+$$ language plpgsql;
+
+create or replace function get_group_for_user(
+    p_id text,
+    p_user_id text
+) returns group_with_details as $$
+declare
+    v_group group_with_details;
+begin
+    if not has_group_permission(p_user_id, p_id) then
+        raise exception 'Group not found or you do not have permission to access it.' using hint = 'forbidden';
+    end if;
+
+    select g.*, d.domain, array_agg(m."user" order by m."user")
+    filter (where m."user" is not null) as members into v_group from groups g
+    left join group_domain_rules d on g.id = d."group"
+    left join group_list_members m on g.id = m."group"
+    where g.id = p_id and g.owner = p_user_id
+    group by g.id, g.owner, g.name, g.description, g.type, d.domain;
+
+    if not found then
+        raise exception 'Group not found or you do not have permission to access it.' using hint = 'forbidden';
+    end if;
+
+    return v_group;
+end;
+$$ language plpgsql;
+
+create or replace function update_group_for_user(
+    p_id text,
+    p_user_id text,
+    p_name text,
+    p_description text
+) returns group_with_details as $$
+declare
+    v_group group_with_details;
+begin
+    if not has_group_permission(p_user_id, p_id) then
+        raise exception 'Group not found or you do not have permission to do this.' using hint = 'forbidden';
+    end if;
+
+    update groups set
+        name = coalesce(p_name, name),
+        description = coalesce(p_description, description)
+    where id = p_id and owner = p_user_id
+    returning * into v_group;
+
+    return v_group;
+end;
+$$ language plpgsql;
+
+create or replace function update_group_domain_for_user(
+    p_id text,
+    p_user_id text,
+    p_domain text
+) returns void as $$
+begin
+    if not has_group_permission(p_user_id, p_id, 'domain'::group_type) then
+        raise exception 'Group not found or you do not have permission to do this.' using hint = 'forbidden';
+    end if;
+
+    update group_domain_rules set domain = p_domain where "group" = p_id;
+end;
+$$ language plpgsql;
+
+create or replace function delete_group_for_user(
+    p_id text,
+    p_user_id text
+) returns void as $$
+begin
+    if not has_group_permission(p_user_id, p_id) then
+        raise exception 'Group not found or you do not have permission to do this.' using hint = 'forbidden';
+    end if;
+
+    delete from groups where id = p_id;
+end;
+$$ language plpgsql;
+
+create or replace function add_group_member_for_user(
+    p_group_id text,
+    p_user_id text,
+    p_target_user text
+) returns void as $$
+declare
+    v_target_user_id text;
+begin
+    if not has_group_permission(p_user_id, p_group_id, 'list'::group_type) then
+        raise exception 'Group not found or you do not have permission to do this.' using hint = 'forbidden';
+    end if;
+
+    select u.id into v_target_user_id from users u where u.email = p_target_user;
+    if not found then
+        raise exception 'User with email % does not exist.', p_target_user using hint = 'not-found';
+    end if;
+
+    insert into group_list_members ("group", "user")
+    values (p_group_id, v_target_user_id) on conflict do nothing;
+end;
+$$ language plpgsql;
+
+create or replace function remove_group_member_for_user(
+    p_group_id text,
+    p_user_id text,
+    p_target_user_id text
+) returns void as $$
+begin
+    if not has_group_permission(p_user_id, p_group_id, 'list'::group_type) then
+        raise exception 'Group not found or you do not have permission to do this.' using hint = 'forbidden';
+    end if;
+
+    delete from group_list_members
+    where "group" = p_group_id and "user" = p_target_user_id;
 end;
 $$ language plpgsql;

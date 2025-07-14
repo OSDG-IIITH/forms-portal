@@ -167,3 +167,285 @@ func CreateGroup(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, group)
 }
+
+func GetGroup(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	groupId := c.Param("groupId")
+
+	group, err := cc.Query.GetGroup(
+		*cc.DbCtx,
+		db.GetGroupParams{
+			ID:     groupId,
+			UserID: user.ID,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to fetch group", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to fetch group.")),
+		)
+	}
+
+	return c.JSON(http.StatusOK, group)
+}
+
+func UpdateGroup(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	groupId := c.Param("groupId")
+
+	type Payload struct {
+		Name        *string `json:"name"`
+		Description *string `json:"description"`
+	}
+
+	payload := Payload{}
+
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(
+			http.StatusBadRequest,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New("Failed to parse request payload."),
+			),
+		)
+	}
+
+	group, err := cc.Query.UpdateGroup(
+		*cc.DbCtx,
+		db.UpdateGroupParams{
+			ID:          groupId,
+			UserID:      user.ID,
+			Name:        payload.Name,
+			Description: payload.Description,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to update group", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to update group.")),
+		)
+	}
+
+	return c.JSON(http.StatusOK, group)
+}
+
+func DeleteGroup(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	groupId := c.Param("groupId")
+
+	err := cc.Query.DeleteGroup(
+		*cc.DbCtx,
+		db.DeleteGroupParams{
+			ID:     groupId,
+			UserID: user.ID,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to delete group", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to delete group.")),
+		)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func UpdateGroupDomain(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	groupId := c.Param("groupId")
+
+	type Payload struct {
+		Domain string `json:"domain" validate:"required,fqdn"`
+	}
+
+	payload := Payload{}
+
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(
+			http.StatusBadRequest,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New("Failed to parse request payload."),
+			),
+		)
+	}
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		message := utils.FormatValidationErrors(err)
+		return c.JSON(
+			http.StatusUnprocessableEntity,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New(message),
+			),
+		)
+	}
+
+	err := cc.Query.UpdateGroupDomain(
+		*cc.DbCtx,
+		db.UpdateGroupDomainParams{
+			ID:     groupId,
+			UserID: user.ID,
+			Domain: payload.Domain,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to update group domain", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to update group domain.")),
+		)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func AddGroupMember(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	groupId := c.Param("groupId")
+
+	type Payload struct {
+		Email string `json:"email" validate:"required,email"`
+	}
+
+	payload := Payload{}
+
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(
+			http.StatusBadRequest,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New("Failed to parse request payload."),
+			),
+		)
+	}
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		message := utils.FormatValidationErrors(err)
+		return c.JSON(
+			http.StatusUnprocessableEntity,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New(message),
+			),
+		)
+	}
+
+	err := cc.Query.AddGroupMember(
+		*cc.DbCtx,
+		db.AddGroupMemberParams{
+			GroupID:    groupId,
+			UserID:     user.ID,
+			TargetUser: payload.Email,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "not-found" {
+			return c.JSON(
+				http.StatusNotFound,
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
+			)
+		}
+
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to add group member", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to add group member.")),
+		)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func RemoveGroupMember(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	groupId := c.Param("groupId")
+	targetUserId := c.Param("userId")
+
+	err := cc.Query.RemoveGroupMember(
+		*cc.DbCtx,
+		db.RemoveGroupMemberParams{
+			GroupID:      groupId,
+			UserID:       user.ID,
+			TargetUserID: targetUserId,
+		},
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to remove group member", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to remove group member.")),
+		)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}

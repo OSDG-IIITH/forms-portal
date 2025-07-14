@@ -21,3 +21,7 @@ sql:
             go_struct_tag: "json:\"domain,omitempty\""
           - column: group_with_details.members
             go_struct_tag: "json:\"members,omitempty\""
+          - column: form_permissions.user
+            go_struct_tag: "json:\"user,omitempty\""
+          - column: form_permissions.group
+            go_struct_tag: "json:\"group,omitempty\""

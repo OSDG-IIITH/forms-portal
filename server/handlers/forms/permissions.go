@@ -108,7 +108,14 @@ func GrantPermission(c echo.Context) error {
 			if pgErr.Hint == "forbidden" {
 				return c.JSON(
 					http.StatusForbidden,
-					utils.FromError(utils.ErrorForbidden, errors.New(pgErr.Message)),
+					utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
+				)
+			}
+
+			if pgErr.Hint == "not-found" {
+				return c.JSON(
+					http.StatusNotFound,
+					utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
 				)
 			}
 		}

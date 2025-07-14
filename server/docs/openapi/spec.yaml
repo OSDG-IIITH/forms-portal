@@ -565,6 +565,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -633,7 +635,7 @@ paths:
   /groups/{groupId}/domain:
     parameters:
       - $ref: '#/components/parameters/groupId'
-    patch:
+    put:
       tags: [Groups]
       summary: Update group domain
       description: Updates the domain for a group of 'DOMAIN' type. Requires ownership.
@@ -675,11 +677,11 @@ paths:
             schema:
               type: object
               required:
-                - userId
+                - email
               properties:
-                userId:
+                email:
                   type: string
-                  format: ulid
+                  format: email
       responses:
         '204':
           description: Member added successfully.
@@ -689,8 +691,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
 
@@ -1080,7 +1082,7 @@ components:
           $ref: '#/components/schemas/GroupType'
         domain:
           type: string
-          format: hostname
+          format: fqdn
           description: Present if type is 'domain'.
         members:
           type: array
@@ -1104,7 +1106,7 @@ components:
           $ref: '#/components/schemas/GroupType'
         domain:
           type: string
-          format: hostname
+          format: fqdn
           description: Required if type is 'domain'.
         members:
           type: array
@@ -1129,7 +1131,7 @@ components:
       properties:
         domain:
           type: string
-          format: hostname
+          format: fqdn
 
     Permission:
       type: object
@@ -1167,7 +1169,7 @@ components:
           $ref: '#/components/schemas/PermissionRole'
         user:
           type: string
-          format: ulid
+          format: email
         group:
           type: string
           format: ulid

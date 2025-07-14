@@ -19,3 +19,32 @@ select * from create_group(
     sqlc.narg(domain),
     sqlc.narg(members)::text[]
 );
+
+-- name: GetGroup :one
+select * from get_group_for_user(sqlc.arg(id), sqlc.arg(user_id));
+
+-- name: UpdateGroup :one
+select * from update_group_for_user(
+    sqlc.arg(id),
+    sqlc.arg(user_id),
+    sqlc.narg(name),
+    sqlc.narg(description)
+);
+
+-- name: DeleteGroup :exec
+select delete_group_for_user(sqlc.arg(id), sqlc.arg(user_id));
+
+-- name: UpdateGroupDomain :exec
+select update_group_domain_for_user(
+    sqlc.arg(id), sqlc.arg(user_id), sqlc.arg(domain)
+);
+
+-- name: AddGroupMember :exec
+select add_group_member_for_user(
+    sqlc.arg(group_id), sqlc.arg(user_id), sqlc.arg(target_user)
+);
+
+-- name: RemoveGroupMember :exec
+select remove_group_member_for_user(
+    sqlc.arg(group_id), sqlc.arg(user_id), sqlc.arg(target_user_id)
+);
