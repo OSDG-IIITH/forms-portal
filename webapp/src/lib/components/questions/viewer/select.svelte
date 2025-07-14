@@ -15,7 +15,7 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<Select type="single" bind:value {disabled}>
+<Select type="single" allowDeselect bind:value {disabled}>
   <SelectTrigger class="w-full">
     {#if value}
       {question.options?.find(opt => opt.value === value)?.label || placeholder}
