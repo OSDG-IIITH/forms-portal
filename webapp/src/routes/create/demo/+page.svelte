@@ -13,6 +13,7 @@
   import DatePickerEditor from '$lib/components/questions/editor/date-picker.svelte';
   import { ulid } from 'ulid';
   import * as kdljs from 'kdljs';
+  import { toast } from "svelte-sonner";
   import {
     IconPlus,
     IconFileText,
@@ -174,11 +175,19 @@
     return kdl;
   }
 
-  function saveFormAsKdl() {
+  function slugify(title: string, suffix = 0): string {
+    let base = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .slice(0, 50);
+    if (suffix > 0) return `${base}-${suffix}`.slice(0, 64);
+    return base;
+  }
+
+  async function saveFormAsKdl() {
     let kdl = 'form {\n';
     kdl += `  version 1\n`;
-    kdl += `  title ${escapeKdlString(form.title)}\n`;
-    kdl += `  description ${escapeKdlString(form.description)}\n`;
     for (const q of questions) {
       kdl += questionToKdl(q);
     }
@@ -187,8 +196,21 @@
     try {
       kdljs.parse(kdl);
     } catch (e) {
-      alert('Failed to generate valid KDL: ' + (e instanceof Error ? e.message : e));
+      toast.error("Failed to generate valid KDL", {
+        description: e instanceof Error ? e.message : String(e)
+      });
       return;
+    }
+
+    /* 
+    if (form.title.trim() === '') {
+      toast.error("Form title is required", { description: "Please enter a title for your form." });
+      return;
+    }
+    */
+
+    if (form.title.trim() === '') {
+      form.title = 'Untitled Form';
     }
 
     const blob = new Blob([kdl], { type: 'text/plain' });
@@ -202,6 +224,45 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
+
+    let suffix = 0;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const payload = {
+        // title: suffix === 0 ? form.title : `${form.title} (${suffix})`,
+        title: form.title || 'Untitled Form',
+        slug: slugify(form.title, suffix),
+        description: form.description,
+        structure: kdl
+      };
+      let res, text = '';
+      try {
+        res = await fetch('http://localhost:8647/api/forms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+        text = await res.text();
+      } catch (e) {
+        toast.error("Network error", { description: e instanceof Error ? e.message : String(e) });
+        return;
+      }
+      if (res.ok) {
+        toast.success("Form created successfully");
+        return;
+      }
+      if (
+        text.includes('duplicate key value') ||
+        text.includes('forms_owner_slug_key') ||
+        res.status === 500
+      ) {
+        suffix++;
+        continue;
+      }
+      toast.error("Error creating form", { description: text || 'Failed to create form.' });
+      return;
+    }
+    toast.error("Error creating form", { description: 'Could not generate a unique title/slug after many attempts.' });
   }
 </script>
 
