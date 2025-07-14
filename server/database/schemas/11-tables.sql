@@ -36,6 +36,12 @@ create table if not exists groups (
     unique (owner, name)
 );
 
+-- note: this table is empty, only exists for sqlc to understand the type
+create table if not exists group_with_details (
+    id text, owner text, name text, description text,
+    type group_type not null, domain text, members text[]
+);
+
 create table if not exists group_domain_rules (
     "group" text primary key references groups(id) on delete cascade,
     domain text not null unique

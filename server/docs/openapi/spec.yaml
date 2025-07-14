@@ -499,15 +499,47 @@ paths:
       summary: List groups
       description: Retrieves all groups owned by the current user.
       operationId: listGroups
+      parameters:
+        - name: sort
+          in: query
+          description: Sort criteria.
+          schema:
+            type: string
+            enum: [created, name, type]
+            default: created
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
-          description: List of user groups.
+          description: A paginated list of groups.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Group'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Group'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         '401':
           $ref: '#/components/responses/Unauthorized'
 

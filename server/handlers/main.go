@@ -3,6 +3,7 @@ package handlers
 import (
 	"backend/handlers/auth"
 	"backend/handlers/forms"
+	"backend/handlers/groups"
 	"backend/handlers/users"
 	"backend/middleware"
 
@@ -27,4 +28,7 @@ func RegisterAll(router *echo.Group) {
 	router.GET("/forms/:formId/permissions", middleware.Auth(forms.ListPermissions))
 	router.POST("/forms/:formId/permissions", middleware.Auth(forms.GrantPermission))
 	router.DELETE("/forms/:formId/permissions/:permissionId", middleware.Auth(forms.RevokePermission))
+
+	router.GET("/groups", middleware.Auth(groups.ListGroups))
+	router.POST("/groups", middleware.Auth(groups.CreateGroup))
 }

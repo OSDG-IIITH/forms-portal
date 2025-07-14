@@ -209,3 +209,87 @@ begin
     delete from form_permissions where id = p_permission_id;
 end;
 $$ language plpgsql;
+
+create or replace function list_groups_for_user(
+    p_user_id text,
+    p_sort_by text,
+    p_order text,
+    p_limit int,
+    p_offset int
+) returns setof group_with_details as $$
+begin
+    return query select g.*, d.domain, array_agg(m."user" order by m."user")
+    filter (where m."user" is not null) as members from groups g
+    left join group_domain_rules d on g.id = d."group"
+    left join group_list_members m on g.id = m."group"
+    where g.owner = p_user_id
+    group by g.id, g.owner, g.name, g.description, g.type, d.domain
+    order by
+        case when p_sort_by = 'created' and p_order = 'asc' then g.id end asc,
+        case when p_sort_by = 'created' and p_order = 'desc' then g.id end desc,
+        case when p_sort_by = 'name' and p_order = 'asc' then name end asc,
+        case when p_sort_by = 'name' and p_order = 'desc' then name end desc,
+        case when p_sort_by = 'type' and p_order = 'asc' then type end asc,
+        case when p_sort_by = 'type' and p_order = 'desc' then type end desc
+    limit p_limit offset p_offset;
+end;
+$$ language plpgsql;
+
+create or replace function count_groups_for_user(p_user_id text)
+returns bigint as $$
+declare
+    v_count bigint;
+begin
+    select count(distinct id) into v_count from groups where owner = p_user_id;
+
+    return v_count;
+end;
+$$ language plpgsql;
+
+create or replace function create_group(
+    p_owner_id text,
+    p_name text,
+    p_description text,
+    p_type group_type,
+    p_domain text,
+    p_members text[]
+) returns group_with_details as $$
+declare
+    v_group_id text;
+    v_missing_emails text[];
+    v_group group_with_details;
+begin
+    insert into groups (owner, name, description, type)
+    values (p_owner_id, p_name, p_description, p_type)
+    returning groups.id into v_group_id;
+
+    if p_type = 'domain' and p_domain is not null then
+        insert into group_domain_rules ("group", domain)
+        values (v_group_id, p_domain);
+    end if;
+
+    if p_type = 'list' and p_members is not null then
+        select array_agg(i_email) into v_missing_emails
+        from unnest(p_members) as i_email
+        left join users u on u.email = i_email where u.id is null;
+
+        if v_missing_emails is not null then
+            raise exception 'Could not create group with users that do not exist: %',
+                array_to_string(v_missing_emails, ', ') using hint = 'not-found';
+        end if;
+
+        insert into group_list_members ("group", "user")
+        select v_group_id, u.id from unnest(p_members) as i_email
+        join users u on u.email = i_email on conflict do nothing;
+    end if;
+
+    select g.*, d.domain, array_agg(m."user" order by m."user")
+    filter (where m."user" is not null) as members into v_group from groups g
+    left join group_domain_rules d on g.id = d."group"
+    left join group_list_members m on g.id = m."group"
+    where g.id = v_group_id
+    group by g.id, g.owner, g.name, g.description, g.type, d.domain;
+
+    return v_group;
+end;
+$$ language plpgsql;

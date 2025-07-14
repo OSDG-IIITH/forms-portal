@@ -17,3 +17,7 @@ sql:
               type: "Timestamptz"
               pointer: true
             nullable: true
+          - column: group_with_details.domain
+            go_struct_tag: "json:\"domain,omitempty\""
+          - column: group_with_details.members
+            go_struct_tag: "json:\"members,omitempty\""
