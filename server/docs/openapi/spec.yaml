@@ -1046,6 +1046,16 @@ components:
           nullable: true
         type:
           $ref: '#/components/schemas/GroupType'
+        domain:
+          type: string
+          format: hostname
+          description: Present if type is 'domain'.
+        members:
+          type: array
+          items:
+            type: string
+            format: email
+          description: Array of user emails. Present if type is 'list'.
 
     GroupCreate:
       type: object
@@ -1064,12 +1074,12 @@ components:
           type: string
           format: hostname
           description: Required if type is 'domain'.
-        users:
+        members:
           type: array
           items:
             type: string
-            format: ulid
-          description: Array of user IDs. Only applicable if type is 'list'.
+            format: email
+          description: Array of user emails. Only applicable if type is 'list'.
 
     GroupUpdate:
       type: object
