@@ -1,4 +1,4 @@
-#!/bin/fish
+#!/usr/bin/env fish
 
 docker cp database/ fdb:/database/
 for f in database/schemas/*.sql
