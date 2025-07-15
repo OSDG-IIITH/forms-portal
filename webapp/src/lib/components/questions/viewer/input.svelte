@@ -31,7 +31,7 @@
   type="text"
   id={question.id}
   name={question.id}
-  placeholder={question.placeholder || ''}
+  placeholder={question.placeholder || 'Your answer'}
   bind:value
   {disabled}
   aria-required={question.required}

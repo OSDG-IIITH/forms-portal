@@ -28,7 +28,7 @@
   class="block w-full rounded-md border border-input bg-background px-3 py-2 text-base focus:outline-none disabled:opacity-50"
   id={question.id}
   name={question.id}
-  placeholder={question.placeholder || ''}
+  placeholder={question.placeholder || 'Your answer'}
   bind:value
   {disabled}
   aria-required={question.required}
