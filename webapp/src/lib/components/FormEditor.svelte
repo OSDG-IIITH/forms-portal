@@ -25,8 +25,9 @@
     IconUpload,
     IconCalendar
   } from '@tabler/icons-svelte';
+  import { createEventDispatcher } from 'svelte';
 
-  const { form }: { form: any } = $props();
+  const { form, mode = 'edit' }: { form: any; mode?: 'create' | 'edit' } = $props();
 
   type QuestionType = 'input' | 'textarea' | 'radio' | 'checkbox' | 'file' | 'select' | 'date';
 
@@ -90,6 +91,10 @@
     { type: 'select' as QuestionType, icon: IconListCheck, label: 'Select' },
     { type: 'date' as QuestionType, icon: IconCalendar, label: 'Date Picker' }
   ];
+
+  const dispatch = createEventDispatcher<{
+    create: { formData: FormData; questions: Question[]; kdl: string };
+  }>();
 
   function parseKdlValue(node: any): string {
     if (node === null || node === undefined) return '';
@@ -317,6 +322,12 @@
       kdl += '}\n';
 
       kdljs.parse(kdl);
+
+      if (mode === 'create') {
+        dispatch('create', { formData, questions, kdl });
+        isSaving = false;
+        return;
+      }
 
       const payload = {
         title: formData.title || 'Untitled Form',
