@@ -160,7 +160,8 @@
                   else if (key === 'id') id = safeString(v);
                 }
               }
-              q.options.push({ id: id || value, value, label });
+              const optionId = id || (value && !q.options.some(opt => opt.id === value) ? value : ulid());
+              q.options.push({ id: optionId, value, label });
             }
             else if (c.name === 'validations') {
               q.validations = {};
@@ -184,13 +185,11 @@
       isLoading = true;
       error = null;
       
-      // Set form data from the loaded form
       if (form) {
         formData.title = form.title || 'Untitled Form';
         formData.description = form.description || 'Add a description';
       }
 
-      // Check if we have a structure to parse
       if (!form || !form.structure) {
         questions = [];
         isLoading = false;
@@ -204,7 +203,6 @@
     } catch (e) {
       console.error('Error parsing form KDL:', e);
       error = `Failed to load form: ${e instanceof Error ? e.message : 'Unknown error'}`;
-      // Still set empty questions array so the editor is usable
       questions = [];
       isLoading = false;
     }
@@ -214,7 +212,6 @@
     if (form) {
       loadFormKdl();
     } else {
-      // If no form is provided, initialize with empty state
       questions = [];
       isLoading = false;
     }
