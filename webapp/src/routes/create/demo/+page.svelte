@@ -185,8 +185,6 @@
     return base;
   }
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8647';
-
   async function saveFormAsKdl() {
     let kdl = 'form {\n';
     kdl += `  version 1\n`;
@@ -203,13 +201,6 @@
       });
       return;
     }
-
-    /* 
-    if (form.title.trim() === '') {
-      toast.error("Form title is required", { description: "Please enter a title for your form." });
-      return;
-    }
-    */
 
     if (form.title.trim() === '') {
       form.title = 'Untitled Form';
@@ -230,7 +221,6 @@
     let suffix = 0;
     for (let attempt = 0; attempt < 100; attempt++) {
       const payload = {
-        // title: suffix === 0 ? form.title : `${form.title} (${suffix})`,
         title: form.title || 'Untitled Form',
         slug: slugify(form.title, suffix),
         description: form.description,
@@ -238,7 +228,7 @@
       };
       let res, text = '';
       try {
-        res = await fetch(`${BACKEND_URL}/api/forms`, {
+        res = await fetch(`/api/forms`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -254,9 +244,9 @@
         return;
       }
       if (
+        res.status === 409 ||
         text.includes('duplicate key value') ||
-        text.includes('forms_owner_slug_key') ||
-        res.status === 500
+        text.includes('forms_owner_slug_key')
       ) {
         suffix++;
         continue;
