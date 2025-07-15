@@ -532,8 +532,8 @@
         </section>
 
         {#if questions.length > 0}
-          <Card>
-            <CardContent>
+          <Card class="py-0">
+            <CardContent class="py-4">
               <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-muted-foreground">
@@ -544,6 +544,7 @@
                   <Button
                     onclick={saveForm}
                     disabled={isSaving}
+                    size="sm"
                   >
                     {#if isSaving}
                       <div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>

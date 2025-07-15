@@ -319,42 +319,40 @@
             {/each}
           </div>
           {#if questions.length > 0}
-            <div class="mt-8">
-              <Card>
-                <CardContent>
-                  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="text-sm text-muted-foreground font-medium">
+            <Card class="py-0 mt-8">
+              <CardContent class="py-4">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm text-muted-foreground">
                       {questions.length} question{questions.length !== 1 ? 's' : ''}
-                    </div>
-                    <div class="flex gap-3 w-full sm:w-auto">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onclick={handleReset}
-                        disabled={isSubmitting}
-                        class="flex-1 sm:flex-none"
-                      >
-                        Reset Form
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        size="sm"
-                        disabled={isSubmitting}
-                        class="flex-1 sm:flex-none"
-                      >
-                        {#if isSubmitting}
-                          <div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                          Submitting...
-                        {:else}
-                          Submit Form
-                        {/if}
-                      </Button>
-                    </div>
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <div class="flex gap-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onclick={handleReset}
+                      disabled={isSubmitting}
+                    >
+                      Reset Form
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      size="sm"
+                      disabled={isSubmitting}
+                    >
+                      {#if isSubmitting}
+                        <div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Submitting...
+                      {:else}
+                        Submit Form
+                      {/if}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           {/if}
         </form>
       </div>

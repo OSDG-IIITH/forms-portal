@@ -8,7 +8,7 @@
 </script>
 
 <Toaster 
-  position="bottom-center"
+  position="bottom-right"
 />
 
 <Header />
