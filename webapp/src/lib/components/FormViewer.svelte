@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import * as kdljs from 'kdljs';
+  import { ulid } from 'ulid';
   import InputView from '$lib/components/questions/viewer/input.svelte';
   import TextareaView from '$lib/components/questions/viewer/textarea.svelte';
   import RadioView from '$lib/components/questions/viewer/radio.svelte';
@@ -140,7 +141,7 @@
                   else if (key === 'id') id = safeString(v);
                 }
               }
-              q.options.push({ id: id || value, value, label });
+              q.options.push({ id: id || ulid(), value, label });
             }
             else if (c.name === 'validations') {
               q.validations = {};
