@@ -312,5 +312,5 @@ func SubmitResponse(c echo.Context) error {
 		)
 	}
 
-	return c.JSON(http.StatusCreated, response)
+	return c.JSON(http.StatusOK, response)
 }
