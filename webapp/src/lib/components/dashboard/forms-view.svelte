@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Tabs, TabsList, TabsTrigger, TabsContent } from '$lib/components/ui/tabs';
 	import FormItem from './form-item.svelte';
+	import FormsGridView from './forms-grid-view.svelte';
+	import FormsListView from './forms-list-view.svelte';
 	import { IconSearch, IconFilter, IconLayoutGrid, IconList, IconChevronLeft, IconChevronRight, IconClock, IconEdit, IconFileFilled, IconUsers } from '@tabler/icons-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -162,38 +164,18 @@
 		<TabsContent value="recent" class="animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
 			{#if loading}
 				{#if viewMode === 'grid'}
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-						{#each Array(10) as _}
-							<div class="h-36 bg-muted rounded-lg animate-pulse"></div>
-						{/each}
-					</div>
+					<FormsGridView forms={[]} {loading} {userHandle} />
 				{:else}
-					<div class="space-y-2">
-						{#each Array(10) as _}
-							<div class="h-16 bg-muted rounded-lg animate-pulse"></div>
-						{/each}
-					</div>
+					<FormsListView forms={[]} {loading} {userHandle} />
 				{/if}
 			{:else if error}
 				<div class="text-center py-8 text-muted-foreground">Failed to load forms</div>
 			{:else if forms.length}
 				<div class="space-y-6">
 					{#if viewMode === 'grid'}
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-							{#each getFilteredForms() as form, i}
-								<div class="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 ease-out" style="animation-delay: {i * 50}ms; animation-fill-mode: both;">
-									<FormItem {form} variant="created" {viewMode} {userHandle} />
-								</div>
-							{/each}
-						</div>
+						<FormsGridView forms={getFilteredForms()} {loading} {userHandle} />
 					{:else}
-						<div class="space-y-0.5">
-							{#each getFilteredForms() as form, i}
-								<div class="animate-in fade-in-0 slide-in-from-left-4 duration-400 ease-out" style="animation-delay: {i * 40}ms; animation-fill-mode: both;">
-									<FormItem {form} variant="created" {viewMode} {userHandle} />
-								</div>
-							{/each}
-						</div>
+						<FormsListView forms={getFilteredForms()} {loading} {userHandle} />
 					{/if}
 					{#if totalCount > perPage || forms.length === perPage}
 						<Pagination.Root count={totalCount} {perPage} bind:page={currentPage} onPageChange={handlePageChange}>
@@ -235,38 +217,18 @@
 		<TabsContent value="created" class="animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
 			{#if loading}
 				{#if viewMode === 'grid'}
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-						{#each Array(10) as _}
-							<div class="h-36 bg-muted rounded-lg animate-pulse"></div>
-						{/each}
-					</div>
+					<FormsGridView forms={[]} {loading} {userHandle} />
 				{:else}
-					<div class="space-y-2">
-						{#each Array(10) as _}
-							<div class="h-16 bg-muted rounded-lg animate-pulse"></div>
-						{/each}
-					</div>
+					<FormsListView forms={[]} {loading} {userHandle} />
 				{/if}
 			{:else if error}
 				<div class="text-center py-8 text-muted-foreground">Failed to load forms</div>
 			{:else if forms.length}
 				<div class="space-y-6">
 					{#if viewMode === 'grid'}
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-							{#each getFilteredForms() as form, i}
-								<div class="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 ease-out" style="animation-delay: {i * 50}ms; animation-fill-mode: both;">
-									<FormItem {form} variant="created" {viewMode} {userHandle} />
-								</div>
-							{/each}
-						</div>
+						<FormsGridView forms={getFilteredForms()} {loading} {userHandle} />
 					{:else}
-						<div class="space-y-0.5">
-							{#each getFilteredForms() as form, i}
-								<div class="animate-in fade-in-0 slide-in-from-left-4 duration-400 ease-out" style="animation-delay: {i * 40}ms; animation-fill-mode: both;">
-									<FormItem {form} variant="created" {viewMode} {userHandle} />
-								</div>
-							{/each}
-						</div>
+						<FormsListView forms={getFilteredForms()} {loading} {userHandle} />
 					{/if}
 					{#if totalCount > perPage || forms.length === perPage}
 						<Pagination.Root count={totalCount} {perPage} bind:page={currentPage} onPageChange={handlePageChange}>
@@ -306,11 +268,7 @@
 		</TabsContent>
 
 		<TabsContent value="filled" class="animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-				{#each Array(8) as _}
-					<div class="h-36 bg-muted rounded-lg animate-pulse"></div>
-				{/each}
-			</div>
+			<FormsGridView forms={[]} loading={true} {userHandle} animationDelay={0} />
 		</TabsContent>
 
 		<TabsContent value="shared" class="animate-in fade-in-0 slide-in-from-bottom-1 duration-300">

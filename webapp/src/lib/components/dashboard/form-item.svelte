@@ -2,9 +2,10 @@
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { cn } from '$lib/utils';
 	import { IconFileText, IconEyeOff, IconEdit } from '@tabler/icons-svelte';
-	import CardFooter from '../ui/card/card-footer.svelte';
 	import { formatRelativeTime } from '$lib/utils/date';
 	import { goto } from '$app/navigation';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import { writable } from 'svelte/store';
 
 	interface Props {
 		form: {
@@ -28,12 +29,12 @@
 	let { form, variant = 'created', viewMode = 'grid', userHandle = 'nouser', class: className = '' }: Props = $props();
 
 	const displayTime = form.modified ? formatRelativeTime(form.modified) : formatRelativeTime(form.createdAt);
-	
 	const slug = form.slug || 'nouser';
-	
 	function handleClick() {
 		goto(`/${userHandle}/${slug}/edit`);
 	}
+
+	let openTooltipStore = writable<'anonymous' | 'editable' | null>(null);
 </script>
 
 {#if viewMode === 'list'}
@@ -52,16 +53,43 @@
 		<div class="flex-1 min-w-0">
 			<span class="font-medium truncate block">{form.title}</span>
 		</div>
-		<div class="w-32 text-xs text-muted-foreground text-right tabular-nums">
-			{displayTime}
-		</div>
-		<div class="flex items-center gap-2 ml-4">
+		<div class="flex items-center gap-4 ml-4">
 			{#if form.anonymous}
-				<IconEyeOff class="w-4 h-4 text-muted-foreground" />
+				<Tooltip.Provider delayDuration={80}>
+					<Tooltip.Root open={$openTooltipStore === 'anonymous'} onOpenChange={v => openTooltipStore.set(v ? 'anonymous' : null)}>
+						<Tooltip.Trigger class="group">
+							<IconEyeOff class="w-4 h-4 text-muted-foreground/80 transition-transform group-hover:scale-110 group-hover:text-primary" />
+						</Tooltip.Trigger>
+						<Tooltip.Content>
+							<p>Anonymous responses enabled</p>
+						</Tooltip.Content>
+					</Tooltip.Root>
+				</Tooltip.Provider>
 			{/if}
 			{#if form.editable_responses}
-				<IconEdit class="w-4 h-4 text-muted-foreground" />
+				<Tooltip.Provider delayDuration={80}>
+					<Tooltip.Root open={$openTooltipStore === 'editable'} onOpenChange={v => openTooltipStore.set(v ? 'editable' : null)}>
+						<Tooltip.Trigger class="group">
+							<IconEdit class="w-4 h-4 text-muted-foreground/80 transition-transform group-hover:scale-110 group-hover:text-primary" />
+						</Tooltip.Trigger>
+						<Tooltip.Content>
+							<p>Editable responses allowed</p>
+						</Tooltip.Content>
+					</Tooltip.Root>
+				</Tooltip.Provider>
 			{/if}
+		</div>
+		<div class="w-20 text-xs text-muted-foreground text-right tabular-nums">
+			<Tooltip.Provider delayDuration={80}>
+				<Tooltip.Root>
+					<Tooltip.Trigger class="group">
+						<span>{displayTime}</span>
+					</Tooltip.Trigger>
+					<Tooltip.Content>
+						<p>{new Date(form.modified || form.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</p>
+					</Tooltip.Content>
+				</Tooltip.Root>
+			</Tooltip.Provider>
 		</div>
 	</div>
 {:else}

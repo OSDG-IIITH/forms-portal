@@ -1,7 +1,7 @@
 <script lang="ts">
   import CreateFormCard from '$lib/components/dashboard/create-form-card.svelte';
   import FormTemplatesCard from '$lib/components/dashboard/form-templates-card.svelte';
-  import FormsGrid from '$lib/components/dashboard/forms-grid.svelte';
+  import FormsGrid from '$lib/components/dashboard/forms-view.svelte';
 </script>
 
 <div class="min-h-screen flex flex-col bg-background">
