@@ -96,7 +96,7 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<Card 
-		class={cn("p-0 rounded-md shadow-xs border hover:shadow-sm h-40 cursor-pointer", className)}
+		class={cn("p-0 bg-muted/10 hover:bg-muted/30 rounded-md shadow-xs border transition-all duration-300 ease-[cubic-bezier(.4,0,.2,1)] h-40 cursor-pointer will-change-transform will-change-shadow hover:shadow-lg hover:-translate-y-0 hover:scale-[1.012]", className)}
 		onclick={handleClick}
 		role="button"
 		tabindex={0}

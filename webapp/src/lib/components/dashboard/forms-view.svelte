@@ -112,9 +112,7 @@
 
 <Tabs bind:value={activeTab}>
 	<div class="space-y-6">
-		<!-- Responsive: Tab bar above search/filter on mobile -->
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<!-- Tab bar: icons on mobile, text on desktop -->
 			<TabsList class="grid w-full sm:w-fit grid-cols-4 gap-1 order-1 sm:order-none">
 				<TabsTrigger value="recent" class="flex flex-col items-center justify-center px-0 sm:px-6 py-2">
 					<span class="sm:hidden"><IconClock class="h-5 w-5" aria-label="Recent" /></span>
@@ -129,40 +127,41 @@
 					<span class="hidden sm:inline">Filled</span>
 				</TabsTrigger>
 				<TabsTrigger value="shared" class="flex flex-col items-center justify-center px-0 sm:px-6 py-2">
-					<span class="sm:hidden"><IconUsers class="h-5 w-5" aria-label="Shared with me" /></span>
-					<span class="hidden sm:inline">Shared with me</span>
+					<span class="sm:hidden"><IconUsers class="h-5 w-5" aria-label="Shared" /></span>
+					<span class="hidden sm:inline">Shared</span>
 				</TabsTrigger>
 			</TabsList>
-			<!-- Search/filter row -->
-			<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 order-2 sm:order-none">
-				<div class="relative">
-					<IconSearch class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-					<Input
-						placeholder="Search forms"
-						class="pl-10 w-full sm:w-80"
-						bind:value={searchQuery}
-					/>
-				</div>
-				<Button variant="outline" size="sm">
-					<IconFilter class="h-4 w-4" />
-				</Button>
-				<div class="flex border rounded-md bg-background">
-					<Button
-						variant={viewMode === 'grid' ? 'default' : 'ghost'}
-						size="sm"
-						class="rounded-r-none border-0 px-3"
-						onclick={() => viewMode = 'grid'}
-					>
-						<IconLayoutGrid class="h-4 w-4" />
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2 order-2 sm:order-none w-full sm:w-auto">
+				<div class="flex flex-row gap-2 w-full">
+					<div class="relative flex-1">
+						<IconSearch class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+						<Input
+							placeholder="Search forms"
+							class="pl-10 w-full"
+							bind:value={searchQuery}
+						/>
+					</div>
+					<Button variant="outline" size="sm" class="flex-shrink-0 h-9 w-9 p-0">
+						<IconFilter class="h-4 w-4" />
 					</Button>
-					<Button
-						variant={viewMode === 'list' ? 'default' : 'ghost'}
-						size="sm"
-						class="rounded-l-none border-0 px-3"
-						onclick={() => viewMode = 'list'}
-					>
-						<IconList class="h-4 w-4" />
-					</Button>
+					<div class="flex border rounded-md bg-background flex-shrink-0">
+						<Button
+							variant={viewMode === 'grid' ? 'default' : 'ghost'}
+							size="sm"
+							class="rounded-r-none border-0 px-3"
+							onclick={() => viewMode = 'grid'}
+						>
+							<IconLayoutGrid class="h-4 w-4" />
+						</Button>
+						<Button
+							variant={viewMode === 'list' ? 'default' : 'ghost'}
+							size="sm"
+							class="rounded-l-none border-0 px-3"
+							onclick={() => viewMode = 'list'}
+						>
+							<IconList class="h-4 w-4" />
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>

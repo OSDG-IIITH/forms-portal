@@ -16,12 +16,27 @@
 	
 	$effect(() => {
 		if (tabsContainer && activeIndicator && $activeTab) {
-			const activeButton = tabsContainer.querySelector(`[data-value="${$activeTab}"]`) as HTMLElement;
-			if (activeButton) {
-				const { offsetLeft, offsetWidth } = activeButton;
-				activeIndicator.style.transform = `translateX(${offsetLeft}px)`;
-				activeIndicator.style.width = `${offsetWidth}px`;
-			}
+			const update = () => {
+				requestAnimationFrame(() => {
+					const activeButton = tabsContainer.querySelector(`[data-value="${$activeTab}"]`) as HTMLElement;
+					if (activeButton) {
+						const { left } = activeButton.getBoundingClientRect();
+						const { left: containerLeft } = tabsContainer.getBoundingClientRect();
+						const offsetLeft = left - containerLeft;
+						const offsetWidth = activeButton.offsetWidth;
+						activeIndicator.style.transform = `translateX(${offsetLeft}px)`;
+						activeIndicator.style.width = `${offsetWidth}px`;
+					}
+				});
+			};
+			update();
+			window.addEventListener('resize', update);
+			const ro = new ResizeObserver(update);
+			ro.observe(tabsContainer);
+			return () => {
+				window.removeEventListener('resize', update);
+				ro.disconnect();
+			};
 		}
 	});
 </script>

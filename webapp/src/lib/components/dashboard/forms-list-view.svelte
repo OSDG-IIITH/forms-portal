@@ -17,7 +17,7 @@
 	<div class="space-y-0.5">
 		{#each forms as form, i}
 			<div class="animate-in fade-in-0 slide-in-from-left-4 duration-400 ease-out" style="animation-delay: {i * animationDelay}ms; animation-fill-mode: both;">
-				<FormItem {form} variant="created" viewMode="list" {userHandle} />
+				<FormItem {form} variant="created" viewMode="list" {userHandle} class="w-full" />
 			</div>
 		{/each}
 	</div>
