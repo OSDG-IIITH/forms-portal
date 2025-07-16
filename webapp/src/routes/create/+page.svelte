@@ -108,4 +108,3 @@
     <FormEditor {form} on:create={handleCreate} mode="create" />
   </main>
 </div>
-Form Configuration
