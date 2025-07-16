@@ -1,5 +1,5 @@
 <script lang="ts">
-  import FormViewer from '$lib/components/FormViewer.svelte';
+  import FormViewer from '$lib/components/viewer/FormViewer.svelte';
   export let data: { form: any };
 </script>
 

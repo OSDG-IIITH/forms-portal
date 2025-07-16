@@ -2,13 +2,13 @@
   import { onMount } from 'svelte';
   import * as kdljs from 'kdljs';
   import { ulid } from 'ulid';
-  import InputView from '$lib/components/questions/viewer/input.svelte';
-  import TextareaView from '$lib/components/questions/viewer/textarea.svelte';
-  import RadioView from '$lib/components/questions/viewer/radio.svelte';
-  import CheckboxView from '$lib/components/questions/viewer/checkbox.svelte';
-  import FileUploadView from '$lib/components/questions/viewer/file-upload.svelte';
-  import SelectView from '$lib/components/questions/viewer/select.svelte';
-  import DateView from '$lib/components/questions/viewer/date.svelte';
+  import InputView from '$lib/components/viewer/questions/input.svelte';
+  import TextareaView from '$lib/components/viewer/questions/textarea.svelte';
+  import RadioView from '$lib/components/viewer/questions/radio.svelte';
+  import CheckboxView from '$lib/components/viewer/questions/checkbox.svelte';
+  import FileUploadView from '$lib/components/viewer/questions/file-upload.svelte';
+  import SelectView from '$lib/components/viewer/questions/select.svelte';
+  import DateView from '$lib/components/viewer/questions/date.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Card, CardContent } from '$lib/components/ui/card';
 

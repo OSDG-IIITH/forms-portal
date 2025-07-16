@@ -2,13 +2,13 @@
   import { Card, CardContent } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
   import { IconChevronUp, IconChevronDown, IconTrash } from '@tabler/icons-svelte';
-  import InputEditor from '$lib/components/questions/editor/input.svelte';
-  import TextareaEditor from '$lib/components/questions/editor/textarea.svelte';
-  import RadioEditor from '$lib/components/questions/editor/radio.svelte';
-  import CheckboxEditor from '$lib/components/questions/editor/checkbox.svelte';
-  import FileUploadEditor from '$lib/components/questions/editor/file-upload.svelte';
-  import SelectEditor from '$lib/components/questions/editor/select.svelte';
-  import DatePickerEditor from '$lib/components/questions/editor/date-picker.svelte';
+  import InputEditor from '$lib/components/editor/questions/input.svelte';
+  import TextareaEditor from '$lib/components/editor/questions/textarea.svelte';
+  import RadioEditor from '$lib/components/editor/questions/radio.svelte';
+  import CheckboxEditor from '$lib/components/editor/questions/checkbox.svelte';
+  import FileUploadEditor from '$lib/components/editor/questions/file-upload.svelte';
+  import SelectEditor from '$lib/components/editor/questions/select.svelte';
+  import DatePickerEditor from '$lib/components/editor/questions/date-picker.svelte';
   import type { Question, QuestionType } from './FormEditor';
 
   export let question: Question;
