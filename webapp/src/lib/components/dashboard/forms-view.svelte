@@ -99,8 +99,14 @@
 	}
 
 	onMount(() => {
+		const storedViewMode = localStorage.getItem('forms-view-mode');
+		if (storedViewMode === 'grid' || storedViewMode === 'list') viewMode = storedViewMode;
 		fetchCurrentUser();
 		fetchForms(1);
+	});
+
+	$effect(() => {
+		if (viewMode === 'grid' || viewMode === 'list') localStorage.setItem('forms-view-mode', viewMode);
 	});
 </script>
 
