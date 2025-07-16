@@ -1,6 +1,7 @@
 <script lang="ts">
   import FormEditor from '$lib/components/FormEditor.svelte';
   import { toast } from 'svelte-sonner';
+  import { Time } from '@internationalized/date';
 
   function slugify(title: string, suffix = 0): string {
     let base = title
@@ -19,14 +20,39 @@
     structure: ''
   };
 
-  async function handleCreate(formData: any, questions: any[], kdl: string) {
+  async function handleCreate(event: CustomEvent) {
+    const { formData, questions, kdl } = event.detail;
     let suffix = 0;
+    
+    const formatDateTime = (dateStr: string | undefined, time: Time | undefined): string | null => {
+      if (!dateStr || dateStr.trim() === '') return null;
+      try {
+        const hours = time?.hour ?? 0;
+        const minutes = time?.minute ?? 0;
+        const seconds = 0;
+        
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return null;
+        
+        date.setHours(hours, minutes, seconds, 0);
+        return date.toISOString();
+      } catch {
+        return null;
+      }
+    };
+
     for (let attempt = 0; attempt < 100; attempt++) {
       const payload = {
         title: formData.title || 'Untitled Form',
         slug: slugify(formData.title, suffix),
-        description: formData.description,
-        structure: kdl
+        description: formData.description || null,
+        structure: kdl,
+        opens: formatDateTime(formData.opens, formData.opensTime),
+        closes: formatDateTime(formData.closes, formData.closesTime),
+        anonymous: Boolean(formData.anonymous),
+        max_responses: formData.max_responses !== null && formData.max_responses !== undefined ? Number(formData.max_responses) : null,
+        individual_limit: Number(formData.individual_limit) || 1,
+        editable_responses: Boolean(formData.editable_responses)
       };
       let res, text = '';
       try {
@@ -79,7 +105,7 @@
 
 <div class="min-h-screen bg-background">
   <main>
-    <FormEditor {form} on:create={e => handleCreate(e.detail.formData, e.detail.questions, e.detail.kdl)} mode="create" />
+    <FormEditor {form} on:create={handleCreate} mode="create" />
   </main>
 </div>
 Form Configuration

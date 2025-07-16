@@ -4,6 +4,8 @@
   import { Input } from '$lib/components/ui/input';
   import { Textarea } from '$lib/components/ui/textarea';
   import { Label } from '$lib/components/ui/label';
+  import { Toggle } from '$lib/components/ui/toggle';
+  import { DatePicker } from '$lib/components/ui/date-picker';
   import InputEditor from '$lib/components/questions/editor/input.svelte';
   import TextareaEditor from '$lib/components/questions/editor/textarea.svelte';
   import RadioEditor from '$lib/components/questions/editor/radio.svelte';
@@ -23,9 +25,15 @@
     IconTrash,
     IconSquareCheck,
     IconUpload,
-    IconCalendar
+    IconCalendar,
+    IconSettings
   } from '@tabler/icons-svelte';
   import { createEventDispatcher } from 'svelte';
+  import { Checkbox } from '$lib/components/ui/checkbox';
+  import { TimeField } from 'bits-ui';
+  import { Time } from '@internationalized/date';
+  import * as Sheet from "$lib/components/ui/sheet";
+  import { buttonVariants } from "$lib/components/ui/button";
 
   const { form, mode = 'edit' }: { form: any; mode?: 'create' | 'edit' } = $props();
 
@@ -59,12 +67,28 @@
     title: string;
     description: string;
     visibility: string;
+    opens?: string;
+    closes?: string;
+    opensTime?: Time;
+    closesTime?: Time;
+    anonymous: boolean;
+    max_responses?: number | null;
+    individual_limit: number;
+    editable_responses: boolean;
   };
 
   let formData = $state<FormData>({
     title: 'Untitled Form',
     description: 'Add a description',
-    visibility: 'private'
+    visibility: 'private',
+    opens: undefined,
+    closes: undefined,
+    opensTime: undefined,
+    closesTime: undefined,
+    anonymous: false,
+    max_responses: null,
+    individual_limit: 1,
+    editable_responses: false
   });
 
   let questions = $state<Question[]>([]);
@@ -193,6 +217,35 @@
       if (form) {
         formData.title = form.title || 'Untitled Form';
         formData.description = form.description || 'Add a description';
+        
+        if (form.opens) {
+          const [dateStr, timeStr] = form.opens.split('T');
+          formData.opens = dateStr;
+          if (timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            formData.opensTime = new Time(hours || 0, minutes || 0);
+          }
+        } else {
+          formData.opens = undefined;
+          formData.opensTime = undefined;
+        }
+        
+        if (form.closes) {
+          const [dateStr, timeStr] = form.closes.split('T');
+          formData.closes = dateStr;
+          if (timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            formData.closesTime = new Time(hours || 0, minutes || 0);
+          }
+        } else {
+          formData.closes = undefined;
+          formData.closesTime = undefined;
+        }
+        
+        formData.anonymous = form.anonymous || false;
+        formData.max_responses = form.max_responses ?? null;
+        formData.individual_limit = form.individual_limit ?? 1;
+        formData.editable_responses = form.editable_responses || false;
       }
 
       if (!form || !form.structure) {
@@ -329,10 +382,33 @@
         return;
       }
 
+      const formatDateTime = (dateStr: string | undefined, time: Time | undefined): string | null => {
+        if (!dateStr || dateStr.trim() === '') return null;
+        try {
+          const hours = time?.hour ?? 0;
+          const minutes = time?.minute ?? 0;
+          const seconds = 0;
+          
+          const date = new Date(dateStr);
+          if (isNaN(date.getTime())) return null;
+          
+          date.setHours(hours, minutes, seconds, 0);
+          return date.toISOString();
+        } catch {
+          return null;
+        }
+      };
+
       const payload = {
         title: formData.title || 'Untitled Form',
-        description: formData.description,
-        structure: kdl
+        description: formData.description || null,
+        structure: kdl,
+        opens: formatDateTime(formData.opens, formData.opensTime),
+        closes: formatDateTime(formData.closes, formData.closesTime),
+        anonymous: Boolean(formData.anonymous),
+        max_responses: formData.max_responses !== null && formData.max_responses !== undefined ? Number(formData.max_responses) : null,
+        individual_limit: Number(formData.individual_limit) || 1,
+        editable_responses: Boolean(formData.editable_responses)
       };
 
       const res = await fetch(`/api/forms/${form.id}`, {
@@ -401,6 +477,126 @@
                   rows={3}
                 />
               </div>
+              <Sheet.Root>
+                <Sheet.Trigger class={buttonVariants({ variant: "outline" }) + " flex items-center gap-2 mt-2"} aria-label="Form settings">
+                  <IconSettings class="size-5" />
+                  <span>Settings</span>
+                </Sheet.Trigger>
+                <Sheet.Content side="right">
+                  <Sheet.Header class="px-8 pt-8">
+                    <Sheet.Title>Form Settings</Sheet.Title>
+                    <Sheet.Description>Advanced configuration for this form.</Sheet.Description>
+                  </Sheet.Header>
+                  <div class="grid flex-1 auto-rows-min gap-6 px-8 py-2">
+                    <div class="grid grid-cols-1 gap-6 pt-2">
+                      <div class="space-y-2">
+                        <Label for="form-opens">Opens</Label>
+                        <div class="flex gap-2">
+                          <DatePicker 
+                            bind:value={formData.opens} 
+                            placeholder="Select open date"
+                            class="flex-1" 
+                          />
+                          <div class="w-22">
+                            <TimeField.Root bind:value={formData.opensTime} hourCycle={24}>
+                              <TimeField.Input class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                {#snippet children({ segments })}
+                                  {#each segments as { part, value }, i (part + value + i)}
+                                    <div class="inline-block select-none">
+                                      {#if part === "literal"}
+                                        <TimeField.Segment {part} class="text-muted-foreground p-1">
+                                          {value}
+                                        </TimeField.Segment>
+                                      {:else}
+                                        <TimeField.Segment
+                                          {part}
+                                          class="rounded px-1 py-1 hover:bg-muted focus:bg-muted focus:text-foreground aria-[valuetext=Empty]:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        >
+                                          {value}
+                                        </TimeField.Segment>
+                                      {/if}
+                                    </div>
+                                  {/each}
+                                {/snippet}
+                              </TimeField.Input>
+                            </TimeField.Root>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="space-y-2">
+                        <Label for="form-closes">Closes</Label>
+                        <div class="flex gap-2">
+                          <DatePicker 
+                            bind:value={formData.closes} 
+                            placeholder="Select close date"
+                            class="flex-1" 
+                          />
+                          <div class="w-22">
+                            <TimeField.Root bind:value={formData.closesTime} hourCycle={24}>
+                              <TimeField.Input class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                                {#snippet children({ segments })}
+                                  {#each segments as { part, value }, i (part + value + i)}
+                                    <div class="inline-block select-none">
+                                      {#if part === "literal"}
+                                        <TimeField.Segment {part} class="text-muted-foreground p-1">
+                                          {value}
+                                        </TimeField.Segment>
+                                      {:else}
+                                        <TimeField.Segment
+                                          {part}
+                                          class="rounded px-1 py-1 hover:bg-muted focus:bg-muted focus:text-foreground aria-[valuetext=Empty]:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        >
+                                          {value}
+                                        </TimeField.Segment>
+                                      {/if}
+                                    </div>
+                                  {/each}
+                                {/snippet}
+                              </TimeField.Input>
+                            </TimeField.Root>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="space-y-3">
+                        <Label for="form-max-responses">Max Responses</Label>
+                        <Input
+                          id="form-max-responses"
+                          type="number"
+                          min="1"
+                          placeholder="Unlimited"
+                          bind:value={formData.max_responses}
+                        />
+                      </div>
+                      <div class="space-y-3">
+                        <Label for="form-individual-limit">Individual Limit</Label>
+                        <Input
+                          id="form-individual-limit"
+                          type="number"
+                          min="1"
+                          bind:value={formData.individual_limit}
+                        />
+                      </div>
+                      <div class="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
+                        <Checkbox id="form-anonymous" bind:checked={formData.anonymous} class="mt-0.5" />
+                        <div>
+                          <Label for="form-anonymous" class="text-sm font-medium">Anonymous Responses</Label>
+                          <p class="text-xs text-muted-foreground">Allow users to submit responses without identification.</p>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
+                        <Checkbox id="form-editable-responses" bind:checked={formData.editable_responses} class="mt-0.5" />
+                        <div>
+                          <Label for="form-editable-responses" class="text-sm font-medium">Editable Responses</Label>
+                          <p class="text-xs text-muted-foreground">Allow users to edit their submitted responses.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Sheet.Footer>
+                    <Sheet.Close class={buttonVariants({ variant: "outline" })}>Save changes</Sheet.Close>
+                  </Sheet.Footer>
+                </Sheet.Content>
+              </Sheet.Root>
             </CardContent>
           </Card>
         </section>
