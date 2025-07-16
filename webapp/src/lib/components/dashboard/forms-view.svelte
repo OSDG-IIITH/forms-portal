@@ -144,11 +144,11 @@
 					<Button variant="outline" size="sm" class="flex-shrink-0 h-9 w-9 p-0">
 						<IconFilter class="h-4 w-4" />
 					</Button>
-					<div class="flex border rounded-md bg-background flex-shrink-0">
+					<div class="flex border rounded-md bg-muted/50 flex-shrink-0">
 						<Button
 							variant={viewMode === 'grid' ? 'default' : 'ghost'}
 							size="sm"
-							class="rounded-r-none border-0 px-3"
+							class="rounded-r-none border-0 px-3 h-full"
 							onclick={() => viewMode = 'grid'}
 						>
 							<IconLayoutGrid class="h-4 w-4" />
@@ -156,7 +156,7 @@
 						<Button
 							variant={viewMode === 'list' ? 'default' : 'ghost'}
 							size="sm"
-							class="rounded-l-none border-0 px-3"
+							class="rounded-l-none border-0 px-3 h-full"
 							onclick={() => viewMode = 'list'}
 						>
 							<IconList class="h-4 w-4" />

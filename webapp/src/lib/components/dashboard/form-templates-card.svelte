@@ -41,18 +41,12 @@
   });
 </script>
 
-<Card class="h-full gap-2 shadow-none">
-  <CardHeader>
-    <CardTitle>Form Templates</CardTitle>
-  </CardHeader>
-  <CardContent>
+
     <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       {#each Array($num) as _}
-        <div class="space-y-2 rounded-lg border p-4 hover:border-primary/25 hover:bg-accent/20 transition-colors cursor-pointer">
-          <Skeleton class="h-32 rounded-lg" />
+        <div class="bg-card space-y-2 rounded-lg border p-4 hover:bg-muted/30 transition-colors cursor-pointer">
+          <Skeleton class="h-38 rounded-lg" />
           <Skeleton class="h-4 w-3/4" />
         </div>
       {/each}
     </div>
-  </CardContent>
-</Card>
