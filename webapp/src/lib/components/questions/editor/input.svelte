@@ -43,36 +43,38 @@
     question.validations?.['max-chars'] !== undefined;
   let showRegex = !!question.validations?.regex;
 
-  $: if (!showPlaceholder) {
-    question.placeholder = undefined;
+  function togglePlaceholder(pressed: boolean) {
+    showPlaceholder = pressed;
+    if (!showPlaceholder) {
+      question.placeholder = undefined;
+    }
   }
 
-  $: if (!showCharLimit) {
-    if (question.validations) {
+  function toggleCharLimit(pressed: boolean) {
+    showCharLimit = pressed;
+    if (!showCharLimit && question.validations) {
       question.validations['min-chars'] = undefined;
       question.validations['max-chars'] = undefined;
     }
   }
-  $: if (!showRegex) {
-    if (question.validations) {
+
+  function toggleRegex(pressed: boolean) {
+    showRegex = pressed;
+    if (!showRegex && question.validations) {
       question.validations.regex = undefined;
     }
   }
 
-  $: if (question.validations?.['min-chars']) {
-    const strValue = String(question.validations['min-chars']);
-    const sanitized = strValue.replace(/\D/g, '');
-    if (strValue !== sanitized) {
-      question.validations['min-chars'] = sanitized ? parseInt(sanitized, 10) : undefined;
-    }
+  function updateMinChars(value: string): void {
+    if (!question.validations) question.validations = {};
+    const sanitized = value.replace(/\D/g, '');
+    question.validations['min-chars'] = sanitized ? parseInt(sanitized, 10) : undefined;
   }
 
-  $: if (question.validations?.['max-chars']) {
-    const strValue = String(question.validations['max-chars']);
-    const sanitized = strValue.replace(/\D/g, '');
-    if (strValue !== sanitized) {
-      question.validations['max-chars'] = sanitized ? parseInt(sanitized, 10) : undefined;
-    }
+  function updateMaxChars(value: string): void {
+    if (!question.validations) question.validations = {};
+    const sanitized = value.replace(/\D/g, '');
+    question.validations['max-chars'] = sanitized ? parseInt(sanitized, 10) : undefined;
   }
 </script>
 
@@ -87,15 +89,30 @@
   </div>
 
   <div class="flex items-center gap-2 flex-wrap my-4">
-    <Toggle bind:pressed={showPlaceholder} aria-label="Toggle placeholder" variant="outline">
+    <Toggle 
+      pressed={showPlaceholder} 
+      onPressedChange={togglePlaceholder}
+      aria-label="Toggle placeholder" 
+      variant="outline"
+    >
       <IconSquareLetterA class="size-4" />
       <span class="text-sm font-medium">Placeholder</span>
     </Toggle>
-    <Toggle bind:pressed={showCharLimit} aria-label="Toggle character limit" variant="outline">
+    <Toggle 
+      pressed={showCharLimit} 
+      onPressedChange={toggleCharLimit}
+      aria-label="Toggle character limit" 
+      variant="outline"
+    >
       <IconViewportTall class="size-4" />
       <span class="text-sm font-medium">Character Limit</span>
     </Toggle>
-    <Toggle bind:pressed={showRegex} aria-label="Toggle regex" variant="outline">
+    <Toggle 
+      pressed={showRegex} 
+      onPressedChange={toggleRegex}
+      aria-label="Toggle regex" 
+      variant="outline"
+    >
       <IconRegex class="size-4" />
       <span class="text-sm font-medium">Regex</span>
     </Toggle>
@@ -130,7 +147,11 @@
           <Input
             id="min-chars-{question.id}"
             placeholder="Minimum Character Limit"
-            bind:value={question.validations['min-chars']}
+            value={question.validations['min-chars'] || ''}
+            oninput={(e: Event) => {
+              const target = e.target as HTMLInputElement;
+              updateMinChars(target.value);
+            }}
           />
         </div>
         <div class="space-y-2" transition:slide={transitionOpts}>
@@ -138,7 +159,11 @@
           <Input
             id="max-chars-{question.id}"
             placeholder="Maximum Character Limit"
-            bind:value={question.validations['max-chars']}
+            value={question.validations['max-chars'] || ''}
+            oninput={(e: Event) => {
+              const target = e.target as HTMLInputElement;
+              updateMaxChars(target.value);
+            }}
           />
         </div>
       {/if}

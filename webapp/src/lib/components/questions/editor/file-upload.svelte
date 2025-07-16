@@ -33,17 +33,21 @@
     question['allowed-types']?.join(', ') || ''
   );
 
-  $effect(() => {
+  function updateFileSize(): void {
     const sizeNum = parseFloat(fileSizeValue) || 1;
     if (fileSizeUnit === 'kb') {
       question['max-file-size'] = Math.round((sizeNum / 1024) * 100) / 100;
     } else {
       question['max-file-size'] = sizeNum;
     }
-    
+  }
+
+  function updateMaxFiles(): void {
     const maxFilesNum = parseInt(maxFilesValue);
     question['max-files'] = maxFilesValue.trim() === '' ? -1 : (isNaN(maxFilesNum) ? -1 : maxFilesNum);
-    
+  }
+
+  function updateAllowedTypes(): void {
     if (allowedFileTypes === 'any') {
       question['allowed-types'] = [];
     } else if (allowedFileTypes === 'images') {
@@ -55,6 +59,12 @@
     } else if (allowedFileTypes === 'custom' && customFileTypes.trim()) {
       question['allowed-types'] = customFileTypes.split(',').map(t => t.trim()).filter(t => t);
     }
+  }
+
+  $effect(() => {
+    updateFileSize();
+    updateMaxFiles();
+    updateAllowedTypes();
   });
 
   const fileSizeUnits = [

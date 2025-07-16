@@ -74,13 +74,10 @@
     dragOverIndex = null;
   }
 
-  $effect(() => {
-    if (question.options) {
-      question.options.forEach((option) => {
-        option.value = option.label;
-      });
-    }
-  });
+  function updateOptionValue(option: Option, newLabel: string): void {
+    option.label = newLabel;
+    option.value = newLabel;
+  }
 
   if (!question.options || question.options.length === 0) {
     addOption();
@@ -115,7 +112,14 @@
             ondragend={handleDragEnd}
           >
             <IconGripVertical class="cursor-grab" />
-            <Input placeholder="Option" bind:value={option.label} />
+            <Input 
+              placeholder="Option" 
+              value={option.label}
+              oninput={(e: Event) => {
+                const target = e.target as HTMLInputElement;
+                updateOptionValue(option, target.value);
+              }}
+            />
             <Button
               variant="ghost"
               size="icon"

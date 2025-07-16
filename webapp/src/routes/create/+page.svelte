@@ -1,5 +1,5 @@
 <script lang="ts">
-  import FormEditor from '$lib/components/FormEditor.svelte';
+  import FormEditor from '$lib/components/editor/FormEditor.svelte';
   import { toast } from 'svelte-sonner';
   import { Time } from '@internationalized/date';
 
