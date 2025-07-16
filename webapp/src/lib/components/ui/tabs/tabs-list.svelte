@@ -29,15 +29,15 @@
 <div
 	bind:this={tabsContainer}
 	class={cn(
-		"inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground relative overflow-hidden",
+		"inline-flex h-10 items-center justify-center rounded-md bg-[var(--tab-track)] border border-[var(--tab-border)] p-1 text-muted-foreground relative overflow-hidden",
 		className
 	)}
 	{...restProps}
 >
 	<div
 		bind:this={activeIndicator}
-		class="absolute inset-y-1 bg-card rounded-sm shadow-sm transition-all duration-300 ease-out"
-		style="width: 0; transform: translateX(0);"
+		class="absolute inset-y-1 rounded-sm shadow-sm transition-all duration-300 ease-out"
+		style="width: 0; transform: translateX(0); background: var(--tab-active);"
 	></div>
 	{@render children()}
 </div>
