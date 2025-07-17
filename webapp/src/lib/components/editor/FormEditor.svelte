@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FormTitleDescription from './FormTitleDescription.svelte';
   import FormConfig from './FormConfig.svelte';
   import QuestionsList from './QuestionsList.svelte';
   import AddQuestionPanel from './AddQuestionPanel.svelte';
@@ -13,7 +14,7 @@
     IconUpload,
     IconCalendar
   } from '@tabler/icons-svelte';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import { Time } from '@internationalized/date';
   import type {
     QuestionType,
@@ -73,6 +74,36 @@
   const dispatch = createEventDispatcher<{
     create: { formData: FormData; questions: Question[]; kdl: string };
   }>();
+
+  let isPanelOpen = $state(false);
+  let windowWidth = $state(0);
+
+  function handlePanelChange(event: CustomEvent<{ open: boolean }>) {
+    isPanelOpen = event.detail.open;
+  }
+
+  const getDisplacement = (width: number, isOpen: boolean) => {
+    if (!isOpen) return '0px';
+    
+    if (width >= 1536) return '-240px';
+    if (width >= 1280) return '-200px';
+    if (width >= 1024) return '-160px';
+    if (width >= 768) return '-120px';
+    return '-80px';
+  };
+
+  $effect(() => {
+    if (typeof window !== 'undefined') {
+      windowWidth = window.innerWidth;
+      
+      const handleResize = () => {
+        windowWidth = window.innerWidth;
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  });
 
   function parseKdlForm(kdl: string) {
     const ast = kdljs.parse(kdl);
@@ -261,7 +292,6 @@
     try {
       const kdl = generateFormKdl(questions);
 
-      // Validate KDL
       kdljs.parse(kdl);
 
       if (mode === 'create') {
@@ -320,8 +350,15 @@
   }
 </script>
 
-<div class="min-h-screen bg-background">
-  <main class="container mx-auto max-w-4xl px-6 py-8 pt-24">
+<div class="min-h-screen bg-background relative pt-24">
+  <div class="absolute top-24 right-8 z-10">
+    <FormConfig bind:formData on:panelchange={handlePanelChange} />
+  </div>
+  <div 
+    id="MainContent" 
+    class="mx-auto transition-transform duration-300 ease-in-out w-full max-w-4xl px-4" 
+    style="transform: translateX({getDisplacement(windowWidth, isPanelOpen)});"
+  >
     {#if isLoading}
       <div class="flex items-center justify-center py-12">
         <div class="text-center space-y-4">
@@ -340,25 +377,10 @@
         <p class="text-muted-foreground mb-6">{error}</p>
       </div>
     {:else}
-      <div class="space-y-8">
-        <section class="space-y-6">
-          <div>
-            <h2 class="text-2xl font-semibold tracking-tight mb-2">Form Configuration</h2>
-          </div>
-          <FormConfig bind:formData />
-        </section>
-
-        <section class="space-y-6">
+      <div class="space-y-0 w-full mb-10">
+        <FormTitleDescription bind:title={formData.title} bind:description={formData.description} />
+        <section class="space-y-6 w-full">
           {#if questions.length > 0}
-            <div class="flex items-center justify-between">
-              <div>
-                <h2 class="text-2xl font-semibold tracking-tight mb-2">Form Questions</h2>
-              </div>
-              <div class="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md text-sm">
-                <span class="font-medium">{questions.length}</span>
-                <span class="text-muted-foreground">question{questions.length !== 1 ? 's' : ''}</span>
-              </div>
-            </div>
             <QuestionsList
               {questions}
               {questionTypeLabels}
@@ -372,16 +394,13 @@
             {addQuestion}
             questionsLength={questions.length}
           />
-        </section>
-
-        {#if questions.length > 0}
           <FormSaveFooter
             questionsLength={questions.length}
             {isSaving}
             {saveForm}
           />
-        {/if}
+        </section>
       </div>
     {/if}
-  </main>
+  </div>
 </div>
