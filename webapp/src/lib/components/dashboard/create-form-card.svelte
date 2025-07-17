@@ -4,7 +4,7 @@
 </script>
 
 <a href="/create" class="block h-full group">
-  <Card class="h-full hover:border-primary/50 hover:bg-accent/20 transition-all duration-200 shadow-none">
+  <Card class="h-full hover:bg-muted/30 transition-all duration-200 shadow-none">
     <CardContent class="flex items-center justify-center h-full p-6">
       <IconPlus class="h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />
     </CardContent>

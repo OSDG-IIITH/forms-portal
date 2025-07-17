@@ -44,7 +44,7 @@
 <div
 	bind:this={tabsContainer}
 	class={cn(
-		"inline-flex h-10 items-center justify-center rounded-md bg-[var(--tab-track)] border border-[var(--tab-border)] p-1 text-muted-foreground relative overflow-hidden",
+		"flex h-10 items-stretch justify-center rounded-md bg-[var(--tab-track)] border border-[var(--tab-border)] py-0 px-1 text-muted-foreground relative overflow-hidden",
 		className
 	)}
 	{...restProps}
