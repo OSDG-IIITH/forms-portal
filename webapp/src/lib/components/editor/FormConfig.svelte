@@ -5,6 +5,7 @@
   import { Checkbox } from '$lib/components/ui/checkbox';
   import * as Panel from "$lib/components/ui/panel";
   import * as Dialog from "$lib/components/ui/dialog";
+  import * as Sheet from "$lib/components/ui/sheet";
   import { buttonVariants } from "$lib/components/ui/button";
   import { TimeField } from 'bits-ui';
   import { IconSettings } from '@tabler/icons-svelte';
@@ -19,16 +20,16 @@
 
   let windowWidth = $state(0);
 
-  const useDialog = $derived(windowWidth > 0 && windowWidth < 1380);
+  const useSheet = $derived(windowWidth > 0 && windowWidth < 1380);
 
   function handlePanelChange(event: CustomEvent<{ open: boolean }>) {
     dispatch('panelchange', event.detail);
   }
 
-  function handleDialogOpenChange(open: boolean) {
+  function handleSheetOpenChange(open: boolean) {
     dialogOpen = open;
     dispatch('dialogopenchange', open);
-    if (useDialog && !open) {
+    if (useSheet && !open) {
       dispatch('panelchange', { open: false });
     }
   }
@@ -40,7 +41,7 @@
       const handleResize = () => {
         windowWidth = window.innerWidth;
         if (windowWidth >= 1024 && dialogOpen) {
-          handleDialogOpenChange(false);
+          handleSheetOpenChange(false);
         }
       };
       
@@ -159,20 +160,20 @@
 {/snippet}
 
 <div class="fixed top-20 right-8 z-50">
-  {#if useDialog}
-    <!-- dialog on non-wide screens -->
-    <Dialog.Root bind:open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-      <Dialog.Trigger class={buttonVariants({ variant: "outline" }) + " flex items-center gap-2"} aria-label="Form settings">
+  {#if useSheet}
+    <!-- sheet on non-wide screens -->
+    <Sheet.Root bind:open={dialogOpen} onOpenChange={handleSheetOpenChange}>
+      <Sheet.Trigger class={buttonVariants({ variant: "outline" }) + " flex items-center gap-2"} aria-label="Form settings">
         <IconSettings class="size-5" />
-      </Dialog.Trigger>
-      <Dialog.Content class="max-w-md max-h-[80vh] overflow-y-auto">
-        <Dialog.Header>
-          <Dialog.Title>Form Settings</Dialog.Title>
-          <Dialog.Description>Advanced configuration for this form.</Dialog.Description>
-        </Dialog.Header>
+      </Sheet.Trigger>
+      <Sheet.Content class="max-w-md h-screen max-h-screen overflow-y-auto pt-8 px-2">
+        <Sheet.Header>
+          <Sheet.Title>Form Settings</Sheet.Title>
+          <Sheet.Description>Advanced configuration for this form.</Sheet.Description>
+        </Sheet.Header>
         {@render settingsContent()}
-      </Dialog.Content>
-    </Dialog.Root>
+      </Sheet.Content>
+    </Sheet.Root>
   {:else}
     <!-- panel on wide screens -->
     <Panel.Root on:openchange={handlePanelChange}>
