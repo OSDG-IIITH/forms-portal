@@ -83,7 +83,11 @@ export function questionToKdl(q: Question): string {
     }
   }
   if (q.validations && (q.validations['max-chars'] || q.validations['min-chars'] || q.validations.regex || q.validations.email)) {
-    kdl += '    validations {\n';
+    kdl += '    validations ';
+    if(q.validations.email) {
+      kdl += 'email ';
+    }
+    kdl +='{\n';
     if (q.validations.regex) {
       kdl += `      regex ${escapeKdlString(q.validations.regex)}\n`;
     }
@@ -92,9 +96,6 @@ export function questionToKdl(q: Question): string {
     }
     if (q.validations['max-chars']) {
       kdl += `      "max-chars" ${q.validations['max-chars']}\n`;
-    }
-    if (q.validations.email) {
-      kdl += `      email true\n`;
     }
     kdl += '    }\n';
   }
