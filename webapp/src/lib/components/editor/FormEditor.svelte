@@ -77,9 +77,17 @@
 
   let isPanelOpen = $state(false);
   let windowWidth = $state(0);
+  let dialogOpen = $state(false);
 
   function handlePanelChange(event: CustomEvent<{ open: boolean }>) {
     isPanelOpen = event.detail.open;
+  }
+
+  function handleDialogOpenChange(e: CustomEvent<boolean>) {
+    dialogOpen = e.detail;
+    if (windowWidth > 0 && windowWidth < 1380 && !e.detail) {
+      isPanelOpen = false;
+    }
   }
 
   const getDisplacement = (width: number, isOpen: boolean) => {
@@ -352,7 +360,7 @@
 
 <div class="min-h-screen bg-background relative pt-24">
   <div class="absolute top-24 right-8 z-10">
-    <FormConfig bind:formData on:panelchange={handlePanelChange} />
+    <FormConfig bind:formData bind:dialogOpen on:panelchange={handlePanelChange} on:dialogopenchange={handleDialogOpenChange} />
   </div>
   <div 
     id="MainContent" 

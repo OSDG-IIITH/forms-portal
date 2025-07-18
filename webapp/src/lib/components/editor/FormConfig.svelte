@@ -10,14 +10,14 @@
   import { IconSettings } from '@tabler/icons-svelte';
   import { createEventDispatcher } from 'svelte';
 
-  let { formData = $bindable() } = $props();
+  let { formData = $bindable(), dialogOpen = $bindable(false) } = $props();
   
   const dispatch = createEventDispatcher<{
     panelchange: { open: boolean };
+    dialogopenchange: boolean;
   }>();
 
   let windowWidth = $state(0);
-  let dialogOpen = $state(false);
 
   const useDialog = $derived(windowWidth > 0 && windowWidth < 1380);
 
@@ -27,7 +27,8 @@
 
   function handleDialogOpenChange(open: boolean) {
     dialogOpen = open;
-    if (useDialog) {
+    dispatch('dialogopenchange', open);
+    if (useDialog && !open) {
       dispatch('panelchange', { open: false });
     }
   }
@@ -39,7 +40,7 @@
       const handleResize = () => {
         windowWidth = window.innerWidth;
         if (windowWidth >= 1024 && dialogOpen) {
-          dialogOpen = false;
+          handleDialogOpenChange(false);
         }
       };
       
@@ -139,14 +140,14 @@
           bind:value={formData.individual_limit}
         />
       </div>
-      <div class="flex items-start gap-3 p-3 border rounded-md bg-muted/20">
+      <div onclick={e => e.stopPropagation()} tabindex="-1" aria-hidden="true" class="flex items-start gap-3 p-3 border rounded-md bg-muted/20">
         <Checkbox id="form-anonymous" bind:checked={formData.anonymous} class="mt-0.5" />
         <div>
           <Label for="form-anonymous" class="text-sm font-medium">Anonymous Responses</Label>
           <p class="text-xs text-muted-foreground">Allow users to submit responses without identification.</p>
         </div>
       </div>
-      <div class="flex items-start gap-3 p-3 border rounded-md bg-muted/20">
+      <div onclick={e => e.stopPropagation()} tabindex="-1" aria-hidden="true" class="flex items-start gap-3 p-3 border rounded-md bg-muted/20">
         <Checkbox id="form-editable-responses" bind:checked={formData.editable_responses} class="mt-0.5" />
         <div>
           <Label for="form-editable-responses" class="text-sm font-medium">Editable Responses</Label>

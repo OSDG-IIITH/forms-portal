@@ -44,6 +44,10 @@
 	function handleClickOutside(event: MouseEvent) {
 		if (open && panelElement && !panelElement.contains(event.target as Node) && 
 			triggerElement && !triggerElement.contains(event.target as Node)) {
+			// Ignore clicks on checkboxes inside the panel
+			if ((event.target as HTMLElement)?.closest('[data-slot="checkbox"]')) {
+				return;
+			}
 			panel?.close();
 		}
 	}
