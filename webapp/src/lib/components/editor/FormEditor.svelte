@@ -402,11 +402,13 @@
             {addQuestion}
             questionsLength={questions.length}
           />
-          <FormSaveFooter
-            questionsLength={questions.length}
-            {isSaving}
-            {saveForm}
-          />
+          {#if questions.length > 0}
+            <FormSaveFooter
+              questionsLength={questions.length}
+              {isSaving}
+              {saveForm}
+            />
+          {/if}
         </section>
       </div>
     {/if}
