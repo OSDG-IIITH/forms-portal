@@ -6,8 +6,7 @@
   import {
     IconSquareLetterA,
     IconViewportTall,
-    IconRegex,
-    IconAt
+    IconRegex
   } from '@tabler/icons-svelte';
   import { slide } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
@@ -23,7 +22,6 @@
         'max-chars'?: number;
         'min-chars'?: number;
         regex?: string;
-        email?: boolean;
       };
     };
   }
@@ -32,9 +30,6 @@
 
   if (!question.validations) {
     question.validations = {};
-  }
-  if (typeof question.validations.email !== 'boolean') {
-    question.validations.email = false;
   }
 
   let showPlaceholder = !!question.placeholder;
@@ -116,16 +111,6 @@
       <IconRegex class="size-4" />
       <span class="text-sm font-medium">Regex</span>
     </Toggle>
-    {#if question.validations}
-      <Toggle
-        bind:pressed={question.validations.email}
-        aria-label="Toggle email validation"
-        variant="outline"
-      >
-        <IconAt class="size-4" />
-        <span class="text-sm font-medium">Email</span>
-      </Toggle>
-    {/if}
   </div>
 
   {#if showPlaceholder}

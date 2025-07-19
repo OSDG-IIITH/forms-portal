@@ -18,7 +18,6 @@ export type Question = {
     'max-chars'?: number;
     'min-chars'?: number;
     regex?: string;
-    email?: boolean;
   };
   'max-file-size'?: number;
   'max-files'?: number;
@@ -82,12 +81,8 @@ export function questionToKdl(q: Question): string {
       kdl += `    "allowed-types" ${typesString}\n`;
     }
   }
-  if (q.validations && (q.validations['max-chars'] || q.validations['min-chars'] || q.validations.regex || q.validations.email)) {
-    kdl += '    validations ';
-    if(q.validations.email) {
-      kdl += 'email ';
-    }
-    kdl +='{\n';
+  if (q.validations && (q.validations['max-chars'] || q.validations['min-chars'] || q.validations.regex)) {
+    kdl += '    validations {\n';
     if (q.validations.regex) {
       kdl += `      regex ${escapeKdlString(q.validations.regex)}\n`;
     }
