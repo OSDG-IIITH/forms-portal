@@ -137,7 +137,6 @@
                 if (v.name === 'regex') q.validations.regex = parseKdlValue(v.values[0]);
                 else if (v.name === 'min-chars') q.validations['min-chars'] = Number(parseKdlValue(v.values[0]));
                 else if (v.name === 'max-chars') q.validations['max-chars'] = Number(parseKdlValue(v.values[0]));
-                else if (v.name === 'email') q.validations.email = true;
               }
             }
           }
