@@ -27,6 +27,17 @@ create table if not exists forms (
     )
 );
 
+create table if not exists comments (
+    id text primary key default generate_ulid(),
+    form text not null references forms(id) on delete cascade,
+    commenter text not null references users(id) on delete cascade,
+    body text not null,
+    state comment_state not null default 'visible',
+    element text, -- id of question/section in forms.spec
+    parent text references comments(id) on delete cascade,
+    modified timestamptz not null default now()
+);
+
 create table if not exists groups (
     id text primary key default generate_ulid(),
     owner text not null references users(id),
@@ -103,13 +114,10 @@ create table if not exists answers (
     unique (response, question)
 );
 
-create table if not exists comments (
-    id text primary key default generate_ulid(),
+create table if not exists saved_responses (
+    "user" text not null references users(id) on delete cascade,
     form text not null references forms(id) on delete cascade,
-    commenter text not null references users(id) on delete cascade,
-    body text not null,
-    state comment_state not null default 'visible',
-    element text, -- id of question/section in forms.spec
-    parent text references comments(id) on delete cascade,
-    modified timestamptz not null default now()
+    response text not null references responses(id) on delete cascade,
+
+    primary key ("user", form, response)
 );

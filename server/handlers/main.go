@@ -46,6 +46,8 @@ func RegisterAll(router *echo.Group) {
 	// This route is placed later so it gets checked last.
 	router.GET("/forms/:handle/:slug", middleware.Auth(forms.ResolveForm))
 
+	router.GET("/responses/saved", middleware.Auth(responses.ListSavedResponses))
+
 	router.GET("/groups", middleware.Auth(groups.ListGroups))
 	router.POST("/groups", middleware.Auth(groups.CreateGroup))
 

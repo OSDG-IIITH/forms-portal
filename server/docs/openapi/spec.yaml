@@ -294,6 +294,62 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /responses/saved:
+    get:
+      tags: [Responses]
+      summary: List saved responses
+      description: Retrieves all the saved responses for the logged in user.
+      operationId: listSavedResponses
+      parameters:
+        - name: title
+          in: query
+          description: The form title.
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ResponseStatus'
+        - name: sort
+          in: query
+          description: Sort criteria.
+          schema:
+            type: string
+            enum: [started, submitted, edited]
+            default: submitted
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of saved responses.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /forms/{formId}/responses:
     parameters:
       - $ref: '#/components/parameters/formId'
@@ -313,7 +369,7 @@ paths:
           description: Sort criteria.
           schema:
             type: string
-            enum: [started, submitted]
+            enum: [started, submitted, edited]
             default: submitted
         - name: order
           in: query
@@ -445,6 +501,12 @@ paths:
       summary: Submit response
       description: Finalizes a response by changing its status to 'completed'. Requires ownership of response.
       operationId: submitResponse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResponseSubmit'
       responses:
         '200':
           description: Response submitted successfully.
@@ -1299,6 +1361,14 @@ components:
         value:
           type: string
           description: This string must contain the answer, JSON.stringify(...)-ed.
+
+    ResponseSubmit:
+      type: object
+      required:
+        - save
+      properties:
+        save:
+          type: boolean
 
     Comment:
       type: object

@@ -568,7 +568,9 @@ begin
             case when p_sort_by = 'submitted' and p_order = 'asc' then r.submitted end asc,
             case when p_sort_by = 'submitted' and p_order = 'desc' then r.submitted end desc,
             case when p_sort_by = 'started' and p_order = 'asc' then r.started end asc,
-            case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc
+            case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc,
+            case when p_sort_by = 'edited' and p_order = 'asc' then r.edited end asc,
+            case when p_sort_by = 'edited' and p_order = 'desc' then r.edited end desc
         limit p_limit offset p_offset;
 
         return;
@@ -580,7 +582,9 @@ begin
             case when p_sort_by = 'submitted' and p_order = 'asc' then r.submitted end asc,
             case when p_sort_by = 'submitted' and p_order = 'desc' then r.submitted end desc,
             case when p_sort_by = 'started' and p_order = 'asc' then r.started end asc,
-            case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc
+            case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc,
+            case when p_sort_by = 'edited' and p_order = 'asc' then r.edited end asc,
+            case when p_sort_by = 'edited' and p_order = 'desc' then r.edited end desc
         limit p_limit offset p_offset;
 
         return;
@@ -739,7 +743,8 @@ $$ language plpgsql;
 create or replace function submit_response_by_id(
     p_id text,
     p_form_id text,
-    p_user_id text
+    p_user_id text,
+    p_save boolean
 ) returns responses as $$
 declare
     v_response responses;
@@ -765,6 +770,54 @@ begin
         where responses.id = p_id returning * into v_response;
     end if;
 
+    if p_save then
+        insert into saved_responses ("user", form, response) values (
+            p_user_id, p_form_id, p_id
+        ) on conflict do nothing;
+    end if;
+
     return v_response;
+end;
+$$ language plpgsql;
+
+create or replace function list_responses_for_user(
+    p_user_id text,
+    p_form_title text,
+    p_status response_status,
+    p_sort_by text,
+    p_order text,
+    p_limit int,
+    p_offset int
+) returns setof responses as $$
+begin
+    return query select r.* from saved_responses sr
+    join responses r on r.id = sr.response join forms f on f.id = sr.form
+    where sr."user" = p_user_id and (p_status is null or r.status = p_status)
+    and (p_form_title = '' or f.title %> p_form_title) order by
+        similarity(f.title, p_form_title) desc,
+        case when p_sort_by = 'submitted' and p_order = 'asc' then r.submitted end asc,
+        case when p_sort_by = 'submitted' and p_order = 'desc' then r.submitted end desc,
+        case when p_sort_by = 'started' and p_order = 'asc' then r.started end asc,
+        case when p_sort_by = 'started' and p_order = 'desc' then r.started end desc,
+        case when p_sort_by = 'edited' and p_order = 'asc' then r.edited end asc,
+        case when p_sort_by = 'edited' and p_order = 'desc' then r.edited end desc
+    limit p_limit offset p_offset;
+end;
+$$ language plpgsql;
+
+create or replace function count_responses_for_user(
+    p_user_id text,
+    p_form_title text,
+    p_status response_status
+) returns bigint as $$
+declare
+    v_count bigint;
+begin
+    select count(distinct r.id) into v_count from saved_responses sr
+    join responses r on r.id = sr.response join forms f on f.id = sr.form
+    where sr."user" = p_user_id and (p_status is null or r.status = p_status)
+    and (p_form_title = '' or f.title %> p_form_title);
+
+    return v_count;
 end;
 $$ language plpgsql;

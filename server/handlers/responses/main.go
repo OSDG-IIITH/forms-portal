@@ -287,12 +287,40 @@ func SubmitResponse(c echo.Context) error {
 	formID := c.Param("formId")
 	responseID := c.Param("responseId")
 
+	type Payload struct {
+		Save bool `json:"save" validate:"required"`
+	}
+
+	payload := Payload{}
+
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(
+			http.StatusBadRequest,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New("Failed to parse request payload."),
+			),
+		)
+	}
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		message := utils.FormatValidationErrors(err)
+		return c.JSON(
+			http.StatusUnprocessableEntity,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New(message),
+			),
+		)
+	}
+
 	response, err := cc.Query.SubmitResponse(
 		*cc.DbCtx,
 		db.SubmitResponseParams{
 			ID:     responseID,
 			FormID: formID,
 			UserID: user.ID,
+			Save:   payload.Save,
 		},
 	)
 
@@ -313,4 +341,110 @@ func SubmitResponse(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+func ListSavedResponses(c echo.Context) error {
+	cc := c.(*dbcontext.Context)
+	user := c.Get("user").(db.User)
+
+	type Query struct {
+		Title  string `query:"title"`
+		Status string `query:"status" validate:"omitempty,oneof=draft completed edited"`
+		Sort   string `query:"sort" validate:"oneof=started submitted"`
+		Order  string `query:"order" validate:"oneof=asc desc"`
+		Limit  int32  `query:"limit" validate:"gte=1,lte=100"`
+		Offset int32  `query:"offset" validate:"gte=0"`
+	}
+
+	query := Query{
+		Sort:  "submitted",
+		Order: "desc",
+		Limit: 20,
+	}
+
+	err := c.Bind(&query)
+	if err != nil {
+		return c.JSON(
+			http.StatusBadRequest,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New("Failed to parse request payload."),
+			),
+		)
+	}
+
+	err = utils.Validate.Struct(query)
+	if err != nil {
+		message := utils.FormatValidationErrors(err)
+		return c.JSON(
+			http.StatusUnprocessableEntity,
+			utils.FromError(
+				utils.ErrorBadRequest,
+				errors.New(message),
+			),
+		)
+	}
+
+	var filterStatus db.NullResponseStatus
+	if query.Status != "" {
+		err := filterStatus.ResponseStatus.Scan(query.Status)
+		if err == nil {
+			filterStatus.Valid = true
+		}
+	} else {
+		filterStatus.Valid = false
+	}
+
+	responses, err := cc.Query.ListSavedResponses(
+		*cc.DbCtx,
+		db.ListSavedResponsesParams{
+			UserID:    user.ID,
+			FormTitle: query.Title,
+			Status:    filterStatus,
+			SortBy:    query.Sort,
+			OrderBy:   query.Order,
+			LimitVal:  query.Limit,
+			OffsetVal: query.Offset,
+		},
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Hint == "forbidden" {
+			return c.JSON(
+				http.StatusForbidden,
+				utils.FromError(utils.HttpErrorCode(pgErr.Hint), errors.New(pgErr.Message)),
+			)
+		}
+
+		log.Error("failed to fetch responses", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to fetch responses.")),
+		)
+	}
+
+	total, err := cc.Query.CountSavedResponses(
+		*cc.DbCtx,
+		db.CountSavedResponsesParams{
+			UserID:    user.ID,
+			FormTitle: query.Title,
+			Status:    filterStatus,
+		},
+	)
+	if err != nil {
+		log.Error("failed to fetch responses", "error", err)
+		return c.JSON(
+			http.StatusInternalServerError,
+			utils.FromError(utils.ErrorInternal, errors.New("Failed to count responses.")),
+		)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": utils.EmptyArrayIfNull(responses),
+		"pagination": map[string]int64{
+			"offset": int64(query.Offset),
+			"limit":  int64(query.Limit),
+			"total":  total,
+		},
+	})
 }

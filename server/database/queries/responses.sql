@@ -46,5 +46,24 @@ select * from add_answer_to_response(
 select * from submit_response_by_id(
     sqlc.arg(id),
     sqlc.arg(form_id),
-    sqlc.arg(user_id)
+    sqlc.arg(user_id),
+    sqlc.arg(save)
+);
+
+-- name: ListSavedResponses :many
+select * from list_responses_for_user(
+    sqlc.arg(user_id),
+    sqlc.arg(form_title),
+    sqlc.narg(status)::response_status,
+    sqlc.arg(sort_by),
+    sqlc.arg(order_by),
+    sqlc.arg(limit_val),
+    sqlc.arg(offset_val)
+);
+
+-- name: CountSavedResponses :one
+select count_responses_for_user(
+    sqlc.arg(user_id),
+    sqlc.arg(form_title),
+    sqlc.narg(status)::response_status
 );
