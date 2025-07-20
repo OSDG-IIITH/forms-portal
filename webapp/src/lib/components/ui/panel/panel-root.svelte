@@ -1,22 +1,32 @@
 <script lang="ts">
 	import { setContext, createEventDispatcher } from 'svelte';
 	
-	let { children }: { children?: any } = $props();
-	let open = $state(false);
+	let { children, open: controlledOpen }: { children?: any; open?: boolean } = $props();
+	let internalOpen = $state(false);
 	let triggerElement = $state<HTMLElement | null>(null);
 	
 	const dispatch = createEventDispatcher<{
 		openchange: { open: boolean };
 	}>();
 	
+	const open = $derived(controlledOpen !== undefined ? controlledOpen : internalOpen);
+	
 	function toggle() {
-		open = !open;
-		dispatch('openchange', { open });
+		if (controlledOpen !== undefined) {
+			dispatch('openchange', { open: !open });
+		} else {
+			internalOpen = !internalOpen;
+			dispatch('openchange', { open: internalOpen });
+		}
 	}
 
 	function close() {
-		open = false;
-		dispatch('openchange', { open });
+		if (controlledOpen !== undefined) {
+			dispatch('openchange', { open: false });
+		} else {
+			internalOpen = false;
+			dispatch('openchange', { open: false });
+		}
 	}
 
 	const panelContext = {

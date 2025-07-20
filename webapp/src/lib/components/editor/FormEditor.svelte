@@ -1,6 +1,6 @@
 <script lang="ts">
   import FormTitleDescription from './FormTitleDescription.svelte';
-  import FormConfig from './FormConfig.svelte';
+  import SidePanel from './SidePanel.svelte';
   import QuestionsList from './QuestionsList.svelte';
   import AddQuestionPanel from './AddQuestionPanel.svelte';
   import FormSaveFooter from './FormActionFooter.svelte';
@@ -359,7 +359,7 @@
 
 <div class="min-h-screen bg-background relative pt-24">
   <div class="absolute top-24 right-8 z-10">
-    <FormConfig bind:formData bind:dialogOpen on:panelchange={handlePanelChange} on:dialogopenchange={handleDialogOpenChange} />
+    <SidePanel bind:formData bind:dialogOpen on:panelchange={handlePanelChange} on:dialogopenchange={handleDialogOpenChange} />
   </div>
   <div 
     id="MainContent" 
