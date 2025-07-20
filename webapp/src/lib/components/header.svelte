@@ -52,14 +52,14 @@
       <div class="flex items-center gap-2 ml-auto">
         {#if showtabs}
           <!-- menu button -->
-          <Button
-          variant="outline"
-            class="md:hidden h-9 px-3 rounded-lg border hover:border-primary/30 transition-all duration-200 hover:scale-105 p-2"
+          <button
+            type="button"
+            class="md:hidden h-9 px-3 rounded-lg bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 border"
             aria-label="Open navigation menu"
-            onclick={() => (showMobileNav = !showMobileNav)}
+            on:click={() => (showMobileNav = !showMobileNav)}
           >
             <IconMenu2 class="w-4 h-4" />
-          </Button>
+          </button>
         {/if}
         <ThemeSwitcher />
       </div>
