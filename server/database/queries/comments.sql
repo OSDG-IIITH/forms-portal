@@ -4,7 +4,7 @@ select * from list_comments_for_form(sqlc.arg(form_id), sqlc.arg(user_id));
 -- name: CreateComment :one
 select * from create_comment_on_form(
     sqlc.arg(form_id), sqlc.arg(user_id),
-    sqlc.arg(body), sqlc.arg(element), sqlc.narg(parent)
+    sqlc.arg(body), sqlc.narg(element), sqlc.narg(parent)
 );
 
 -- name: UpdateComment :one
