@@ -16,12 +16,25 @@
 
   let error: string = '';
 
-  $: if (question.validations?.['min-chars'] && value.length < question.validations['min-chars']) {
-    error = `Minimum ${question.validations['min-chars']} characters required.`;
-  } else if (question.validations?.['max-chars'] && value.length > question.validations['max-chars']) {
-    error = `Maximum ${question.validations['max-chars']} characters allowed.`;
-  } else {
-    error = '';
+  $: {
+    if (question.validations?.['min-chars'] && value.length < question.validations['min-chars']) {
+      error = `Minimum ${question.validations['min-chars']} characters required.`;
+    } else if (question.validations?.['max-chars'] && value.length > question.validations['max-chars']) {
+      error = `Maximum ${question.validations['max-chars']} characters allowed.`;
+    } else if (question.validations?.regex && value) {
+      try {
+        const re = new RegExp(question.validations.regex);
+        if (!re.test(value)) {
+          error = 'Invalid format.';
+        } else {
+          error = '';
+        }
+      } catch {
+        error = 'Invalid format.';
+      }
+    } else {
+      error = '';
+    }
   }
 </script>
 
