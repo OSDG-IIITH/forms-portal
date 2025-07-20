@@ -108,6 +108,11 @@
 	$effect(() => {
 		if (viewMode === 'grid' || viewMode === 'list') localStorage.setItem('forms-view-mode', viewMode);
 	});
+
+	function handleFormDelete(e: CustomEvent<{ id: string | number }>) {
+		totalCount = Math.max(0, totalCount - 1);
+		fetchForms(currentPage);
+	}
 </script>
 
 <Tabs bind:value={activeTab}>
@@ -178,9 +183,9 @@
 			{:else if forms.length}
 				<div class="space-y-6">
 					{#if viewMode === 'grid'}
-						<FormsGridView forms={getFilteredForms()} {loading} {userHandle} />
+						<FormsGridView forms={getFilteredForms()} {loading} {userHandle} on:delete={handleFormDelete} />
 					{:else}
-						<FormsListView forms={getFilteredForms()} {loading} {userHandle} />
+						<FormsListView forms={getFilteredForms()} {loading} {userHandle} on:delete={handleFormDelete} />
 					{/if}
 					{#if totalCount > perPage || forms.length === perPage}
 						<Pagination.Root count={totalCount} {perPage} bind:page={currentPage} onPageChange={handlePageChange}>
@@ -231,9 +236,9 @@
 			{:else if forms.length}
 				<div class="space-y-6">
 					{#if viewMode === 'grid'}
-						<FormsGridView forms={getFilteredForms()} {loading} {userHandle} />
+						<FormsGridView forms={getFilteredForms()} {loading} {userHandle} on:delete={handleFormDelete} />
 					{:else}
-						<FormsListView forms={getFilteredForms()} {loading} {userHandle} />
+						<FormsListView forms={getFilteredForms()} {loading} {userHandle} on:delete={handleFormDelete} />
 					{/if}
 					{#if totalCount > perPage || forms.length === perPage}
 						<Pagination.Root count={totalCount} {perPage} bind:page={currentPage} onPageChange={handlePageChange}>
