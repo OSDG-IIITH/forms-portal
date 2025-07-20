@@ -109,7 +109,7 @@ create table if not exists comments (
     commenter text not null references users(id) on delete cascade,
     body text not null,
     state comment_state not null default 'visible',
-    element text not null, -- id of question/section in forms.spec
+    element text, -- id of question/section in forms.spec
     parent text references comments(id) on delete cascade,
     modified timestamptz not null default now()
 );
