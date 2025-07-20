@@ -532,6 +532,17 @@ paths:
       description: Retrieves all groups owned by the current user.
       operationId: listGroups
       parameters:
+        - name: owner
+          in: query
+          description: User ID of the owner.
+          schema:
+            type: string
+            format: ulid
+            nullable: true
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/GroupType'
         - name: sort
           in: query
           description: Sort criteria.

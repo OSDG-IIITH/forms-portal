@@ -18,10 +18,12 @@ func ListGroups(c echo.Context) error {
 	user := c.Get("user").(db.User)
 
 	type Query struct {
-		Sort   string `query:"sort" validate:"oneof=created name type"`
-		Order  string `query:"order" validate:"oneof=asc desc"`
-		Limit  int32  `query:"limit" validate:"gte=1,lte=100"`
-		Offset int32  `query:"offset" validate:"gte=0"`
+		Owner  *string `query:"owner"`
+		Type   string  `query:"type" validate:"omitempty,oneof=list domain"`
+		Sort   string  `query:"sort" validate:"oneof=created name type"`
+		Order  string  `query:"order" validate:"oneof=asc desc"`
+		Limit  int32   `query:"limit" validate:"gte=1,lte=100"`
+		Offset int32   `query:"offset" validate:"gte=0"`
 	}
 
 	query := Query{Sort: "created", Order: "desc", Limit: 20}
@@ -49,14 +51,26 @@ func ListGroups(c echo.Context) error {
 		)
 	}
 
+	var filterType db.NullGroupType
+	if query.Type != "" {
+		err := filterType.GroupType.Scan(query.Type)
+		if err == nil {
+			filterType.Valid = true
+		}
+	} else {
+		filterType.Valid = false
+	}
+
 	groups, err := cc.Query.ListGroups(
 		*cc.DbCtx,
 		db.ListGroupsParams{
-			UserID:    user.ID,
-			SortBy:    query.Sort,
-			OrderBy:   query.Order,
-			LimitVal:  query.Limit,
-			OffsetVal: query.Offset,
+			UserID:     user.ID,
+			OwnerID:    query.Owner,
+			FilterType: filterType,
+			SortBy:     query.Sort,
+			OrderBy:    query.Order,
+			LimitVal:   query.Limit,
+			OffsetVal:  query.Offset,
 		},
 	)
 	if err != nil {

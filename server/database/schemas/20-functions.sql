@@ -267,6 +267,8 @@ $$ language plpgsql;
 
 create or replace function list_groups_for_user(
     p_user_id text,
+    p_owner_id text,
+    p_filter_type group_type,
     p_sort_by text,
     p_order text,
     p_limit int,
@@ -277,8 +279,14 @@ begin
     filter (where m."user" is not null) as members from groups g
     left join group_domain_rules d on g.id = d."group"
     left join group_list_members m on g.id = m."group"
-    where g.owner = p_user_id
-    group by g.id, g.owner, g.name, g.description, g.type, d.domain
+    where ((
+        p_owner_id is not null and g.owner = p_owner_id
+        and m."user" = p_user_id or d.domain = (
+            select substring(email from '@(.*)$') from users where id = p_user_id
+        )
+    ) or (p_owner_id is null and g.owner = p_user_id)) and (
+        p_filter_type is null or g.type = p_filter_type
+    ) group by g.id, g.owner, g.name, g.description, g.type, d.domain
     order by
         case when p_sort_by = 'created' and p_order = 'asc' then g.id end asc,
         case when p_sort_by = 'created' and p_order = 'desc' then g.id end desc,
