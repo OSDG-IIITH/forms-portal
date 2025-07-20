@@ -267,7 +267,7 @@ $$ language plpgsql;
 
 create or replace function list_groups_for_user(
     p_user_id text,
-    p_owner_id text,
+    p_owner_email text,
     p_filter_type group_type,
     p_sort_by text,
     p_order text,
@@ -275,21 +275,21 @@ create or replace function list_groups_for_user(
     p_offset int
 ) returns setof group_with_details as $$
 begin
-    return query select g.*, d.domain, array_agg(m."user" order by m."user")
-    filter (where m."user" is not null) as members from groups g
-    left join group_domain_rules d on g.id = d."group"
-    left join group_list_members m on g.id = m."group"
-    where ((
-        p_owner_id is not null and g.owner = p_owner_id
-        and m."user" = p_user_id or d.domain = (
+    return query with group_details as (
+        select g.*, d.domain, array_agg(m."user" order by m."user")
+        filter (where m."user" is not null) as members from groups g
+        left join group_domain_rules d on g.id = d."group"
+        left join group_list_members m on g.id = m."group"
+        where (p_owner_email is null or owner = (
+            select id from users where email = p_owner_email
+        )) group by g.id, d.domain
+    ) select * from group_details where owner = p_user_id or (
+        p_user_id = any(members) or domain = (
             select substring(email from '@(.*)$') from users where id = p_user_id
         )
-    ) or (p_owner_id is null and g.owner = p_user_id)) and (
-        p_filter_type is null or g.type = p_filter_type
-    ) group by g.id, g.owner, g.name, g.description, g.type, d.domain
-    order by
-        case when p_sort_by = 'created' and p_order = 'asc' then g.id end asc,
-        case when p_sort_by = 'created' and p_order = 'desc' then g.id end desc,
+    ) and (p_filter_type is null or type = p_filter_type) order by
+        case when p_sort_by = 'created' and p_order = 'asc' then id end asc,
+        case when p_sort_by = 'created' and p_order = 'desc' then id end desc,
         case when p_sort_by = 'name' and p_order = 'asc' then name end asc,
         case when p_sort_by = 'name' and p_order = 'desc' then name end desc,
         case when p_sort_by = 'type' and p_order = 'asc' then type end asc,

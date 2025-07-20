@@ -19,11 +19,13 @@ func ListForms(c echo.Context) error {
 	user := c.Get("user").(db.User)
 
 	type Query struct {
-		Role   string `query:"role" validate:"omitempty,oneof=view respond comment analyze edit manage"`
-		Sort   string `query:"sort" validate:"oneof=modified title"`
-		Order  string `query:"order" validate:"oneof=asc desc"`
-		Limit  int32  `query:"limit" validate:"gte=1,lte=100"`
-		Offset int32  `query:"offset" validate:"gte=0"`
+		Owner  *string `query:"owner"`
+		Title  string  `query:"title"`
+		Role   string  `query:"role" validate:"omitempty,oneof=view respond comment analyze edit manage"`
+		Sort   string  `query:"sort" validate:"oneof=modified title"`
+		Order  string  `query:"order" validate:"oneof=asc desc"`
+		Limit  int32   `query:"limit" validate:"gte=1,lte=100"`
+		Offset int32   `query:"offset" validate:"gte=0"`
 	}
 
 	query := Query{Sort: "modified", Order: "desc", Limit: 20}

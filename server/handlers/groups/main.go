@@ -18,7 +18,7 @@ func ListGroups(c echo.Context) error {
 	user := c.Get("user").(db.User)
 
 	type Query struct {
-		Owner  *string `query:"owner"`
+		Owner  *string `query:"owner" validate:"omitempty,email"`
 		Type   string  `query:"type" validate:"omitempty,oneof=list domain"`
 		Sort   string  `query:"sort" validate:"oneof=created name type"`
 		Order  string  `query:"order" validate:"oneof=asc desc"`
@@ -65,7 +65,7 @@ func ListGroups(c echo.Context) error {
 		*cc.DbCtx,
 		db.ListGroupsParams{
 			UserID:     user.ID,
-			OwnerID:    query.Owner,
+			OwnerEmail: query.Owner,
 			FilterType: filterType,
 			SortBy:     query.Sort,
 			OrderBy:    query.Order,

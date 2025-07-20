@@ -1,7 +1,7 @@
 -- name: ListGroups :many
 select * from list_groups_for_user(
     sqlc.arg(user_id),
-    sqlc.narg(owner_id),
+    sqlc.narg(owner_email),
     sqlc.narg(filter_type)::group_type,
     sqlc.arg(sort_by),
     sqlc.arg(order_by),
