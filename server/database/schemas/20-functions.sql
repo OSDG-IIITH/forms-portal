@@ -61,6 +61,8 @@ $$ language plpgsql;
 
 create or replace function list_forms_for_user(
     p_user_id text,
+    p_owner_email text,
+    p_form_title text,
     p_filter_role permission_role,
     p_sort_by text,
     p_order text,
@@ -70,8 +72,9 @@ create or replace function list_forms_for_user(
 begin
     return query select f.* from forms f
     inner join form_permissions fp on f.id = fp.form and fp.user = p_user_id
-    where p_filter_role is null or fp.role = p_filter_role
-    group by f.id order by
+    where (p_filter_role is null or fp.role = p_filter_role) and (
+        p_owner_email is null or f.owner = (select id from users where email = p_owner_email
+    )) and (p_form_title = '' or f.title %> p_form_title) group by f.id order by
         case when p_sort_by = 'modified' and p_order = 'asc' then f.modified end asc,
         case when p_sort_by = 'modified' and p_order = 'desc' then f.modified end desc,
         case when p_sort_by = 'title' and p_order = 'asc' then f.title end asc,
@@ -82,6 +85,8 @@ $$ language plpgsql;
 
 create or replace function count_forms_for_user(
     p_user_id text,
+    p_owner_email text,
+    p_form_title text,
     p_filter_role permission_role default null
 ) returns bigint as $$
 declare
@@ -89,7 +94,9 @@ declare
 begin
     select count(distinct f.id) into v_count from forms f
     left join form_permissions fp on f.id = fp.form and fp.user = p_user_id
-    where p_filter_role is null or fp.role = p_filter_role;
+    where (p_filter_role is null or fp.role = p_filter_role) and (
+        p_owner_email is null or f.owner = (select id from users where email = p_owner_email
+    )) and (p_form_title = '' or f.title %> p_form_title);
 
     return v_count;
 end;

@@ -139,6 +139,17 @@ paths:
       description: Retrieves forms accessible to the current user, with support for filtering, sorting, and pagination.
       operationId: listForms
       parameters:
+        - name: title
+          in: query
+          description: The form title.
+          schema:
+            type: string
+        - name: owner
+          in: query
+          description: The owner's email.
+          schema:
+            type: string
+            format: email
         - name: role
           in: query
           schema:
@@ -596,11 +607,10 @@ paths:
       parameters:
         - name: owner
           in: query
-          description: User ID of the owner.
+          description: The owner's email.
           schema:
             type: string
-            format: ulid
-            nullable: true
+            format: email
         - name: type
           in: query
           schema:

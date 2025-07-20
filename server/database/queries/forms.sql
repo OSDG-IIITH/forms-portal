@@ -1,6 +1,8 @@
 -- name: ListForms :many
 select * from list_forms_for_user(
     sqlc.arg(user_id),
+    sqlc.narg(owner_email),
+    sqlc.arg(form_title),
     sqlc.narg(filter_role)::permission_role,
     sqlc.arg(sort_by),
     sqlc.arg(order_by),
@@ -11,6 +13,8 @@ select * from list_forms_for_user(
 -- name: CountForms :one
 select count_forms_for_user(
     sqlc.arg(user_id),
+    sqlc.narg(owner_email),
+    sqlc.arg(form_title),
     sqlc.narg(filter_role)::permission_role
 );
 

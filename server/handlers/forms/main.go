@@ -19,7 +19,7 @@ func ListForms(c echo.Context) error {
 	user := c.Get("user").(db.User)
 
 	type Query struct {
-		Owner  *string `query:"owner"`
+		Owner  *string `query:"owner" validate:"omitempty,email"`
 		Title  string  `query:"title"`
 		Role   string  `query:"role" validate:"omitempty,oneof=view respond comment analyze edit manage"`
 		Sort   string  `query:"sort" validate:"oneof=modified title"`
@@ -67,6 +67,8 @@ func ListForms(c echo.Context) error {
 		*cc.DbCtx,
 		db.ListFormsParams{
 			UserID:     user.ID,
+			OwnerEmail: query.Owner,
+			FormTitle:  query.Title,
 			FilterRole: filterRole,
 			SortBy:     query.Sort,
 			OrderBy:    query.Order,
@@ -86,6 +88,8 @@ func ListForms(c echo.Context) error {
 		*cc.DbCtx,
 		db.CountFormsParams{
 			UserID:     user.ID,
+			OwnerEmail: query.Owner,
+			FormTitle:  query.Title,
 			FilterRole: filterRole,
 		},
 	)
