@@ -47,7 +47,7 @@ func CreateComment(c echo.Context) error {
 
 	type Payload struct {
 		Body    string  `json:"body" validate:"required"`
-		Element string  `json:"element"`
+		Element *string `json:"element"`
 		Parent  *string `json:"parent" validate:"omitempty,ulid"`
 	}
 
