@@ -6,18 +6,18 @@
   import TextareaEditor from '$lib/components/editor/questions/textarea.svelte';
   import RadioEditor from '$lib/components/editor/questions/radio.svelte';
   import CheckboxEditor from '$lib/components/editor/questions/checkbox.svelte';
-  import FileUploadEditor from '$lib/components/editor/questions/file-upload.svelte';
+  import FileUploadEditor from '$lib/components/editor/questions/file.svelte';
   import SelectEditor from '$lib/components/editor/questions/select.svelte';
-  import DatePickerEditor from '$lib/components/editor/questions/date-picker.svelte';
-  import type { Question, QuestionType } from './FormEditor';
+  import DatePickerEditor from '$lib/components/editor/questions/date.svelte';
+  import { getContext } from 'svelte';
+  import type { FormStore, Question, QuestionType } from './form-store.svelte';
 
   export let question: Question;
   export let i: number;
   export let questionTypeLabels: Record<QuestionType, string>;
-  export let moveQuestionUp: (index: number) => void;
-  export let moveQuestionDown: (index: number) => void;
-  export let removeQuestion: (id: string) => void;
   export let questionsLength: number;
+
+  const store: FormStore = getContext('form-store');
 </script>
 
 <Card>
@@ -36,7 +36,7 @@
           variant="ghost"
           size="icon"
           class="h-8 w-8"
-          onclick={() => moveQuestionUp(i)}
+          onclick={() => store.moveQuestionUp(i)}
           disabled={i === 0}
         >
           <IconChevronUp class="h-4 w-4" />
@@ -45,7 +45,7 @@
           variant="ghost"
           size="icon"
           class="h-8 w-8"
-          onclick={() => moveQuestionDown(i)}
+          onclick={() => store.moveQuestionDown(i)}
           disabled={i === questionsLength - 1}
         >
           <IconChevronDown class="h-4 w-4" />
@@ -54,7 +54,7 @@
           variant="ghost"
           size="icon"
           class="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-          onclick={() => removeQuestion(question.id)}
+          onclick={() => store.removeQuestion(question.id)}
         >
           <IconTrash class="h-4 w-4" />
         </Button>
@@ -63,19 +63,19 @@
     <!-- editor container -->
     <div class="pl-4">
       {#if question.type === 'input'}
-        <InputEditor bind:question />
+        <InputEditor questionId={question.id} />
       {:else if question.type === 'textarea'}
-        <TextareaEditor bind:question />
-      {:else if question.type === 'radio'}
-        <RadioEditor bind:question />
+        <TextareaEditor questionId={question.id} />
       {:else if question.type === 'checkbox'}
-        <CheckboxEditor bind:question />
-      {:else if question.type === 'file'}
-        <FileUploadEditor bind:question />
+        <CheckboxEditor questionId={question.id} />
+      {:else if question.type === 'radio'}
+        <RadioEditor questionId={question.id} />
       {:else if question.type === 'select'}
-        <SelectEditor bind:question />
+        <SelectEditor questionId={question.id} />
       {:else if question.type === 'date'}
-        <DatePickerEditor bind:question />
+        <DatePickerEditor questionId={question.id} />
+      {:else if question.type === 'file'}
+        <FileUploadEditor questionId={question.id} />
       {/if}
     </div>
   </CardContent>

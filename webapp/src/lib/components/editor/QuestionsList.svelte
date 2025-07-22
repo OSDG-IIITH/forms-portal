@@ -1,25 +1,20 @@
 <script lang="ts">
   import QuestionItem from './QuestionItem.svelte';
-  import type { Question, QuestionType } from './FormEditor';
+  import { getContext } from 'svelte';
+  import type { FormStore, QuestionType } from './form-store.svelte';
 
-  export let questions: Question[];
   export let questionTypeLabels: Record<QuestionType, string>;
-  export let moveQuestionUp: (index: number) => void;
-  export let moveQuestionDown: (index: number) => void;
-  export let removeQuestion: (id: string) => void;
 
+  const store: FormStore = getContext('form-store');
 </script>
 
 <div class="space-y-4">
-  {#each questions as question, i (question.id)}
-    <QuestionItem 
-      {question} 
-      {i} 
+  {#each store.questions as question, i (question.id)}
+    <QuestionItem
+      {question}
+      {i}
       {questionTypeLabels}
-      {moveQuestionUp}
-      {moveQuestionDown}
-      {removeQuestion}
-      questionsLength={questions.length}
+      questionsLength={store.questions.length}
     />
   {/each}
 </div>

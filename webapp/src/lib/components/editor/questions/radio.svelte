@@ -5,35 +5,46 @@
   import { Button } from '$lib/components/ui/button';
   import { IconPlus, IconGripVertical, IconTrash } from '@tabler/icons-svelte';
   import { ulid } from 'ulid';
+  import { getContext } from 'svelte';
+  import type { FormStore, Option } from '../form-store.svelte';
 
-  interface Option {
-    id: string;
-    value: string;
-    label: string;
-  }
+  let { questionId }: { questionId: string } = $props();
 
-  interface Props {
-    question: {
-      id: string;
-      title: string;
-      required: boolean;
-      options?: Option[];
-    };
-  }
+  const store: FormStore = getContext('form-store');
+  const question = $derived(store.questions.find((q) => q.id === questionId));
 
-  let { question = $bindable() }: Props = $props();
   let draggedIndex = $state<number | null>(null);
   let dragOverIndex = $state<number | null>(null);
 
+  $effect(() => {
+    if (question && (!question.options || question.options.length === 0)) {
+      const newOptions = [
+        { id: ulid(), value: '', label: '' },
+        { id: ulid(), value: '', label: '' }
+      ];
+      store.updateQuestion(questionId, { options: newOptions });
+    }
+  });
+
   function addOption(): void {
-    if (!question.options) question.options = [];
+    if (!question?.options) return;
     const newId = ulid();
-    question.options = [...question.options, { id: newId, value: '', label: '' }];
+    const newOptions = [...question.options, { id: newId, value: '', label: '' }];
+    store.updateQuestion(questionId, { options: newOptions });
   }
 
   function removeOption(id: string): void {
-    if (!question.options) return;
-    question.options = question.options.filter((option) => option.id !== id);
+    if (!question?.options) return;
+    const newOptions = question.options.filter((option) => option.id !== id);
+    store.updateQuestion(questionId, { options: newOptions });
+  }
+
+  function updateOptionValue(optionId: string, newLabel: string): void {
+    if (!question?.options) return;
+    const newOptions = question.options.map(opt => 
+      opt.id === optionId ? { ...opt, label: newLabel, value: newLabel } : opt
+    );
+    store.updateQuestion(questionId, { options: newOptions });
   }
 
   function handleDragStart(event: DragEvent, index: number): void {
@@ -57,14 +68,12 @@
 
   function handleDrop(event: DragEvent, dropIndex: number): void {
     event.preventDefault();
-
-    if (draggedIndex !== null && draggedIndex !== dropIndex && question.options) {
+    if (draggedIndex !== null && draggedIndex !== dropIndex && question?.options) {
       const newOptions = [...question.options];
       const [draggedOption] = newOptions.splice(draggedIndex, 1);
       newOptions.splice(dropIndex, 0, draggedOption);
-      question.options = newOptions;
+      store.updateQuestion(questionId, { options: newOptions });
     }
-
     draggedIndex = null;
     dragOverIndex = null;
   }
@@ -73,25 +82,17 @@
     draggedIndex = null;
     dragOverIndex = null;
   }
-
-  function updateOptionValue(option: Option, newLabel: string): void {
-    option.label = newLabel;
-    option.value = newLabel;
-  }
-
-  if (!question.options || question.options.length === 0) {
-    addOption();
-    addOption();
-  }
 </script>
 
+{#if question}
 <div class="space-y-4">
   <div class="space-y-2">
     <Label for="question-{question.id}">Question Text</Label>
     <Input
       id="question-{question.id}"
       placeholder="Enter your question here"
-      bind:value={question.title}
+      value={question.title}
+      oninput={(e) => store.updateQuestion(questionId, { title: e.currentTarget.value })}
     />
   </div>
 
@@ -115,10 +116,7 @@
             <Input 
               placeholder="Option" 
               value={option.label}
-              oninput={(e: Event) => {
-                const target = e.target as HTMLInputElement;
-                updateOptionValue(option, target.value);
-              }}
+              oninput={(e) => updateOptionValue(option.id, e.currentTarget.value)}
             />
             <Button
               variant="ghost"
@@ -140,15 +138,14 @@
   </Button>
 
   <div class="flex items-center gap-2">
-    <Checkbox
-      id="required-{question.id}"
-      bind:checked={question.required}
+    <Checkbox 
+      id="required-{question.id}" 
+      checked={question.required}
+      onchange={() => store.updateQuestion(questionId, { required: !question.required })}
     />
-    <Label
-      for="required-{question.id}"
-      class="text-sm"
-    >
+    <Label for="required-{question.id}" class="text-sm">
       Required
     </Label>
   </div>
 </div>
+{/if}
