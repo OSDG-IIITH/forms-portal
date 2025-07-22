@@ -16,16 +16,6 @@
   let draggedIndex = $state<number | null>(null);
   let dragOverIndex = $state<number | null>(null);
 
-  $effect(() => {
-    if (question && (!question.options || question.options.length === 0)) {
-      const newOptions = [
-        { id: ulid(), value: '', label: '' },
-        { id: ulid(), value: '', label: '' }
-      ];
-      store.updateQuestion(questionId, { options: newOptions });
-    }
-  });
-
   function addOption(): void {
     if (!question?.options) return;
     const newId = ulid();

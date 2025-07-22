@@ -1,168 +1,152 @@
 <script lang="ts">
-  import { Input } from '$lib/components/ui/input';
-  import { Label } from '$lib/components/ui/label';
-  import { Checkbox } from '$lib/components/ui/checkbox';
-  import Chip from '../chips/Chip.svelte';
-  import AddChip from '../chips/AddChip.svelte';
-  import {
-    IconSquareLetterA,
-    IconViewportTall,
-    IconRegex,
-    IconNumber123,
-    IconAt
-  } from '@tabler/icons-svelte';
-  import { fly, slide } from 'svelte/transition';
-  import { cubicOut } from 'svelte/easing';
-  import { tick, getContext } from 'svelte';
-  import type { FormStore } from '../form-store.svelte';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import Chip from '../chips/Chip.svelte';
+	import AddChip from '../chips/AddChip.svelte';
+	import {
+		IconSquareLetterA,
+		IconViewportTall,
+		IconRegex,
+		IconNumber123,
+		IconAt
+	} from '@tabler/icons-svelte';
+	import { fly, slide } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
+	import { tick, getContext } from 'svelte';
+	import type { FormStore } from '../form-store.svelte';
 
-  const transitionOpts = { duration: 480, easing: cubicOut };
+	const transitionOpts = { duration: 480, easing: cubicOut };
+	let { questionId }: { questionId: string } = $props();
 
-  let { questionId }: { questionId: string } = $props();
+	const store: FormStore = getContext('form-store');
+	const question = $derived(store.questions.find((q) => q.id === questionId));
 
-  const store: FormStore = getContext('form-store');
-  const question = $derived(store.questions.find((q) => q.id === questionId));
+	let activeChip: string | null = $state(null);
+	let chipOrder: string[] = $state([]);
 
-  let activeChip: string | null = $state(null);
-  let chipOrder: string[] = $state([]);
+	const regexType = $derived.by(() => {
+		if (!question?.validations?.regex) return null;
+		const regex = question.validations.regex;
+		const emailPattern = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$';
+		if (/^\\d\+$/.test(regex) || /^\^\\d\+\$$/.test(regex)) return 'number';
+		if (regex === emailPattern) return 'email';
+		return 'regex';
+	});
 
-  const regexType = $derived.by(() => {
-    if (!question?.validations?.regex) return null;
-    const regex = question.validations.regex;
-    const emailPattern = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$';
-    if (/^\\d\+$/.test(regex) || /^\^\\d\+\$$/.test(regex)) return 'number';
-    if (regex === emailPattern) return 'email';
-    return 'regex';
-  });
+	const chips = [
+		{ key: 'placeholder', label: 'Placeholder', icon: IconSquareLetterA, clickable: true },
+		{ key: 'charlimit', label: 'Character Limit', icon: IconViewportTall, clickable: true },
+		{ key: 'number', label: 'Number', icon: IconNumber123, clickable: false },
+		{ key: 'email', label: 'Email', icon: IconAt, clickable: false },
+		{ key: 'regex', label: 'Regex', icon: IconRegex, clickable: true }
+	];
 
-  const chips = $derived([
-    {
-      key: 'placeholder',
-      label: 'Placeholder',
-      icon: IconSquareLetterA,
-      active: question?.placeholder !== undefined,
-      clickable: true
-    },
-    {
-      key: 'charlimit',
-      label: 'Character Limit',
-      icon: IconViewportTall,
-      active:
-        'min-chars' in (question?.validations ?? {}) || 'max-chars' in (question?.validations ?? {}),
-      clickable: true
-    },
-    {
-      key: 'number',
-      label: 'Number',
-      icon: IconNumber123,
-      active: regexType === 'number',
-      clickable: false
-    },
-    {
-      key: 'email',
-      label: 'Email',
-      icon: IconAt,
-      active: regexType === 'email',
-      clickable: false
-    },
-    {
-      key: 'regex',
-      label: 'Regex',
-      icon: IconRegex,
-      active: regexType === 'regex',
-      clickable: true
-    }
-  ]);
+	const activeKeys = $derived.by(() => {
+		const keys = new Set<string>();
+		if (!question) return keys;
 
-  $effect(() => {
-    const activeKeys = chips.filter((v) => v.active).map((v) => v.key);
-    const newOrder = chipOrder.filter((key) => activeKeys.includes(key));
-    for (const key of activeKeys) {
-      if (!newOrder.includes(key)) newOrder.push(key);
-    }
-    chipOrder = newOrder;
-  });
+		if (question.placeholder !== undefined) keys.add('placeholder');
+		if ('min-chars' in (question.validations ?? {}) || 'max-chars' in (question.validations ?? {})) {
+			keys.add('charlimit');
+		}
+		
+		const rt = regexType;
+		if (rt === 'number') keys.add('number');
+		if (rt === 'email') keys.add('email');
+		if (rt === 'regex') keys.add('regex');
 
-  function handleChipClick(key: string) {
-    activeChip = activeChip === key ? null : key;
-  }
+		return keys;
+	});
 
-  function removeChip(key: string) {
-    if (!question) return;
-    const newValidations = { ...question.validations };
-    let update: Partial<typeof question> = {};
+	$effect(() => {
+		const newOrder = chipOrder.filter((key) => activeKeys.has(key));
+		for (const key of activeKeys) {
+			if (!newOrder.includes(key)) newOrder.push(key);
+		}
+		
+		if (newOrder.length !== chipOrder.length || newOrder.some((v, i) => v !== chipOrder[i])) {
+			chipOrder = newOrder;
+		}
+	});
 
-    if (key === 'placeholder') {
-      update.placeholder = undefined;
-    }
-    if (key === 'charlimit') {
-      delete newValidations['min-chars'];
-      delete newValidations['max-chars'];
-      update.validations = newValidations;
-    }
-    if (key === 'regex' || key === 'number' || key === 'email') {
-      delete newValidations.regex;
-      update.validations = newValidations;
-    }
+	function handleChipClick(key: string) {
+		activeChip = activeChip === key ? null : key;
+	}
 
-    store.updateQuestion(questionId, update);
-    chipOrder = chipOrder.filter((k) => k !== key);
-    activeChip = null;
-  }
+	function removeChip(key: string) {
+		if (!question) return;
+		const newValidations = { ...question.validations };
+		let update: Partial<typeof question> = {};
 
-  function addValidation(key: string) {
-    if (!question) return;
-    const newValidations = { ...question.validations };
-    let update: Partial<typeof question> = {};
+		if (key === 'placeholder') {
+			update.placeholder = undefined;
+		}
+		if (key === 'charlimit') {
+			delete newValidations['min-chars'];
+			delete newValidations['max-chars'];
+			update.validations = newValidations;
+		}
+		if (key === 'regex' || key === 'number' || key === 'email') {
+			delete newValidations.regex;
+			update.validations = newValidations;
+		}
 
-    if (key === 'placeholder') {
-      update.placeholder = '';
-    }
-    if (key === 'charlimit') {
-      newValidations['min-chars'] = undefined;
-      newValidations['max-chars'] = undefined;
-    }
-    if (key === 'regex') {
-      newValidations.regex = '';
-    }
-    if (key === 'number') {
-      newValidations.regex = '^\\d+$';
-    }
-    if (key === 'email') {
-      newValidations.regex = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$';
-    }
+		store.updateQuestion(questionId, update);
+		activeChip = null;
+	}
 
-    update.validations = newValidations;
-    store.updateQuestion(questionId, update);
+	function addValidation(key: string) {
+		if (!question) return;
+		const newValidations = { ...question.validations };
+		let update: Partial<typeof question> = {};
 
-    if (!chipOrder.includes(key)) chipOrder.push(key);
-    activeChip = key;
-  }
+		if (key === 'placeholder') {
+			update.placeholder = '';
+		}
+		if (key === 'charlimit') {
+			newValidations['min-chars'] = undefined;
+			newValidations['max-chars'] = undefined;
+		}
+		if (key === 'regex') {
+			newValidations.regex = '';
+		}
+		if (key === 'number') {
+			newValidations.regex = '^\\d+$';
+		}
+		if (key === 'email') {
+			newValidations.regex = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$';
+		}
 
-  function updateValidation(field: 'min-chars' | 'max-chars' | 'regex', value: string) {
-    if (!question?.validations) return;
-    const newValidations = { ...question.validations };
-    if (field === 'regex') {
-      newValidations.regex = value;
-    } else {
-      const sanitized = value.replace(/\D/g, '');
-      newValidations[field] = sanitized ? parseInt(sanitized, 10) : undefined;
-    }
-    store.updateQuestion(questionId, { validations: newValidations });
-  }
+		update.validations = newValidations;
+		store.updateQuestion(questionId, update);
+		activeChip = key;
+	}
 
-  function focusValidationInput(key: string) {
-    tick().then(() => {
-      const el = document.getElementById(`${key}-${questionId}`);
-      el?.focus();
-    });
-  }
+	function updateValidation(field: 'min-chars' | 'max-chars' | 'regex', value: string) {
+		if (!question?.validations) return;
+		const newValidations = { ...question.validations };
+		if (field === 'regex') {
+			newValidations.regex = value;
+		} else {
+			const sanitized = value.replace(/\D/g, '');
+			newValidations[field] = sanitized ? parseInt(sanitized, 10) : undefined;
+		}
+		store.updateQuestion(questionId, { validations: newValidations });
+	}
 
-  const availableToAdd = $derived(chips.filter((v) => !v.active));
+	function focusValidationInput(key: string) {
+		tick().then(() => {
+			const el = document.getElementById(`${key}-${questionId}`);
+			el?.focus();
+		});
+	}
 
-  function getActiveValidationByKey(key: string) {
-    return chips.find((v) => v.key === key && v.active);
-  }
+	const availableToAdd = $derived(chips.filter((v) => !activeKeys.has(v.key)));
+
+	function getChipByKey(key: string) {
+		return chips.find((v) => v.key === key);
+	}
 </script>
 
 {#if question}
@@ -180,13 +164,13 @@
     <div class="my-4">
       <div class="flex items-center gap-2 flex-wrap">
         {#each chipOrder as key (key)}
-          {@const v = getActiveValidationByKey(key)}
+          {@const v = getChipByKey(key)}
           {#if v}
             <div transition:fly={{ y: 10, opacity: 0, duration: 220, easing: cubicOut }}>
               <Chip
                 label={v.label}
                 icon={v.icon}
-                active={v.active && v.clickable ? activeChip === v.key : false}
+                active={v.clickable ? activeChip === v.key : false}
                 clickable={v.clickable}
                 on:click={() => v.clickable && handleChipClick(v.key)}
                 onRemove={() => removeChip(v.key)}

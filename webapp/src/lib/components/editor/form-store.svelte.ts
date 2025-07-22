@@ -191,9 +191,12 @@ export function createFormStore(initialForm: any) {
 			title: '',
 			required: false
 		};
-		if (type === 'radio' || type === 'checkbox' || type === 'select') {
-			newQuestion.options = [];
-		}
+    	if (type === 'radio' || type === 'checkbox' || type === 'select') {
+		    newQuestion.options = [
+			    { id: ulid(), value: '', label: '' },
+			    { id: ulid(), value: '', label: '' }
+		    ];
+	    }
 		if (type === 'input' || type === 'textarea') {
 			newQuestion.placeholder = '';
 			newQuestion.validations = {};
@@ -236,6 +239,10 @@ export function createFormStore(initialForm: any) {
 		}
 	}
 
+    function updateFormData(data: Partial<FormData>) {
+        Object.assign(formData, data);
+    }
+
 	// init
 	loadForm();
 
@@ -250,7 +257,8 @@ export function createFormStore(initialForm: any) {
 		updateQuestion,
 		removeQuestion,
 		moveQuestionUp,
-		moveQuestionDown
+		moveQuestionDown,
+		updateFormData
 	};
 }
 

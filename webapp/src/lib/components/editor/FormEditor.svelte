@@ -150,7 +150,6 @@
 <div class="min-h-screen bg-background relative pt-24">
   <div class="absolute top-24 right-8 z-10">
     <SidePanel
-      bind:formData={store.formData}
       bind:dialogOpen
       on:panelchange={handlePanelChange}
       on:dialogopenchange={handleDialogOpenChange}
@@ -162,12 +161,10 @@
     style="transform: translateX({getDisplacement(windowWidth, isPanelOpen)});"
   >
     {#if false}
-      <!-- Content removed, will be handled by store -->
+      <!-- ... -->
     {:else}
       <div class="space-y-0 w-full mb-10">
         <FormTitleDescription
-          bind:title={store.formData.title}
-          bind:description={store.formData.description}
         />
         <section class="space-y-6 w-full">
           {#if store.questions.length > 0}

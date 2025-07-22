@@ -8,7 +8,7 @@
   import FormSettings from './FormSettings.svelte';
   import FormComments from './FormComments.svelte';
 
-  let { formData = $bindable(), dialogOpen = $bindable(false) } = $props();
+  let { dialogOpen = $bindable(false) } = $props();
   
   const dispatch = createEventDispatcher<{
     panelchange: { open: boolean };
@@ -86,7 +86,7 @@
 
 {#snippet currentContent()}
   {#if activeTab === 'settings'}
-    <FormSettings bind:formData />
+    <FormSettings />
   {:else}
     <FormComments />
   {/if}
@@ -147,7 +147,7 @@
           <Panel.Title>Form Settings</Panel.Title>
           <Panel.Description>Advanced configuration for this form.</Panel.Description>
         </Panel.Header>
-        <FormSettings bind:formData />
+        <FormSettings />
         <Panel.Footer>
         </Panel.Footer>
       </Panel.Content>
