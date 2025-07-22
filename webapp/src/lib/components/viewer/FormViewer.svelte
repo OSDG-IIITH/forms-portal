@@ -11,6 +11,7 @@
   import DateView from '$lib/components/viewer/questions/date.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Card, CardContent } from '$lib/components/ui/card';
+  import { toast } from 'svelte-sonner';
 
   export let form: any;
 
@@ -212,12 +213,16 @@
         });
         if (!upsertRes.ok) throw new Error('Could not save answer');
       }
-      const submitRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/submit`, { method: 'POST' });
+      const submitRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ "save": true })
+      });
       if (!submitRes.ok) throw new Error('Could not submit response');
-      alert('Form submitted successfully!');
+      toast.success('Form submitted successfully!');
       handleReset();
     } catch (e: any) {
-      error = e.message || 'Submission failed';
+      toast.error(e.message || 'Submission failed');
     } finally {
       isSubmitting = false;
     }
