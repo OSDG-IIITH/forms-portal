@@ -1,6 +1,8 @@
 import type { LayoutLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
+export const ssr = false
+
 const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/login/callback', '/api/auth/logout'];
 
 export const load: LayoutLoad = async ({ fetch, url }) => {
