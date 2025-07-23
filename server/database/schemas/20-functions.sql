@@ -51,7 +51,7 @@ begin
     select exists (
         select 1 from groups
         where id = p_group_id and owner = p_user_id and (
-            type is null or type = p_required_type
+            p_required_type is null or type = p_required_type
         )
     ) into has_permission;
 
@@ -371,7 +371,7 @@ create or replace function get_group_by_id(
 declare
     v_group group_with_details;
 begin
-    if not has_group_permission(p_user_id, p_id) then
+    if not has_group_permission(p_user_id, p_id, null) then
         raise exception 'Group not found or you do not have permission do this.' using hint = 'forbidden';
     end if;
 
@@ -399,7 +399,7 @@ create or replace function update_group_by_id(
 declare
     v_group group_with_details;
 begin
-    if not has_group_permission(p_user_id, p_id) then
+    if not has_group_permission(p_user_id, p_id, null) then
         raise exception 'Group not found or you do not have permission to do this.' using hint = 'forbidden';
     end if;
 
