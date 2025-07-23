@@ -17,14 +17,15 @@
   let { table }: $$Props = $props();
 </script>
 
+
 <div class="flex items-center justify-between px-2">
-  <div class="flex-1 text-sm text-muted-foreground">
-    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-    {table.getFilteredRowModel().rows.length} row(s) selected.
+  <div class="flex-1 text-sm text-muted-foreground hidden sm:block whitespace-nowrap">
+    {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
   </div>
-  <div class="flex items-center space-x-6 lg:space-x-8">
+  <div class="flex items-center space-x-6 lg:space-x-8 w-full justify-end">
     <div class="flex items-center space-x-2">
-      <p class="text-sm font-medium">Rows per page</p>
+      <p class="text-sm font-medium sm:inline hidden">Rows per page</p>
+      <p class="text-sm font-medium sm:hidden">Rows</p>
       <Select.Root
         allowDeselect={false}
         type="single"
@@ -44,8 +45,8 @@
       </Select.Root>
     </div>
     <div class="flex w-[100px] items-center justify-center text-sm font-medium">
-      Page {table.getState().pagination.pageIndex + 1} of{" "}
-      {table.getPageCount()}
+      <span class="sm:inline hidden">Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
+      <span class="sm:hidden">{table.getState().pagination.pageIndex + 1}/{table.getPageCount()}</span>
     </div>
     <div class="flex items-center space-x-2">
       <Button

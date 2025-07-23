@@ -7,6 +7,7 @@
 		DialogTitle,
 		DialogTrigger
 	} from '$lib/components/ui/dialog';
+	import * as Select from '$lib/components/ui/select';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 
@@ -20,6 +21,13 @@
 	let members = $state('');
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+
+	const groupTypes = [
+		{ value: 'list', label: 'List' },
+		{ value: 'domain', label: 'Domain' }
+	];
+
+	const selectedLabel = $derived(groupTypes.find((t) => t.value === type)?.label);
 
 	function resetForm() {
 		name = '';
@@ -64,9 +72,9 @@
 
 <Dialog bind:open>
 	<DialogTrigger>
-		<Button class="ml-auto gap-2" variant="default" aria-label="Add group"> Add Group </Button>
+		<Button class="ml-auto gap-2 h-8" variant="default" aria-label="Add group"> Add Group </Button>
 	</DialogTrigger>
-	<DialogContent>
+	<DialogContent class="max-w-sm w-full">
 		<DialogHeader>
 			<DialogTitle>Add New Group</DialogTitle>
 		</DialogHeader>
@@ -81,14 +89,16 @@
 			</div>
 			<div>
 				<label class="block text-sm font-medium mb-1" for="type">Type</label>
-				<select
-					id="type"
-					bind:value={type}
-					class="w-full border rounded px-2 py-1 bg-background text-foreground h-10"
-				>
-					<option value="list">List</option>
-					<option value="domain">Domain</option>
-				</select>
+				<Select.Root type="single" bind:value={type}>
+					<Select.Trigger class="w-full">
+						{selectedLabel}
+					</Select.Trigger>
+					<Select.Content>
+						{#each groupTypes as groupType}
+							<Select.Item value={groupType.value}>{groupType.label}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 
 			{#if type === 'domain'}

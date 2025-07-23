@@ -119,7 +119,7 @@
   const columns = createColumns(handlePermissionChange, handleRemoveUser);
 </script>
 
-<div class="container mx-auto py-8 mt-20 min-h-screen">
+<div class="container mx-auto px-8 py-8 mt-20 min-h-screen">
   <div class="flex items-center mb-3">
     <h2 class="text-xl font-semibold tracking-tight flex-1">Permissions</h2>
     <AddEntityDialog on:add={handleAddEntity} />

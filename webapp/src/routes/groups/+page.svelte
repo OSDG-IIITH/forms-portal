@@ -20,7 +20,7 @@
 	}
 </script>
 
-<div class="container mx-auto py-8 min-h-screen">
+<div class="container mx-auto px-8 py-8 min-h-screen">
 	<div class="flex items-center justify-between mb-6">
 		<h2 class="text-3xl font-bold tracking-tight">Groups</h2>
 	</div>

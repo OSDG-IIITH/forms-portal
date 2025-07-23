@@ -11,7 +11,7 @@
   }));
 </script>
 
-<div class="container mx-auto py-8 min-h-screen">
+<div class="container mx-auto px-8 py-8 min-h-screen">
   <h2 class="text-3xl font-bold tracking-tight mb-6">Responses</h2>
   <DataTable data={responsesData} {columns} />
 </div>

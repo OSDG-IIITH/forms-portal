@@ -60,7 +60,7 @@ async function handleSubmit() {
       Add
     </Button>
   </DialogTrigger>
-  <DialogContent class="max-w-md w-full p-2 pb-4 overflow-hidden rounded-xl">
+  <DialogContent class="max-w-sm w-full p-2 pb-4 overflow-hidden rounded-xl">
     <form class="px-6 pt-6 pb-2 flex flex-col gap-4" on:submit|preventDefault={handleSubmit}>
       <DialogTitle class="text-lg font-semibold">Add User or Group</DialogTitle>
       <DialogDescription class="text-muted-foreground text-sm">Invite a user by email or add a group to this form. You can assign permissions after adding.</DialogDescription>

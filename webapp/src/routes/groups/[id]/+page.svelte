@@ -6,7 +6,7 @@
 	const { group } = data;
 </script>
 
-<div class="container mx-auto min-h-screen pt-24">
+<div class="container mx-auto px-8 min-h-screen pt-24">
 	<div class="max-w-4xl mx-auto">
 		<header class="mb-8">
 			<div class="flex items-center justify-between mb-2">
