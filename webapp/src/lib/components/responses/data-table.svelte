@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ColumnDef, TableOptions, SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/table-core";
+  import type { ColumnDef, TableOptions, SortingState, ColumnFiltersState, VisibilityState, PaginationState } from "@tanstack/table-core";
   import { createSvelteTable, FlexRender } from "$lib/components/ui/data-table/index.js";
   import { getCoreRowModel, getFacetedRowModel, getFacetedUniqueValues, getFilteredRowModel, getPaginationRowModel, getSortedRowModel } from "@tanstack/table-core";
   import { writable } from "svelte/store";
@@ -27,6 +27,7 @@
   const columnFilters = writable<ColumnFiltersState>([]);
   const columnVisibility = writable<VisibilityState>({ id: false });
   const rowSelection = writable<Record<string, boolean>>({});
+  const pagination = writable<PaginationState>({ pageIndex: 0, pageSize: 10 });
 
   const options = $derived.by(() => {
     const opts: TableOptions<Response> = {
@@ -37,6 +38,7 @@
         columnFilters: $columnFilters,
         columnVisibility: $columnVisibility,
         rowSelection: $rowSelection,
+        pagination: $pagination,
       },
       enableRowSelection: true,
       onSortingChange: (updater) => {
@@ -65,6 +67,13 @@
           rowSelection.update(updater);
         } else {
           rowSelection.set(updater);
+        }
+      },
+      onPaginationChange: (updater) => {
+        if (updater instanceof Function) {
+          pagination.update(updater);
+        } else {
+          pagination.set(updater);
         }
       },
       getCoreRowModel: getCoreRowModel(),
