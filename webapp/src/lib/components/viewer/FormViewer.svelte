@@ -204,12 +204,26 @@
       const responseObj = await startRes.json();
       const responseId = responseObj.id;
       for (const q of questions) {
-        const answer = responses[q.id];
-        const value = q.type === 'checkbox' ? JSON.parse(answer) : answer;
+        let valueToSubmit: any;
+        const rawValue = responses[q.id];
+
+        if (q.type === 'radio') {
+          const selectedOption = q.options?.find((opt) => opt.id === rawValue);
+          valueToSubmit = selectedOption ? selectedOption.value : '';
+        } else if (q.type === 'checkbox') {
+          const selectedIds = JSON.parse(rawValue);
+          valueToSubmit =
+            q.options
+              ?.filter((opt) => selectedIds.includes(opt.id))
+              .map((opt) => opt.value) || [];
+        } else {
+          valueToSubmit = rawValue;
+        }
+
         const upsertRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/answers`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q.id, value: JSON.stringify(value) })
+          body: JSON.stringify({ question: q.id, value: JSON.stringify(valueToSubmit) })
         });
         if (!upsertRes.ok) throw new Error('Could not save answer');
       }
@@ -226,6 +240,7 @@
     } finally {
       isSubmitting = false;
     }
+    
   }
 </script>
 

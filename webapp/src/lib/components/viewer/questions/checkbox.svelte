@@ -1,44 +1,67 @@
 <script lang="ts">
+  import { Checkbox } from '$lib/components/ui/checkbox';
   import { Label } from '$lib/components/ui/label';
-  import Checkbox from '../../ui/checkbox/checkbox.svelte';
-  import { onMount, createEventDispatcher } from 'svelte';
-  export let question: {
-    id: string;
-    title: string;
-    required: boolean;
-    options: { id: string; value: string; label: string }[];
-  };
-  export let value: string = '[]';
-  export let disabled: boolean = false;
-  let selected: Set<string> = new Set();
-  const dispatch = createEventDispatcher();
-  onMount(() => {
-    try {
-      const arr = JSON.parse(value);
-      if (Array.isArray(arr)) selected = new Set(arr);
-    } catch {}
+
+  let {
+    question,
+    value = $bindable('[]'),
+    disabled = false
+  }: {
+    question: {
+      id: string;
+      title: string;
+      required: boolean;
+      options: { id: string; value: string; label: string }[];
+    };
+    value: string;
+    disabled?: boolean;
+  } = $props();
+
+  let selectedIds = $state<string[]>([]);
+  let isUpdatingFromValue = false;
+
+  $effect(() => {
+    if (!isUpdatingFromValue) {
+      try {
+        const parsed = JSON.parse(value);
+        selectedIds = parsed;
+      } catch {
+        selectedIds = [];
+      }
+    }
   });
-  function handleCheckboxChange(optId: string, event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.checked) selected.add(optId);
-    else selected.delete(optId);
-    value = JSON.stringify(Array.from(selected));
-    dispatch('input', value);
+
+  function handleCheckboxChange(optionId: string, checked: boolean | 'indeterminate') {
+    const isChecked = checked === true;
+    if (isChecked) {
+      if (!selectedIds.includes(optionId)) {
+        selectedIds = [...selectedIds, optionId];
+      }
+    } else {
+      selectedIds = selectedIds.filter(id => id !== optionId);
+    }
+    
+    isUpdatingFromValue = true;
+    value = JSON.stringify(selectedIds);
+    isUpdatingFromValue = false;
   }
 </script>
+
 {#if question.options.length > 0}
-  <div class="space-y-4">
-    {#each question.options as opt (opt.id)}
-      <div class="flex items-center gap-3 p-2 py-0 rounded-md">
+  <div class="space-y-3">
+    {#each question.options as option (option.id)}
+      <div class="flex items-center space-x-3">
         <Checkbox
-          id={`checkbox-${opt.id}`}
-          checked={selected.has(opt.id)}
-          disabled={disabled}
-          onchange={(e) => handleCheckboxChange(opt.id, e)}
-          class="data-[state=checked]:bg-primary border-input"
+          checked={selectedIds.includes(option.id)}
+          onCheckedChange={(checked) => handleCheckboxChange(option.id, checked)}
+          {disabled}
+          id={`checkbox-${option.id}`}
         />
-        <Label for={`checkbox-${opt.id}`} class="text-sm font-normal cursor-pointer flex-1 select-none">
-          {opt.label}
+        <Label 
+          for={`checkbox-${option.id}`}
+          class="text-sm font-normal cursor-pointer flex-1"
+        >
+          {option.label}
         </Label>
       </div>
     {/each}
