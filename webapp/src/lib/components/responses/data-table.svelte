@@ -26,7 +26,6 @@
   const sorting = writable<SortingState>([]);
   const columnFilters = writable<ColumnFiltersState>([]);
   const columnVisibility = writable<VisibilityState>({ id: false });
-  const rowSelection = writable<Record<string, boolean>>({});
   const pagination = writable<PaginationState>({ pageIndex: 0, pageSize: 10 });
 
   const options = $derived.by(() => {
@@ -37,10 +36,8 @@
         sorting: $sorting,
         columnFilters: $columnFilters,
         columnVisibility: $columnVisibility,
-        rowSelection: $rowSelection,
         pagination: $pagination,
       },
-      enableRowSelection: true,
       onSortingChange: (updater) => {
         if (updater instanceof Function) {
           sorting.update(updater);
@@ -60,13 +57,6 @@
           columnVisibility.update(updater);
         } else {
           columnVisibility.set(updater);
-        }
-      },
-      onRowSelectionChange: (updater) => {
-        if (updater instanceof Function) {
-          rowSelection.update(updater);
-        } else {
-          rowSelection.set(updater);
         }
       },
       onPaginationChange: (updater) => {
@@ -91,7 +81,7 @@
 
 <div class="space-y-4">
   <DataTableToolbar {table} />
-  <div class="rounded-md border">
+  <div class="rounded-md border bg-card">
     <Table.Root>
       <Table.Header>
         {#each table.getHeaderGroups() as headerGroup}
@@ -110,7 +100,6 @@
         {#if table.getRowModel().rows?.length}
           {#each table.getRowModel().rows as row}
             <Table.Row 
-              data-state={row.getIsSelected() && "selected"}
               class="cursor-pointer hover:bg-muted/50"
               onclick={() => handleRowClick(row.original.id)}
             >

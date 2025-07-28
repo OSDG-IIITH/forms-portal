@@ -16,7 +16,8 @@
 </script>
 
 <div class="flex items-center justify-between">
-  <div class="flex flex-1 items-center space-x-2">
+  <h2 class="text-lg font-semibold flex-1">Responses List</h2>
+  <div class="flex items-center space-x-2">
     <Input
       placeholder="Search..."
       value={table.getColumn("respondentName")?.getFilterValue() ?? ""}
@@ -33,6 +34,6 @@
         <X class="ml-2 h-4 w-4" />
       </Button>
     {/if}
+    <DataTableViewOptions {table} />
   </div>
-  <DataTableViewOptions {table} />
 </div>

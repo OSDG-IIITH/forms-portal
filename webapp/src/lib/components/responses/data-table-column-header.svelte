@@ -26,7 +26,7 @@
 <div class={cn("flex items-center space-x-2", className)} {...restProps}>
   {#if canSort}
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger class="px-6">
         <Button variant="ghost" size="sm" class="-ml-3 h-8 data-[state=open]:bg-accent">
           <span>{title}</span>
           {#if sorted === "desc"}
