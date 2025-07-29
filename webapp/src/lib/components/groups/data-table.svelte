@@ -74,7 +74,7 @@
 	<DataTableToolbar {table}>
 		<AddGroupDialog slot="add-group" onCreated={onGroupCreated} />
 	</DataTableToolbar>
-	<div class="rounded-md border">
+	<div class="rounded-md border bg-card">
 		<Table.Root>
 			<Table.Header>
 				{#each table.getHeaderGroups() as headerGroup}
@@ -97,7 +97,7 @@
 					{#each table.getRowModel().rows as row}
 						<Table.Row
 							data-state={row.getIsSelected() && 'selected'}
-							class="cursor-pointer hover:bg-muted/50"
+							class="cursor-pointer hover:bg-muted/30"
 							onclick={() => handleRowClick(row.original.id)}
 						>
 							{#each row.getVisibleCells() as cell}
@@ -115,7 +115,7 @@
 					{/each}
 				{:else}
 					<Table.Row>
-						<Table.Cell colspan={columns.length} class="h-24 text-center">
+						<Table.Cell colspan={columns.length} class="h-20 text-center">
 							No groups found.
 						</Table.Cell>
 					</Table.Row>

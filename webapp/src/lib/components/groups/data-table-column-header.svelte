@@ -27,7 +27,7 @@
   {#if canSort}
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Button variant="ghost" size="sm" class="-ml-3 h-8 data-[state=open]:bg-accent">
+        <Button variant="ghost" size="sm" class="ml-3 h-8 data-[state=open]:bg-accent">
           <span>{title}</span>
           {#if sorted === "desc"}
             <ArrowDown class="ml-2 h-4 w-4" />
