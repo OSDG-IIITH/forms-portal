@@ -69,7 +69,7 @@ const table = $derived.by(() => {
 </script>
 
 <div class="space-y-4">
-  <div class="rounded-md border overflow-x-auto">
+  <div class="rounded-md border overflow-x-auto bg-card">
     <Table.Root class="min-w-full">
       <Table.Header>
         {#each table.getHeaderGroups() as headerGroup}

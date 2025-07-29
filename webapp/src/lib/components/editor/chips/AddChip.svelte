@@ -32,10 +32,10 @@ function handleSelect(key: string) {
 </script>
 
 <Popover.Root bind:open>
-  <Popover.Trigger bind:ref={triggerRef}>
+  <Popover.Trigger bind:ref={triggerRef} class="outline-none ring-0 focus:outline-none focus-visible:outline-none focus:ring-0">
     <Button
       variant="outline"
-      class="rounded-md border hover:bg-muted/60 transition-all h-8 py-1.5 flex items-center justify-center text-sm min-w-0 focus-visible:outline-none focus:ring-0 gap-2"
+      class="rounded-md border hover:bg-muted/60 transition-all h-8 py-1.5 flex items-center justify-center text-sm min-w-0 outline-none ring-0 focus:outline-none focus-visible:outline-none focus:ring-0 gap-2"
       role="combobox"
       aria-expanded={open}
       aria-label="Add validation"

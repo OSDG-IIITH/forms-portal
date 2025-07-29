@@ -41,8 +41,8 @@
               href="{basePath}/{tab.key}"
               class="px-3 py-1 rounded transition-colors duration-150 font-medium {activeTab ===
               tab.key
-                ? 'text-foreground/90 hover:text-foreground'
-                : 'text-muted-foreground/80 hover:text-foreground'}"
+                ? 'text-primary/90 hover:text-primary'
+                : 'text-muted-foreground/50 hover:text-primary/70'}"
             >
               {tab.name}
             </a>
@@ -75,7 +75,7 @@
           href="{basePath}/{tab.key}"
           class="px-3 py-1 rounded transition-colors duration-150 font-medium whitespace-nowrap {activeTab ===
           tab.key
-            ? 'text-foreground/90 hover:text-foreground'
+            ? 'text-primary/90 hover:text-primary'
             : 'text-muted-foreground/80 hover:text-foreground'}"
         >
           {tab.name}

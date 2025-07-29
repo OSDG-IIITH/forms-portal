@@ -140,7 +140,6 @@
 	   class="mb-2 aspect-auto flex-1 w-full"
    >
 			<BarChart
-				class="p-0 m-0"
 				bind:context
 				data={filteredData}
 				xScale={scaleBand().padding(0.25)}
