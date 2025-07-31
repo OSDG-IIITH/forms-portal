@@ -1,5 +1,5 @@
 // types
-export type QuestionType = 'input' | 'textarea' | 'radio' | 'checkbox' | 'file' | 'select' | 'date';
+export type QuestionType = 'input' | 'textarea' | 'radio' | 'checkbox' | 'file' | 'select' | 'date' | 'section-header';
 
 export type Option = {
   id: string;
@@ -12,6 +12,7 @@ export type Question = {
   type: QuestionType;
   title: string;
   required: boolean;
+  description?: string;
   options?: Option[];
   placeholder?: string;
   validations?: {
@@ -61,6 +62,9 @@ export function escapeKdlString(str: string): string {
 export function questionToKdl(q: Question): string {
   let kdl = `  question id=${escapeKdlString(q.id)} type=${escapeKdlString(q.type)}${q.required ? ' required' : ''} {\n`;
   kdl += `    title ${escapeKdlString(q.title)}\n`;
+  if (q.description) {
+    kdl += `    description ${escapeKdlString(q.description)}\n`;
+  }
   if (q.placeholder) {
     kdl += `    placeholder ${escapeKdlString(q.placeholder)}\n`;
   }

@@ -6,7 +6,7 @@
   import FormSaveFooter from './FormActionFooter.svelte';
   import * as kdljs from 'kdljs';
   import { toast } from 'svelte-sonner';
-  import { IconFileText, IconListCheck, IconSquareCheck, IconUpload, IconCalendar } from '@tabler/icons-svelte';
+  import { IconFileText, IconListCheck, IconSquareCheck, IconUpload, IconCalendar, IconHeading } from '@tabler/icons-svelte';
   import { createEventDispatcher, setContext } from 'svelte';
   import type { Time } from '@internationalized/date';
   import { createFormStore, type FormStore, type QuestionType } from './form-store.svelte';
@@ -26,7 +26,8 @@
     checkbox: 'Checkbox',
     file: 'File Upload',
     select: 'Select',
-    date: 'Date Picker'
+    date: 'Date Picker',
+    'section-header': 'Section Header'
   };
 
   const questionTypeButtons = [
@@ -36,7 +37,8 @@
     { type: 'checkbox' as QuestionType, icon: IconSquareCheck, label: 'Checkbox' },
     { type: 'file' as QuestionType, icon: IconUpload, label: 'File Upload' },
     { type: 'select' as QuestionType, icon: IconListCheck, label: 'Select' },
-    { type: 'date' as QuestionType, icon: IconCalendar, label: 'Date Picker' }
+    { type: 'date' as QuestionType, icon: IconCalendar, label: 'Date Picker' },
+    { type: 'section-header' as QuestionType, icon: IconHeading, label: 'Section Header' }
   ];
 
   const dispatch = createEventDispatcher<{

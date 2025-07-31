@@ -9,6 +9,7 @@
   import FileUploadEditor from '$lib/components/editor/questions/file.svelte';
   import SelectEditor from '$lib/components/editor/questions/select.svelte';
   import DatePickerEditor from '$lib/components/editor/questions/date.svelte';
+  import SectionHeaderEditor from '$lib/components/editor/questions/section-header.svelte';
   import { getContext } from 'svelte';
   import type { FormStore, Question, QuestionType } from './form-store.svelte';
 
@@ -76,6 +77,8 @@
         <DatePickerEditor questionId={question.id} />
       {:else if question.type === 'file'}
         <FileUploadEditor questionId={question.id} />
+      {:else if question.type === 'section-header'}
+        <SectionHeaderEditor questionId={question.id} />
       {/if}
     </div>
   </CardContent>

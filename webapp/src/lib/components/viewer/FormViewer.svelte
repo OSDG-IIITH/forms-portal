@@ -28,13 +28,15 @@
     | 'checkbox'
     | 'file'
     | 'select'
-    | 'date';
+    | 'date'
+    | 'section-header';
 
   interface Question {
     id: string;
     type: QuestionType;
     title: string;
     required: boolean;
+    description?: string;
     options?: Option[];
     placeholder?: string;
     validations?: {
@@ -120,6 +122,7 @@
         if (child.children) {
           for (const c of child.children) {
             if (c.name === 'title') q.title = parseKdlValue(c.values[0]);
+            else if (c.name === 'description') q.description = parseKdlValue(c.values[0]);
             else if (c.name === 'placeholder') q.placeholder = parseKdlValue(c.values[0]);
             else if (c.name === 'max-file-size') {
               q['max-file-size'] = Number(parseKdlValue(c.values[0]));
@@ -281,10 +284,18 @@
         <form on:submit|preventDefault={handleSubmit}>
           <div class="space-y-6">
             {#each questions as question (question.id)}
-              <div class="p-6 border rounded-lg bg-card shadow-xs space-y-2">
-                <div class="font-medium text-base mb-4">
-                  {question.title}{#if question.required}<span class="text-destructive ml-1">*</span>{/if}
+              {#if question.type === 'section-header'}
+                <div class="px-6 py-4 bg-muted/20 border rounded-lg">
+                  <h3 class="text-lg font-semibold text-foreground mb-2">{question.title}</h3>
+                  {#if question.description}
+                    <p class="text-sm text-muted-foreground">{question.description}</p>
+                  {/if}
                 </div>
+              {:else}
+                <div class="p-6 border rounded-lg bg-card shadow-xs space-y-2">
+                  <div class="font-medium text-base mb-4">
+                    {question.title}{#if question.required}<span class="text-destructive ml-1">*</span>{/if}
+                  </div>
                 {#if question.type === 'input'}
                   <InputView {question} bind:value={responses[question.id]} />
                 {:else if question.type === 'textarea'}
@@ -333,7 +344,8 @@
                     <div class="mt-2 text-xs text-muted-foreground">Validations: {JSON.stringify(question.validations)}</div>
                   {/if}
                 {/if}
-              </div>
+                </div>
+              {/if}
             {/each}
           </div>
           {#if questions.length > 0}

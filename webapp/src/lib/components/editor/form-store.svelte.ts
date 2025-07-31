@@ -4,7 +4,7 @@ import { Time } from '@internationalized/date';
 import { parseKdlValue, safeString } from './FormEditor';
 
 // type definitions
-export type QuestionType = 'input' | 'textarea' | 'radio' | 'checkbox' | 'file' | 'select' | 'date';
+export type QuestionType = 'input' | 'textarea' | 'radio' | 'checkbox' | 'file' | 'select' | 'date' | 'section-header';
 
 export type Option = {
 	id: string;
@@ -18,6 +18,7 @@ export type Question = {
 	type: QuestionType;
 	title: string;
 	required: boolean;
+	description?: string;
 	options?: Option[];
 	placeholder?: string;
 	validations?: {
@@ -271,6 +272,10 @@ export function createFormStore(initialForm: any) {
 			newQuestion['max-file-size'] = 10;
 			newQuestion['max-files'] = -1;
 			newQuestion['allowed-types'] = [];
+		}
+		if (type === 'section-header') {
+			newQuestion.description = '';
+			newQuestion.required = false; // Section headers are never required
 		}
 		questions.push(newQuestion);
 	}
