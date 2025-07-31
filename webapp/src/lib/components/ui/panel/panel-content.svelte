@@ -42,14 +42,19 @@
 	});
 
 	function handleClickOutside(event: MouseEvent) {
-		if (open && panelElement && !panelElement.contains(event.target as Node) && 
-			triggerElement && !triggerElement.contains(event.target as Node)) {
-			// Ignore clicks on checkboxes inside the panel
-			if ((event.target as HTMLElement)?.closest('[data-slot="checkbox"]')) {
-				return;
-			}
-			panel?.close();
+		if (!open || !panelElement) return;
+		
+		const target = event.target as HTMLElement;
+		
+		if (panelElement.contains(target)) {
+			return;
 		}
+		
+		if (triggerElement && triggerElement.contains(target)) {
+			return;
+		}
+		
+		panel?.close();
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -60,10 +65,14 @@
 
 	$effect(() => {
 		if (open) {
-			document.addEventListener('click', handleClickOutside);
-			document.addEventListener('keydown', handleKeydown);
+			const timeoutId = setTimeout(() => {
+				document.addEventListener('click', handleClickOutside, true);
+				document.addEventListener('keydown', handleKeydown);
+			}, 50);
+			
 			return () => {
-				document.removeEventListener('click', handleClickOutside);
+				clearTimeout(timeoutId);
+				document.removeEventListener('click', handleClickOutside, true);
 				document.removeEventListener('keydown', handleKeydown);
 			};
 		}
