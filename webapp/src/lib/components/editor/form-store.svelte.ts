@@ -10,6 +10,7 @@ export type Option = {
 	id: string;
 	value: string;
 	label: string;
+	error?: string;
 };
 
 export type Question = {
@@ -27,6 +28,7 @@ export type Question = {
 	'max-file-size'?: number;
 	'max-files'?: number;
 	'allowed-types'?: string[];
+	error?: string;
 };
 
 export type FormData = {
@@ -60,6 +62,19 @@ export function createFormStore(initialForm: any) {
 	});
 
 	let questions = $state<Question[]>([]);
+
+	const isFormValid = $derived.by(() => {
+		for (const question of questions) {
+			if (question.error) return false;
+			
+			if (question.options) {
+				for (const option of question.options) {
+					if (option.error) return false;
+				}
+			}
+		}
+		return true;
+	});
 
 	function parseKdlForm(kdl: string): Question[] {
 		const ast = kdljs.parse(kdl);
@@ -182,6 +197,57 @@ export function createFormStore(initialForm: any) {
 		}
 	}
 
+	// validation
+	
+	function validateQuestions() {
+		for (const question of questions) {
+			question.error = undefined;
+			
+			if (!question.title || question.title.trim() === '') {
+				question.error = "Question text cannot be empty.";
+			}
+			
+			if (question.options && (question.type === 'radio' || question.type === 'checkbox' || question.type === 'select')) {
+				const seenLabels = new Set<string>();
+				
+				for (const option of question.options) {
+					option.error = undefined;
+					
+					if (!option.label || option.label.trim() === '') {
+						option.error = "Option text cannot be empty.";
+						continue;
+					}
+					
+					const trimmedLabel = option.label.trim().toLowerCase();
+					if (seenLabels.has(trimmedLabel)) {
+						option.error = "Duplicate option found.";
+					} else {
+						seenLabels.add(trimmedLabel);
+					}
+				}
+				
+				const labelCounts = new Map<string, Option[]>();
+				for (const option of question.options) {
+					if (option.label && option.label.trim() !== '') {
+						const trimmedLabel = option.label.trim().toLowerCase();
+						if (!labelCounts.has(trimmedLabel)) {
+							labelCounts.set(trimmedLabel, []);
+						}
+						labelCounts.get(trimmedLabel)!.push(option);
+					}
+				}
+				
+				for (const [label, options] of labelCounts) {
+					if (options.length > 1) {
+						for (const option of options) {
+							option.error = "Duplicate option found.";
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// actions
 
 	function addQuestion(type: QuestionType) {
@@ -213,6 +279,13 @@ export function createFormStore(initialForm: any) {
 		const index = questions.findIndex((q) => q.id === id);
 		if (index !== -1) {
 			questions[index] = { ...questions[index], ...updatedQuestion };
+			
+			// Only clear question title error if title is actually being updated and is valid
+			if (updatedQuestion.title !== undefined && questions[index].error) {
+				if (updatedQuestion.title.trim() !== '') {
+					questions[index].error = undefined;
+				}
+			}
 		}
 	}
 
@@ -221,6 +294,40 @@ export function createFormStore(initialForm: any) {
 		if (index > -1) {
 			questions.splice(index, 1);
 		}
+	}
+
+	function addOption(questionId: string) {
+		const question = questions.find((q) => q.id === questionId);
+		if (!question?.options) return;
+		
+		const newOption: Option = { id: ulid(), value: '', label: '' };
+		const updatedOptions = [...question.options, newOption];
+		updateQuestion(questionId, { options: updatedOptions });
+	}
+
+	function removeOption(questionId: string, optionId: string) {
+		const question = questions.find((q) => q.id === questionId);
+		if (!question?.options) return;
+		
+		const updatedOptions = question.options.filter((option) => option.id !== optionId);
+		updateQuestion(questionId, { options: updatedOptions });
+	}
+
+	function updateOption(questionId: string, optionId: string, updatedOption: Partial<Option>) {
+		const question = questions.find((q) => q.id === questionId);
+		if (!question?.options) return;
+		
+		const updatedOptions = question.options.map(opt => {
+			if (opt.id === optionId) {
+				const newOption = { ...opt, ...updatedOption };
+				if (updatedOption.label !== undefined && opt.error && updatedOption.label.trim() !== '') {
+					newOption.error = undefined;
+				}
+				return newOption;
+			}
+			return opt;
+		});
+		updateQuestion(questionId, { options: updatedOptions });
 	}
 
 	function moveQuestionUp(index: number) {
@@ -253,12 +360,19 @@ export function createFormStore(initialForm: any) {
 		get questions() {
 			return questions;
 		},
+		get isFormValid() {
+			return isFormValid;
+		},
 		addQuestion,
 		updateQuestion,
 		removeQuestion,
+		addOption,
+		removeOption,
+		updateOption,
 		moveQuestionUp,
 		moveQuestionDown,
-		updateFormData
+		updateFormData,
+		validateQuestions
 	};
 }
 

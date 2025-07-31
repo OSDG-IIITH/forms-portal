@@ -30,11 +30,7 @@
   }
 
   function updateOptionValue(optionId: string, newLabel: string): void {
-    if (!question?.options) return;
-    const newOptions = question.options.map(opt => 
-      opt.id === optionId ? { ...opt, label: newLabel, value: newLabel } : opt
-    );
-    store.updateQuestion(questionId, { options: newOptions });
+    store.updateOption(questionId, optionId, { label: newLabel, value: newLabel });
   }
 
   function handleDragStart(event: DragEvent, index: number): void {
@@ -84,6 +80,9 @@
       value={question.title}
       oninput={(e) => store.updateQuestion(questionId, { title: e.currentTarget.value })}
     />
+    {#if question.error}
+      <p class="text-destructive text-sm">{question.error}</p>
+    {/if}
   </div>
 
   <div class="space-y-3">
@@ -91,31 +90,36 @@
     <div class="space-y-2">
       {#if question.options}
         {#each question.options as option, i (option.id)}
-          <div
-            role="button"
-            tabindex="0"
-            class="flex items-center gap-3 p-3 border rounded-md transition-colors {dragOverIndex === i ? 'border-primary bg-primary/5' : ''} {draggedIndex === i ? 'opacity-50' : ''}"
-            draggable="true"
-            ondragstart={(e) => handleDragStart(e, i)}
-            ondragover={(e) => handleDragOver(e, i)}
-            ondragleave={handleDragLeave}
-            ondrop={(e) => handleDrop(e, i)}
-            ondragend={handleDragEnd}
-          >
-            <IconGripVertical class="cursor-grab" />
-            <Input 
-              placeholder="Option" 
-              value={option.label}
-              oninput={(e) => updateOptionValue(option.id, e.currentTarget.value)}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              class="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-              onclick={() => removeOption(option.id)}
+          <div class="space-y-1">
+            <div
+              role="button"
+              tabindex="0"
+              class="flex items-center gap-3 p-3 border rounded-md transition-colors {dragOverIndex === i ? 'border-primary bg-primary/5' : ''} {draggedIndex === i ? 'opacity-50' : ''}"
+              draggable="true"
+              ondragstart={(e) => handleDragStart(e, i)}
+              ondragover={(e) => handleDragOver(e, i)}
+              ondragleave={handleDragLeave}
+              ondrop={(e) => handleDrop(e, i)}
+              ondragend={handleDragEnd}
             >
-              <IconTrash class="h-4 w-4" />
-            </Button>
+              <IconGripVertical class="cursor-grab" />
+              <Input 
+                placeholder="Option" 
+                value={option.label}
+                oninput={(e) => updateOptionValue(option.id, e.currentTarget.value)}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                onclick={() => removeOption(option.id)}
+              >
+                <IconTrash class="h-4 w-4" />
+              </Button>
+            </div>
+            {#if option.error}
+              <p class="text-destructive text-sm ml-10">{option.error}</p>
+            {/if}
           </div>
         {/each}
       {/if}

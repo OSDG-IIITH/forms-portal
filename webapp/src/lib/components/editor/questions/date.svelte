@@ -21,6 +21,9 @@
       value={question.title}
       oninput={(e) => store.updateQuestion(questionId, { title: e.currentTarget.value })}
     />
+    {#if question.error}
+      <p class="text-destructive text-sm">{question.error}</p>
+    {/if}
   </div>
 
   <div class="flex items-center space-x-2">

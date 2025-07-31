@@ -3,6 +3,7 @@
   import { Button } from '$lib/components/ui/button';
   export let questionsLength;
   export let isSaving;
+  export let isFormValid;
   export let saveForm;
 </script>
 
@@ -17,7 +18,7 @@
       <div class="flex gap-4">
         <Button
           onclick={saveForm}
-          disabled={isSaving}
+          disabled={isSaving || !isFormValid}
           size="sm"
         >
           {#if isSaving}

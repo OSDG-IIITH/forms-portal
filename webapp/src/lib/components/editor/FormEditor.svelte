@@ -82,6 +82,13 @@
   });
 
   async function saveForm() {
+    store.validateQuestions();
+    
+    if (!store.isFormValid) {
+      toast.error("Please fix validation errors before saving");
+      return;
+    }
+    
     isSaving = true;
     try {
       const kdl = generateFormKdl(store.questions);
@@ -179,6 +186,7 @@
             <FormSaveFooter
               questionsLength={store.questions.length}
               {isSaving}
+              isFormValid={store.isFormValid}
               {saveForm}
             />
           {/if}
