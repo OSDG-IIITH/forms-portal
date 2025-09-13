@@ -9,7 +9,7 @@ info:
     name: OSDG
 
 servers:
-  - url: /api
+  - url: /forms/api
     description: Production
 
 tags:
