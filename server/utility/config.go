@@ -3,15 +3,17 @@ package utils
 import (
 	"os"
 
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/charmbracelet/log"
+	"github.com/joho/godotenv"
 )
 
 type config struct {
 	Production bool
 
-	Host   string
-	Port   string
-	Domain string
+	Host    string
+	Port    string
+	Domain  string
+	BaseUrl string
 
 	DatabaseUri string
 	FrontendUrl string
@@ -26,9 +28,10 @@ func defaultConfig() config {
 	return config{
 		Production: false,
 
-		Host:   "127.0.0.1",
-		Port:   "8647",
-		Domain: "localhost",
+		Host:    "127.0.0.1",
+		Port:    "8647",
+		Domain:  "localhost",
+		BaseUrl: "",
 
 		DatabaseUri: "postgres://user:pass@localhost:5432/forms",
 		FrontendUrl: "http://localhost:8648",
@@ -42,6 +45,10 @@ func defaultConfig() config {
 
 func LoadConfig() {
 	c := defaultConfig()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("error loading env file", "error", err)
+	}
 
 	prod, ok := os.LookupEnv("PRODUCTION")
 	if ok && (prod == "true" || prod == "1") {
@@ -58,6 +65,10 @@ func LoadConfig() {
 	domain, ok := os.LookupEnv("FORMS_APP_DOMAIN")
 	if ok {
 		c.Domain = domain
+	}
+	baseUrl, ok := os.LookupEnv("FORMS_APP_BASE_URL")
+	if ok {
+		c.BaseUrl = baseUrl
 	}
 
 	databaseUri, ok := os.LookupEnv("FORMS_DATABASE_URI")

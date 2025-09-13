@@ -47,7 +47,8 @@ func main() {
 		}
 	})
 
-	router := server.Group("/api")
+	base := server.Group(utils.Config.BaseUrl)
+	router := base.Group("/api")
 	docs := router.Group("/docs")
 
 	middleware.RegisterAll(server, router)
