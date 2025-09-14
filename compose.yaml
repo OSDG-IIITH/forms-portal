@@ -1,0 +1,18 @@
+services:
+  database:
+    container_name: forms-database
+    image: postgres:17-alpine
+    restart: always
+    env_file: .env.database
+    volumes:
+      - ./server/database/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database:/var/lib/postgresql/data
+  server:
+    container_name: forms-server
+    image: forms-server:latest
+    env_file: .env.server
+  webapp:
+    container_name: forms-webapp
+    image: forms-webapp:latest
+    ports:
+      - 80:80

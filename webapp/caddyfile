@@ -1,0 +1,18 @@
+{
+	auto_https off
+}
+
+:80 {
+	bind 0.0.0.0
+
+	handle /forms/api* {
+		reverse_proxy server:9876
+	}
+
+	handle_path /forms* {
+		encode gzip
+		root * /app
+		try_files {path} /index.html
+		file_server
+	}
+}

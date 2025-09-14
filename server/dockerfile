@@ -1,0 +1,17 @@
+from golang:1.24-alpine as builder
+workdir /src
+
+run go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
+
+copy go.mod go.sum ./
+run go mod download
+copy . .
+
+env CGO_ENABLED=0
+run sqlc generate
+run go build -ldflags="-w -s" -o server .
+
+from scratch
+copy --from=builder /etc/ssl/certs/ca-certificates.crt /ca-certificates.crt
+copy --from=builder /src/server /server
+entrypoint ["/server"]
