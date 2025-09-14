@@ -12,6 +12,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Card, CardContent } from '$lib/components/ui/card';
   import { toast } from 'svelte-sonner';
+  import { PartyPopper } from '@lucide/svelte';
 
   export let form: any;
 
@@ -64,6 +65,8 @@
   let responses: Record<string, string> = {};
   let isLoading = true;
   let isSubmitting = false;
+  let isSubmitted = false;
+  let userReachedLimit = false;
   let error: string | null = null;
 
   function parseKdlValue(node: any): string {
@@ -196,6 +199,8 @@
 
   function handleReset() {
     responses = getInitialResponses();
+    isSubmitted = false;
+    userReachedLimit = false;
   }
 
   async function handleSubmit() {
@@ -203,7 +208,14 @@
     error = null;
     try {
       const startRes = await fetch(`/api/forms/${form.id}/responses`, { method: 'POST' });
-      if (!startRes.ok) throw new Error('Could not start response');
+      if (!startRes.ok) {
+        const errorText = await startRes.text();
+        if (errorText.includes('Maximum responses submitted') || errorText.includes('form-closed')) {
+          userReachedLimit = true;
+          throw new Error('You have reached the maximum number of individual responses allowed for this form.');
+        }
+        throw new Error('Could not start response');
+      }
       const responseObj = await startRes.json();
       const responseId = responseObj.id;
       for (const q of questions) {
@@ -237,7 +249,7 @@
       });
       if (!submitRes.ok) throw new Error('Could not submit response');
       toast.success('Form submitted successfully!');
-      handleReset();
+      isSubmitted = true;
     } catch (e: any) {
       toast.error(e.message || 'Submission failed');
     } finally {
@@ -270,6 +282,19 @@
         </div>
         <h3 class="text-lg font-semibold mb-2">Error Loading Form</h3>
         <p class="text-muted-foreground mb-6">{error}</p>
+      </div>
+    {:else if isSubmitted}
+      <div class="text-center py-12">
+        <div class="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <PartyPopper class="w-8 h-8 text-green-600 dark:text-green-400" />
+        </div>
+        <h2 class="text-2xl font-bold mb-4">Thank you for submitting!</h2>
+        <p class="text-muted-foreground mb-6">Your response has been recorded successfully.</p>
+        {#if form.individual_limit > 1 && !userReachedLimit}
+          <Button onclick={handleReset} variant="outline">
+            Submit Another Response
+          </Button>
+        {/if}
       </div>
     {:else}
       <div class="space-y-8">
