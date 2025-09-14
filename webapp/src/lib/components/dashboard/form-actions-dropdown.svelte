@@ -1,11 +1,12 @@
 <script lang="ts">
+import { base } from '$app/paths';
+import { goto } from '$app/navigation';
 import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
 import * as Dialog from "$lib/components/ui/dialog/index.js";
 import { Input } from "$lib/components/ui/input/index.js";
 import { Label } from "$lib/components/ui/label/index.js";
 import { IconDotsVertical } from '@tabler/icons-svelte';
-import { goto } from '$app/navigation';
 import { createEventDispatcher } from 'svelte';
 
 export let userHandle: string;
@@ -29,7 +30,7 @@ async function submitRename() {
 		return;
 	}
 	try {
-		const res = await fetch(`/api/forms/${formId}`, {
+		const res = await fetch(`${base}/api/forms/${formId}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ title: newTitle })
@@ -78,16 +79,16 @@ async function confirmDelete() {
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="w-48 rounded-md shadow-xl border border-border text-xs" align="end" style="min-width:12rem;">
 		<DropdownMenu.Group>
-			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`/${userHandle}/${slug}`)}>
+			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`${base}/${userHandle}/${slug}`)}>
 				Respond to form
 			</DropdownMenu.Item>
-			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`/${userHandle}/${slug}/edit`)}>
+			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`${base}/${userHandle}/${slug}/edit`)}>
 				Edit form
 			</DropdownMenu.Item>
-			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`/${userHandle}/${slug}/responses`)}>
+			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`${base}/${userHandle}/${slug}/responses`)}>
 				View responses
 			</DropdownMenu.Item>
-			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`/${userHandle}/${slug}/permissions`)}>
+			<DropdownMenu.Item class="text-xs rounded-md px-3 py-2 hover:bg-accent/80 hover:text-primary transition-colors cursor-pointer" onclick={() => goTo(`${base}/${userHandle}/${slug}/permissions`)}>
 				Manage permissions
 			</DropdownMenu.Item>
 		</DropdownMenu.Group>

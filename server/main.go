@@ -17,9 +17,10 @@ import (
 )
 
 func main() {
-	utils.LoadConfig()
-	utils.LoadValidator()
 	utils.SetupLogger()
+	utils.LoadConfig()
+	utils.SetupTLS()
+	utils.LoadValidator()
 
 	ctx := context.Background()
 	conn, err := pgxpool.New(ctx, utils.Config.DatabaseUri)

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import * as kdljs from 'kdljs';
   import { ulid } from 'ulid';
+  import { base } from '$app/paths';
   import InputView from '$lib/components/viewer/questions/input.svelte';
   import TextareaView from '$lib/components/viewer/questions/textarea.svelte';
   import RadioView from '$lib/components/viewer/questions/radio.svelte';
@@ -207,7 +208,7 @@
     isSubmitting = true;
     error = null;
     try {
-      const startRes = await fetch(`/api/forms/${form.id}/responses`, { method: 'POST' });
+      const startRes = await fetch(`${base}/api/forms/${form.id}/responses`, { method: 'POST' });
       if (!startRes.ok) {
         const errorText = await startRes.text();
         if (errorText.includes('Maximum responses submitted') || errorText.includes('form-closed')) {
@@ -235,14 +236,14 @@
           valueToSubmit = rawValue;
         }
 
-        const upsertRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/answers`, {
+        const upsertRes = await fetch(`${base}/api/forms/${form.id}/responses/${responseId}/answers`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: q.id, value: JSON.stringify(valueToSubmit) })
         });
         if (!upsertRes.ok) throw new Error('Could not save answer');
       }
-      const submitRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/submit`, {
+      const submitRes = await fetch(`${base}/api/forms/${form.id}/responses/${responseId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ "save": true })

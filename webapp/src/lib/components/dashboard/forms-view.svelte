@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { Tabs, TabsList, TabsTrigger, TabsContent } from '$lib/components/ui/tabs';
 	import FormItem from './form-item.svelte';
 	import FormsGridView from './forms-grid-view.svelte';
@@ -42,7 +43,7 @@
 				limit: perPage.toString(),
 				offset: ((page - 1) * perPage).toString(),
 			});
-			const res = await fetch(`/api/forms?${params.toString()}`, { credentials: 'include' });
+			const res = await fetch(`${base}/api/forms?${params.toString()}`, { credentials: 'include' });
 			if (!res.ok) throw new Error();
 			const data = await res.json();
 			if (data && Array.isArray(data.data) && data.pagination && typeof data.pagination.total === 'number') {
@@ -86,7 +87,7 @@
 
 	async function fetchCurrentUser() {
 		try {
-			const res = await fetch('/api/auth/info', { credentials: 'include' });
+			const res = await fetch(`${base}/api/auth/info`, { credentials: 'include' });
 			if (res.ok) {
 				const user = await res.json();
 				if (user?.handle) {

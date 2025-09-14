@@ -1,13 +1,14 @@
+import { base } from '$app/paths';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params, fetch }) => {
   const { handle, slug } = params;
   
-  const res = await fetch(`/api/forms/${handle}/${slug}`);
+  const res = await fetch(`${base}/api/forms/${handle}/${slug}`);
   if (!res.ok) return { status: res.status, error: new Error('Form not found') };
   const form = await res.json();
   
-  const permissionsRes = await fetch(`/api/forms/${form.id}/permissions`, { credentials: 'include' });
+  const permissionsRes = await fetch(`${base}/api/forms/${form.id}/permissions`, { credentials: 'include' });
   if (!permissionsRes.ok) return { status: permissionsRes.status, error: new Error('Failed to fetch permissions') };
   const permissions = await permissionsRes.json();
   
@@ -19,7 +20,7 @@ export const load: PageLoad = async ({ params, fetch }) => {
   
   let userMap: Record<string, { name: string; email: string }> = {};
   if (userIds.length > 0) {
-    const results = await Promise.all(userIds.map(id => fetch(`/api/users/${id}`, { credentials: 'include' })));
+    const results = await Promise.all(userIds.map(id => fetch(`${base}/api/users/${id}`, { credentials: 'include' })));
     for (let i = 0; i < results.length; i++) {
       if (results[i].ok) {
         const user = await results[i].json();

@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"net/http"
+	"os"
 
 	"github.com/charmbracelet/log"
 	"github.com/labstack/echo/v4"
@@ -69,4 +72,32 @@ func ErrorHandler(err error, c echo.Context) {
 	}
 
 	c.JSON(code, FromError(errCode, errors.New(msg)))
+}
+
+func SetupTLS() {
+	pool := x509.NewCertPool()
+	file := Config.TlsCertsPath
+
+	if file == "" {
+		return
+	}
+
+	certs, err := os.ReadFile(file)
+	if err != nil {
+		log.Warn("could not read ca certificates", "file", file)
+		return
+	}
+
+	ok := pool.AppendCertsFromPEM(certs)
+	if !ok {
+		log.Warn("failed to parse ca certs", "file", file)
+		return
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{RootCAs: pool},
+		},
+	}
+	*http.DefaultClient = *client
 }

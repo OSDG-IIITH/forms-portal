@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import DataTable from '$lib/components/groups/data-table.svelte';
 	import { columns } from '$lib/components/groups/columns';
 	import { invalidate } from '$app/navigation';
@@ -11,7 +12,7 @@
 	async function handleGroupCreated() {
 		loading = true;
 		try {
-			await invalidate('/api/groups');
+			await invalidate(`${base}/api/groups`);
 		} catch (error) {
 			console.error('Failed to reload groups:', error);
 		} finally {

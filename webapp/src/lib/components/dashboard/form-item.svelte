@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { cn } from '$lib/utils';
 	import { IconFileText, IconEyeOff, IconEdit } from '@tabler/icons-svelte';
 	import { formatRelativeTime } from '$lib/utils/date';
-	import { goto } from '$app/navigation';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { writable } from 'svelte/store';
 	import FormActionsDropdown from './form-actions-dropdown.svelte';
@@ -36,7 +37,7 @@
 	const displayTime = form.modified ? formatRelativeTime(form.modified) : formatRelativeTime(form.createdAt);
 	const slug = form.slug || 'nouser';
 	function handleClick() {
-		goto(`/${userHandle}/${slug}/edit`);
+		goto(`${base}/${userHandle}/${slug}/edit`);
 	}
 
 	let openTooltipStore = writable<'anonymous' | 'editable' | null>(null);

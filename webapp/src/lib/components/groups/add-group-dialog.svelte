@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import {
 		Dialog,
 		DialogContent,
@@ -47,7 +48,7 @@
 		if (type === 'list' && members) payload.members = members.split(/[,\s]+/).filter(Boolean);
 
 		try {
-			const res = await fetch('/api/groups', {
+			const res = await fetch(`${base}/api/groups`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',

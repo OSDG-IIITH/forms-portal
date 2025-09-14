@@ -1,6 +1,7 @@
 <script>
   import ThemeSwitcher from "./theme-switcher.svelte";
   import { page } from "$app/stores";
+  import { base } from "$app/paths";
   import { Button } from '$lib/components/ui/button';
   import { IconMenu2 } from '@tabler/icons-svelte';
   $: currentPath = $page.url.pathname;
@@ -28,7 +29,7 @@
   <div class="container mx-auto px-6 py-4">
     <div class="flex items-center w-full">
       <h1 class="text-3xl tracking-tight flex-shrink-0">
-        <a href="/"
+        <a href="{base}"
           >forms <span class="font-semibold text-accent-foreground">iiit</span
           ></a
         >

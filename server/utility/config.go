@@ -10,6 +10,8 @@ import (
 type config struct {
 	Production bool
 
+	TlsCertsPath string
+
 	Host    string
 	Port    string
 	Domain  string
@@ -27,6 +29,8 @@ type config struct {
 func defaultConfig() config {
 	return config{
 		Production: false,
+
+		TlsCertsPath: "",
 
 		Host:    "127.0.0.1",
 		Port:    "8647",
@@ -47,13 +51,19 @@ func LoadConfig() {
 	c := defaultConfig()
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("error loading env file", "error", err)
+		log.Warn("failed to load env file", "error", err)
 	}
 
 	prod, ok := os.LookupEnv("PRODUCTION")
 	if ok && (prod == "true" || prod == "1") {
 		c.Production = true
 	}
+
+	tlsCertsPath, ok := os.LookupEnv("FORMS_SERVER_TLS_CERTS_PATH")
+	if ok {
+		c.TlsCertsPath = tlsCertsPath
+	}
+
 	host, ok := os.LookupEnv("FORMS_SERVER_HOST")
 	if ok {
 		c.Host = host
