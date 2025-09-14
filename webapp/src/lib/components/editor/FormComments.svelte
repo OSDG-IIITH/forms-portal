@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { IconMessage, IconTrash } from '@tabler/icons-svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -31,7 +32,7 @@
 	async function fetchUserName(userId: string): Promise<string> {
 		if (!userId || userNames[userId]) return userNames[userId] || 'Unknown';
 		try {
-			const res = await fetch(`/api/users/${userId}`);
+			const res = await fetch(`${base}/api/users/${userId}`);
 			if (!res.ok) throw new Error();
 			const data = await res.json();
 			const name = data.name || data.handle || 'Unknown';
@@ -48,7 +49,7 @@
 		loading = true;
 		error = '';
 		try {
-			const res = await fetch(`/api/forms/${formId}/comments`);
+			const res = await fetch(`${base}/api/forms/${formId}/comments`);
 			if (!res.ok) throw new Error('Failed to fetch comments');
 			const data = await res.json();
 			const commentList: Comment[] = data.data || [];
@@ -75,7 +76,7 @@
 		loading = true;
 		error = '';
 		try {
-			const res = await fetch(`/api/forms/${formId}/comments`, {
+			const res = await fetch(`${base}/api/forms/${formId}/comments`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ element: 'none', body: newComment })
@@ -95,7 +96,7 @@
 		loading = true;
 		error = '';
 		try {
-			const res = await fetch(`/api/forms/${formId}/comments/${commentToDelete}`, {
+			const res = await fetch(`${base}/api/forms/${formId}/comments/${commentToDelete}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' }
 			});

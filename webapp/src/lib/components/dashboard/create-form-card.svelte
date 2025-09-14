@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import { Card, CardContent } from '$lib/components/ui/card';
   import { IconPlus } from '@tabler/icons-svelte';
 </script>
 
-<a href="/create" class="block h-full group">
+<a href="{base}/create" class="block h-full group">
   <Card class="h-full hover:bg-muted/30 transition-all duration-200 shadow-none">
     <CardContent class="flex items-center justify-center h-full p-6">
       <IconPlus class="h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors" />

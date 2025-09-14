@@ -1,10 +1,11 @@
+import { base } from '$app/paths';
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 import type { Group } from '$lib/components/groups/columns';
 
 export const load: PageLoad = async ({ fetch }) => {
 	try {
-		const groupsResponse = await fetch('/api/groups', { credentials: 'include' });
+		const groupsResponse = await fetch(`${base}/api/groups`, { credentials: 'include' });
 
 		if (!groupsResponse.ok) {
 			throw error(groupsResponse.status, 'Failed to fetch groups');
@@ -16,7 +17,7 @@ export const load: PageLoad = async ({ fetch }) => {
 		const ownerIds = [...new Set(groups.map((group) => group.owner))];
 
 		const userPromises = ownerIds.map((id) =>
-			fetch(`/api/users/${id}`, { credentials: 'include' }).then((res) => {
+			fetch(`${base}/api/users/${id}`, { credentials: 'include' }).then((res) => {
 				if (!res.ok) {
 					console.warn(`Failed to fetch user ${id}`);
 					return null;

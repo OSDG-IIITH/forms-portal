@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import DataTable from "$lib/components/permissions/data-table.svelte";
   import { createColumns } from "$lib/components/permissions/columns.js";
   import AddEntityDialog from "$lib/components/permissions/add-entity-dialog.svelte";
@@ -107,7 +108,7 @@
           ? { role, group: userId }
           : { role, user: entry.userEmail };
           
-        const res = await fetch(`/api/forms/${data.form.id}/permissions`, {
+        const res = await fetch(`${base}/api/forms/${data.form.id}/permissions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -133,7 +134,7 @@
         const userEntry = permissions.find(p => p.userId === userId);
         const toRemove = userEntry?.permissions?.find(p => p.role === role);
         if (toRemove) {
-          const res = await fetch(`/api/forms/${data.form.id}/permissions/${toRemove.id}`, {
+          const res = await fetch(`${base}/api/forms/${data.form.id}/permissions/${toRemove.id}`, {
             method: 'DELETE',
             credentials: 'include'
           });
@@ -166,8 +167,13 @@
       const entry = permissions.find(p => p.userId === userId);
       if (entry?.permissions) {
         const results = await Promise.all(
+<<<<<<< HEAD
           entry.permissions.map(p =>
             fetch(`/api/forms/${data.form.id}/permissions/${p.id}`, { method: 'DELETE', credentials: 'include' })
+=======
+          userEntry.permissions.map(p =>
+            fetch(`${base}/api/forms/${data.form.id}/permissions/${p.id}`, { method: 'DELETE', credentials: 'include' })
+>>>>>>> a4a5648 (fix: support base url everywhere)
           )
         );
         if (results.every(r => r.ok)) {
@@ -189,7 +195,7 @@
       if (type === 'user' && email) {
         toast.success('User added. Assign permissions using the menu.');
       } else if (type === 'group' && groupId) {
-        const res = await fetch(`/api/forms/${data.form.id}/permissions`, {
+        const res = await fetch(`${base}/api/forms/${data.form.id}/permissions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',

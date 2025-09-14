@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import FormTitleDescription from './FormTitleDescription.svelte';
   import SidePanel from './SidePanel.svelte';
   import QuestionsList from './QuestionsList.svelte';
@@ -135,7 +136,7 @@
         editable_responses: Boolean(store.formData.editable_responses)
       };
 
-      const res = await fetch(`/api/forms/${form.id}`, {
+      const res = await fetch(`${base}/api/forms/${form.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

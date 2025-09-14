@@ -1,15 +1,16 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import type { Row } from "@tanstack/table-core";
   import { Button } from "$lib/components/ui/button/index.js";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-  DialogClose
-} from "$lib/components/ui/dialog/index.js";
+  import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogFooter,
+    DialogTitle,
+    DialogDescription,
+    DialogClose
+  } from "$lib/components/ui/dialog/index.js";
   import { createEventDispatcher } from 'svelte';
   import {
     DropdownMenu,
@@ -43,7 +44,7 @@ async function deleteGroup() {
   isDeleting = true;
   try {
     const groupId = row.original.id;
-    const res = await fetch(`/api/groups/${groupId}`, {
+    const res = await fetch(`${base}/api/groups/${groupId}`, {
       method: 'DELETE',
       credentials: 'same-origin'
     });

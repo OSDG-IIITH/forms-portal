@@ -5,7 +5,7 @@
   import CalendarChart from "$lib/components/responses/calendar-chart.svelte";
   import SummaryCard from "$lib/components/responses/summary-card.svelte";
   import Card from "$lib/components/ui/card/card.svelte";
-import { ChartNoAxesColumn, Settings } from "@lucide/svelte";
+  import { ChartNoAxesColumn, Settings } from "@lucide/svelte";
   
   export let data: PageData;
   
