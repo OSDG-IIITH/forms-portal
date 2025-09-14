@@ -7,12 +7,23 @@ services:
     volumes:
       - ./server/database/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database:/var/lib/postgresql/data
+    networks:
+      - forms-network
   server:
     container_name: forms-server
     image: forms-server:latest
     env_file: .env.server
+    networks:
+      - forms-network
   webapp:
     container_name: forms-webapp
     image: forms-webapp:latest
-    ports:
-      - 80:80
+    networks:
+      - forms-network
+
+networks:
+  forms-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.42.1.0/24

@@ -6,7 +6,7 @@
 	bind 0.0.0.0
 
 	handle /forms/api* {
-		reverse_proxy server:9876
+		reverse_proxy server:80
 	}
 
 	handle_path /forms* {
