@@ -1,0 +1,12 @@
+from oven/bun:slim as builder
+workdir /src
+
+copy package.json bun.lock ./
+run bun install --frozen-lockfile
+copy . .
+
+run bun run build
+
+from caddy:2-alpine
+copy caddyfile /etc/caddy/Caddyfile
+copy --from=builder /src/build/ /app/
