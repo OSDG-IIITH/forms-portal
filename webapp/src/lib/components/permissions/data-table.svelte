@@ -75,7 +75,7 @@ const table = $derived.by(() => {
         {#each table.getHeaderGroups() as headerGroup}
           <Table.Row>
             {#each headerGroup.headers as header}
-              <Table.Head class="first:pl-12 last:w-[70px] last:text-right">
+              <Table.Head class="first:pl-3 last:w-[70px] last:text-right">
                 {#if !header.isPlaceholder}
                   <FlexRender content={header.column.columnDef.header} context={header.getContext()} />
                 {/if}

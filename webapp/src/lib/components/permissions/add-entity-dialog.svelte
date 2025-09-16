@@ -5,6 +5,10 @@ import { Input } from '$lib/components/ui/input/index.js';
 import * as Select from '$lib/components/ui/select/index.js';
 import { IconUserPlus } from '@tabler/icons-svelte';
 import { createEventDispatcher } from 'svelte';
+import { page } from '$app/stores';
+
+export let formId: string;
+export let existingPermissions: Array<{ userId: string; type?: string }> = [];
 
 const dispatch = createEventDispatcher();
 let open = false;
@@ -14,6 +18,24 @@ let groupId = '';
 let isLoading = false;
 let error = '';
 let availableGroups: { id: string; name: string }[] = [];
+
+async function fetchGroups() {
+	try {
+		const res = await fetch('/api/groups?limit=100', { credentials: 'include' });
+		if (res.ok) {
+			const data = await res.json();
+			const allGroups = data.data ?? [];
+			const existingGroupIds = existingPermissions
+				.filter(p => p.type === 'group')
+				.map(p => p.userId);
+      availableGroups = allGroups.filter((group: { id: string; name: string }) => !existingGroupIds.includes(group.id));
+		} else {
+			console.error('Failed to fetch groups');
+		}
+	} catch (e) {
+		console.error('Error fetching groups', e);
+	}
+}
 
 function reset() {
   email = '';
@@ -43,30 +65,54 @@ async function handleSubmit() {
       isLoading = false;
       return;
     }
-    dispatch('add', { type: 'group', groupId });
-    reset();
-    open = false;
-    isLoading = false;
+    try {
+        const res = await fetch(`/api/forms/${formId}/permissions`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ group: groupId, role: 'view' })
+        });
+
+        if (res.ok) {
+            dispatch('add', { type: 'group', groupId });
+        } else {
+            const data = await res.json();
+            error = data.message || 'Failed to add group permission.';
+        }
+    } catch (e) {
+        error = 'An unexpected error occurred.';
+        console.error('Error adding group permission', e);
+    } finally {
+        isLoading = false;
+        if (!error) {
+            reset();
+            open = false;
+        }
+    }
     return;
   }
   isLoading = false;
 }
 </script>
 
-<Dialog bind:open>
+<Dialog bind:open onOpenChange={(isOpen) => {
+    if (isOpen) {
+        fetchGroups();
+    }
+}}>
   <DialogTrigger>
     <Button class="ml-auto gap-2" variant="outline" size="sm" aria-label="Add user or group">
       <IconUserPlus class="w-4 h-4" />
       Add
     </Button>
   </DialogTrigger>
-  <DialogContent class="max-w-sm w-full p-2 pb-4 overflow-hidden rounded-xl">
+  <DialogContent class="max-w-sm w-full p-2 pb-4 overflow-hidden rounded-xl bg-card">
     <form class="px-6 pt-6 pb-2 flex flex-col gap-4" on:submit|preventDefault={handleSubmit}>
       <DialogTitle class="text-lg font-semibold">Add User or Group</DialogTitle>
       <DialogDescription class="text-muted-foreground text-sm">Invite a user by email or add a group to this form. You can assign permissions after adding.</DialogDescription>
-      <div class="flex gap-2">
-        <Button type="button" variant={mode === 'user' ? 'outline' : 'ghost'} size="sm" class="flex-1" onclick={() => mode = 'user'}>User</Button>
-        <Button type="button" variant={mode === 'group' ? 'outline' : 'ghost'} size="sm" class="flex-1" onclick={() => mode = 'group'}>Group</Button>
+      <div class="flex gap-2 border bg-card p-1 rounded-md">
+        <Button type="button" variant={mode === 'user' ? 'secondary' : 'ghost'} size="sm" class="flex-1" onclick={() => mode = 'user'}>User</Button>
+        <Button type="button" variant={mode === 'group' ? 'secondary' : 'ghost'} size="sm" class="flex-1" onclick={() => mode = 'group'}>Group</Button>
       </div>
       {#if mode === 'user'}
         <Input type="email" placeholder="User email" bind:value={email} required autocomplete="off" class="w-full" />

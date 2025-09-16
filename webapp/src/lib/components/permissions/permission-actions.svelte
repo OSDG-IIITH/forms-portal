@@ -143,7 +143,7 @@ function onRemoveRoleSelect(roleValue: string) {
       <DropdownMenu.Separator />
       <DropdownMenu.Item onSelect={handleRemoveUser}>
         <TrashIcon class="mr-2 size-4" />
-        Remove User
+        Remove
       </DropdownMenu.Item>
     </DropdownMenu.Group>
   </DropdownMenu.Content>

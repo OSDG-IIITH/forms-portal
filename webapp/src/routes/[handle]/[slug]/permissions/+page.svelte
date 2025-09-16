@@ -7,22 +7,111 @@
   import { toast } from "svelte-sonner";
 
   let { data }: { data: PageData } = $props();
-  let permissions = $state<Permission[]>(data.permissions ?? []);
+  let permissions = $state<Permission[]>(
+    (data.permissions ?? []).map(p => ({
+      ...p,
+      type: p.type === "user" || p.type === "group" ? p.type : undefined
+    }))
+  );
+
+  async function refreshPermissions() {
+    try {
+      const permissionsRes = await fetch(`/api/forms/${data.form.id}/permissions`, { credentials: 'include' });
+      if (!permissionsRes.ok) return;
+      const permissionsData = await permissionsRes.json();
+      
+      const userPermissions = permissionsData.filter((p: any) => p.user);
+      const groupPermissions = permissionsData.filter((p: any) => p.group);
+      
+      const userIds = Array.from(new Set(userPermissions.map((p: any) => p.user)));
+      const groupIds = Array.from(new Set(groupPermissions.map((p: any) => p.group)));
+      
+      let userMap: Record<string, { name: string; email: string }> = {};
+      if (userIds.length > 0) {
+        const results = await Promise.all(userIds.map(id => fetch(`/api/users/${id}`, { credentials: 'include' })));
+        for (let i = 0; i < results.length; i++) {
+          if (results[i].ok) {
+            const user = await results[i].json();
+            userMap[String(userIds[i])] = { name: user.name, email: user.email };
+          }
+        }
+      }
+
+      let groupMap: Record<string, { name: string; type: string; domain?: string }> = {};
+      if (groupIds.length > 0) {
+        const results = await Promise.all(groupIds.map(id => fetch(`/api/groups/${id}`, { credentials: 'include' })));
+        for (let i = 0; i < results.length; i++) {
+          if (results[i].ok) {
+            const group = await results[i].json();
+            groupMap[String(groupIds[i])] = { 
+              name: group.name, 
+              type: group.type,
+              domain: group.domain 
+            };
+          }
+        }
+      }
+
+      const groupedPermissions = [
+        ...userIds.map(userId => {
+          const userPerms = userPermissions.filter((p: any) => p.user === userId);
+          const user = userMap[String(userId)];
+          return {
+            userId: String(userId),
+            userName: user?.name,
+            userEmail: user?.email,
+            roles: userPerms.map((p: any) => p.role),
+            permissions: userPerms,
+            type: 'user'
+          };
+        }),
+        ...groupIds.map(groupId => {
+          const groupPerms = groupPermissions.filter((p: any) => p.group === groupId);
+          const group = groupMap[String(groupId)];
+          const displayEmail = group?.type === 'domain' && group?.domain 
+            ? group.domain 
+            : group?.type === 'list' 
+            ? 'List' 
+            : 'Group';
+          
+          return {
+            userId: String(groupId),
+            userName: group?.name,
+            userEmail: displayEmail,
+            roles: groupPerms.map((p: any) => p.role),
+            permissions: groupPerms,
+            type: 'group'
+          };
+        })
+      ];
+      
+      permissions = groupedPermissions.map(p => ({
+        ...p,
+        type: p.type === "user" || p.type === "group" ? p.type : undefined
+      }));
+    } catch (e) {
+      console.error('Failed to refresh permissions:', e);
+    }
+  }
 
   async function handlePermissionChange(userId: string, action: 'add' | 'remove', role: string) {
     try {
       if (action === 'add') {
-        const userEntry = permissions.find(p => p.userId === userId);
-        const userEmail = userEntry?.userEmail;
-        if (!userEmail) {
-          toast.error('User email not found');
+        const entry = permissions.find(p => p.userId === userId);
+        if (!entry) {
+          toast.error('Entry not found');
           return;
         }
+        
+        const payload = entry.type === 'group' 
+          ? { role, group: userId }
+          : { role, user: entry.userEmail };
+          
         const res = await fetch(`/api/forms/${data.form.id}/permissions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ role, user: userEmail })
+          body: JSON.stringify(payload)
         });
         if (res.ok) {
           const newPerm = await res.json();
@@ -49,7 +138,8 @@
             credentials: 'include'
           });
           if (res.ok) {
-            toast.success(`Removed ${role} permission`);
+            const entityType = userEntry?.type === 'group' ? 'group' : 'user';
+            toast.success(`Removed ${role} permission from ${entityType}`);
             permissions = permissions
               .map(p =>
                 p.userId === userId
@@ -73,22 +163,23 @@
 
   async function handleRemoveUser(userId: string) {
     try {
-      const userEntry = permissions.find(p => p.userId === userId);
-      if (userEntry?.permissions) {
+      const entry = permissions.find(p => p.userId === userId);
+      if (entry?.permissions) {
         const results = await Promise.all(
-          userEntry.permissions.map(p =>
+          entry.permissions.map(p =>
             fetch(`/api/forms/${data.form.id}/permissions/${p.id}`, { method: 'DELETE', credentials: 'include' })
           )
         );
         if (results.every(r => r.ok)) {
-          toast.success('User removed');
+          const entityType = entry?.type === 'group' ? 'Group' : 'User';
+          toast.success(`${entityType} removed`);
           permissions = permissions.filter(p => p.userId !== userId);
         } else {
-          toast.error('Failed to remove user');
+          toast.error('Failed to remove entity');
         }
       }
     } catch {
-      toast.error('Error removing user');
+      toast.error('Error removing entity');
     }
   }
 
@@ -106,6 +197,7 @@
         });
         if (res.ok) {
           toast.success('Group added with view permission.');
+          await refreshPermissions();
         } else {
           const err = await res.text();
           toast.error(`Failed to add group: ${err}`);
@@ -122,7 +214,7 @@
 <div class="container mx-auto px-8 py-8 mt-20 min-h-screen">
   <div class="flex items-center mb-3">
     <h2 class="text-xl font-semibold tracking-tight flex-1">Permissions</h2>
-    <AddEntityDialog on:add={handleAddEntity} />
+    <AddEntityDialog on:add={handleAddEntity} formId={data.form.id} existingPermissions={permissions} />
   </div>
   <DataTable data={permissions} {columns} />
 </div>

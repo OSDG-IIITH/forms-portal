@@ -11,7 +11,8 @@ export type Permission = {
   userName?: string;
   userEmail?: string;
   roles: Array<"view" | "respond" | "comment" | "analyze" | "edit" | "manage">;
-  permissions?: Array<{ id: string; role: string; user: string }>;
+  permissions?: Array<{ id: string; role: string; user?: string; group?: string }>;
+  type?: 'user' | 'group';
 };
 
 export function createColumns(
@@ -22,7 +23,7 @@ export function createColumns(
     {
       accessorKey: "userName",
       header: ({ column }) =>
-        renderComponent(DataTableColumnHeader, { column, title: "User" }),
+        renderComponent(DataTableColumnHeader, { column, title: "User/Group" }),
       cell: ({ row }) =>
         renderComponent(UserNameCell, { 
           userName: row.original.userName,
@@ -33,7 +34,7 @@ export function createColumns(
     {
       accessorKey: "userEmail",
       header: ({ column }) =>
-        renderComponent(DataTableColumnHeader, { column, title: "Email" }),
+        renderComponent(DataTableColumnHeader, { column, title: "Email/Domain" }),
       cell: ({ row }) =>
         renderComponent(UserEmailCell, { userEmail: row.original.userEmail }),
     },
