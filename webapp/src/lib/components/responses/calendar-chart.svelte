@@ -146,6 +146,7 @@
 				x="date"
 				axis="x"
 				y="responses"
+				
 				{yDomain}
 				props={{
 					bars: {
