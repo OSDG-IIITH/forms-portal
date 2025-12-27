@@ -657,8 +657,13 @@ begin
         raise exception 'Maximum responses submitted.' using hint = 'form-closed';
     end if;
 
-    insert into responses (form, respondent) values (p_form_id, p_user_id)
-    returning * into v_response;
+    if v_form.anonymous then
+        insert into responses (form, respondent) values (p_form_id, null)
+        returning * into v_response;
+    else
+        insert into responses (form, respondent) values (p_form_id, p_user_id)
+        returning * into v_response;
+    end if;
 
     insert into submission_records (form, "user", responses)
     values (p_form_id, p_user_id, 1) on conflict (form, "user") do update
