@@ -4,24 +4,20 @@
 
 The frontend is made with `sveltekit`, using `bits-ui`, `shadcn-svelte` and `tailwindcss`.
 
+This project uses [`mise`](https://github.com/jdx/mise) for managing tools.
 
-## Prerequisites
-
-- [Node.js](https://nodejs.org/)
-
-
-## Steps
-
-Install dependencies:
+Please install the necessary dependencies by running:
 
 ```sh
-npm i
+bun install
 ```
 
-Start the development server:
+To start the development server, run:
 
 ```sh
-npm run dev
+bun dev
 ```
 
-The app will be available at [http://localhost:5173](http://localhost:5173),
+The app will be available at [http://localhost:5173](http://localhost:5173).
+Make sure to start the backend following the instructions given in the readme
+[here](../server/readme.md) before starting the frontend.
