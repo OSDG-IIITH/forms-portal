@@ -30,7 +30,7 @@
     <Checkbox 
       id="required-{question.id}" 
       checked={question.required} 
-      onchange={() => store.updateQuestion(questionId, { required: !question.required })}
+      onCheckedChange={(v) => store.updateQuestion(questionId, { required: !!v })}
     />
     <Label for="required-{question.id}" class="text-sm font-normal cursor-pointer">
       Required field
