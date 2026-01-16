@@ -1,7 +1,8 @@
 import type { LayoutLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
-export const ssr = false
+export const ssr = false;
+export const prerender = true;
 
 const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/login/callback', '/api/auth/logout'];
 
