@@ -8,7 +8,7 @@
   import FormSettings from './FormSettings.svelte';
   import FormComments from './FormComments.svelte';
 
-  let { dialogOpen = $bindable(false) } = $props();
+  let { dialogOpen = $bindable(false), mode = 'edit' } = $props();
   
   const dispatch = createEventDispatcher<{
     panelchange: { open: boolean };
@@ -96,13 +96,15 @@
 
 <div class="fixed top-20 right-8 z-50 flex gap-2">
   {#if useSheet}
-    <button
-      class={buttonVariants({ variant: dialogOpen && activeTab === 'comments' ? 'default' : 'outline' }) + ' flex items-center gap-2'}
-      aria-label="Form comments"
-      onclick={handleCommentsClick}
-    >
-      <IconMessage class="size-5" />
-    </button>
+    {#if mode !== 'create'}
+      <button
+        class={buttonVariants({ variant: dialogOpen && activeTab === 'comments' ? 'default' : 'outline' }) + ' flex items-center gap-2'}
+        aria-label="Form comments"
+        onclick={handleCommentsClick}
+      >
+        <IconMessage class="size-5" />
+      </button>
+    {/if}
     
     <Sheet.Root bind:open={dialogOpen} onOpenChange={handleSheetOpenChange}>
     <Sheet.Trigger
@@ -121,22 +123,24 @@
       </Sheet.Content>
     </Sheet.Root>
   {:else}
-    <Panel.Root open={panelOpen && activeTab === 'comments'} on:openchange={handleCommentsOpenChange}>
-      <Panel.Trigger
-        class={buttonVariants({ variant: panelOpen && activeTab === 'comments' ? 'default' : 'outline' }) + ' flex items-center gap-2'}
-        aria-label="Form comments"
-        onclick={() => { activeTab = 'comments'; }}
-      >
-        <IconMessage class="size-5" />
-      </Panel.Trigger>
-      <Panel.Content class="flex flex-col">
-        <Panel.Header class="px-8 pt-8">
-          <Panel.Title>Form Comments</Panel.Title>
-          <Panel.Description>Comments and feedback for this form.</Panel.Description>
-        </Panel.Header>
-        <FormComments />
-      </Panel.Content>
-    </Panel.Root>
+    {#if mode !== 'create'}
+      <Panel.Root open={panelOpen && activeTab === 'comments'} on:openchange={handleCommentsOpenChange}>
+        <Panel.Trigger
+          class={buttonVariants({ variant: panelOpen && activeTab === 'comments' ? 'default' : 'outline' }) + ' flex items-center gap-2'}
+          aria-label="Form comments"
+          onclick={() => { activeTab = 'comments'; }}
+        >
+          <IconMessage class="size-5" />
+        </Panel.Trigger>
+        <Panel.Content class="flex flex-col">
+          <Panel.Header class="px-8 pt-8">
+            <Panel.Title>Form Comments</Panel.Title>
+            <Panel.Description>Comments and feedback for this form.</Panel.Description>
+          </Panel.Header>
+          <FormComments />
+        </Panel.Content>
+      </Panel.Root>
+    {/if}
     
     <Panel.Root open={panelOpen && activeTab === 'settings'} on:openchange={handleSettingsOpenChange}>
       <Panel.Trigger

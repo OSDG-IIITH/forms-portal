@@ -162,6 +162,7 @@
       bind:dialogOpen
       on:panelchange={handlePanelChange}
       on:dialogopenchange={handleDialogOpenChange}
+      {mode}
     />
   </div>
   <div
