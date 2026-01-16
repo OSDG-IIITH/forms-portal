@@ -5,65 +5,69 @@
 		DialogFooter,
 		DialogHeader,
 		DialogTitle,
-		DialogTrigger
-	} from '$lib/components/ui/dialog';
-	import * as Select from '$lib/components/ui/select';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
+		DialogTrigger,
+	} from "$lib/components/ui/dialog";
+	import * as Select from "$lib/components/ui/select";
+	import { Button } from "$lib/components/ui/button/index.js";
+	import { Input } from "$lib/components/ui/input/index.js";
+	import type { Group } from "$lib/types/group";
 
 	let { onCreated = () => {} }: { onCreated?: () => void } = $props();
 
 	let open = $state(false);
-	let name = $state('');
-	let description = $state('');
-	let type = $state<'domain' | 'list'>('list');
-	let domain = $state('');
-	let members = $state('');
+	let name = $state("");
+	let description = $state("");
+	let type = $state<"domain" | "list">("list");
+	let domain = $state("");
+	let members = $state("");
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 
 	const groupTypes = [
-		{ value: 'list', label: 'List' },
-		{ value: 'domain', label: 'Domain' }
+		{ value: "list", label: "List" },
+		{ value: "domain", label: "Domain" },
 	];
 
-	const selectedLabel = $derived(groupTypes.find((t) => t.value === type)?.label);
+	const selectedLabel = $derived(
+		groupTypes.find((t) => t.value === type)?.label,
+	);
 
 	function resetForm() {
-		name = '';
-		description = '';
-		domain = '';
-		members = '';
-		type = 'list';
+		name = "";
+		description = "";
+		domain = "";
+		members = "";
+		type = "list";
 		error = null;
 	}
 
 	async function handleSubmit() {
 		loading = true;
 		error = null;
-		const payload: any = { name, type };
+		const payload: Partial<Group> = { name, type };
 		if (description) payload.description = description;
-		if (type === 'domain' && domain) payload.domain = domain;
-		if (type === 'list' && members) payload.members = members.split(/[,\s]+/).filter(Boolean);
+		if (type === "domain" && domain) payload.domain = domain;
+		if (type === "list" && members)
+			payload.members = members.split(/[,\s]+/).filter(Boolean);
 
 		try {
-			const res = await fetch('/api/groups', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify(payload)
+			const res = await fetch("/api/groups", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify(payload),
 			});
 
 			if (!res.ok) {
 				const errText = await res.text();
-				throw new Error(errText || 'Failed to create group');
+				throw new Error(errText || "Failed to create group");
 			}
 
 			open = false;
 			onCreated();
 			resetForm();
 		} catch (e: any) {
-			error = e.message || 'Unknown error';
+			error = e.message || "Unknown error";
 		} finally {
 			loading = false;
 		}
@@ -72,7 +76,13 @@
 
 <Dialog bind:open>
 	<DialogTrigger>
-		<Button class="ml-auto gap-2 h-8" variant="default" aria-label="Add group"> Add Group </Button>
+		<Button
+			class="ml-auto gap-2 h-8"
+			variant="default"
+			aria-label="Add group"
+		>
+			Add Group
+		</Button>
 	</DialogTrigger>
 	<DialogContent class="max-w-sm w-full">
 		<DialogHeader>
@@ -80,34 +90,58 @@
 		</DialogHeader>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div>
-				<label class="block text-sm font-medium mb-1" for="name">Name</label>
-				<Input id="name" bind:value={name} required placeholder="Group name" />
+				<label class="block text-sm font-medium mb-1" for="name"
+					>Name</label
+				>
+				<Input
+					id="name"
+					bind:value={name}
+					required
+					placeholder="Group name"
+				/>
 			</div>
 			<div>
-				<label class="block text-sm font-medium mb-1" for="description">Description</label>
-				<Input id="description" bind:value={description} placeholder="Description (optional)" />
+				<label class="block text-sm font-medium mb-1" for="description"
+					>Description</label
+				>
+				<Input
+					id="description"
+					bind:value={description}
+					placeholder="Description (optional)"
+				/>
 			</div>
 			<div>
-				<label class="block text-sm font-medium mb-1" for="type">Type</label>
+				<label class="block text-sm font-medium mb-1" for="type"
+					>Type</label
+				>
 				<Select.Root type="single" bind:value={type}>
 					<Select.Trigger class="w-full">
 						{selectedLabel}
 					</Select.Trigger>
 					<Select.Content>
 						{#each groupTypes as groupType}
-							<Select.Item value={groupType.value}>{groupType.label}</Select.Item>
+							<Select.Item value={groupType.value}
+								>{groupType.label}</Select.Item
+							>
 						{/each}
 					</Select.Content>
 				</Select.Root>
 			</div>
 
-			{#if type === 'domain'}
+			{#if type === "domain"}
 				<div>
-					<label class="block text-sm font-medium mb-1" for="domain">Domain</label>
-					<Input id="domain" bind:value={domain} required placeholder="example.com" />
+					<label class="block text-sm font-medium mb-1" for="domain"
+						>Domain</label
+					>
+					<Input
+						id="domain"
+						bind:value={domain}
+						required
+						placeholder="example.com"
+					/>
 				</div>
 			{/if}
-			{#if type === 'list'}
+			{#if type === "list"}
 				<div>
 					<label class="block text-sm font-medium mb-1" for="members"
 						>Members (comma or space separated emails)</label
@@ -125,7 +159,9 @@
 			{/if}
 
 			<DialogFooter>
-				<Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Group'}</Button>
+				<Button type="submit" disabled={loading}
+					>{loading ? "Creating..." : "Create Group"}</Button
+				>
 			</DialogFooter>
 		</form>
 	</DialogContent>

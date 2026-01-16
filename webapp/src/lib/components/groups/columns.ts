@@ -3,15 +3,7 @@ import { renderComponent } from '$lib/components/ui/data-table/index.js';
 import DataTableColumnHeader from './data-table-column-header.svelte';
 import DataTableRowActions from './data-table-row-actions.svelte';
 
-export type Group = {
-	id: string;
-	owner: string;
-	name: string;
-	description?: string;
-	type: 'domain' | 'list';
-	domain?: string;
-	members?: string[];
-};
+import type { Group } from '$lib/types/group';
 
 export const columns: ColumnDef<Group>[] = [
 	{

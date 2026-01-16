@@ -1,65 +1,26 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import * as kdljs from 'kdljs';
-  import { ulid } from 'ulid';
-  import InputView from '$lib/components/viewer/questions/input.svelte';
-  import TextareaView from '$lib/components/viewer/questions/textarea.svelte';
-  import RadioView from '$lib/components/viewer/questions/radio.svelte';
-  import CheckboxView from '$lib/components/viewer/questions/checkbox.svelte';
-  import FileUploadView from '$lib/components/viewer/questions/file-upload.svelte';
-  import SelectView from '$lib/components/viewer/questions/select.svelte';
-  import DateView from '$lib/components/viewer/questions/date.svelte';
-  import { Button } from '$lib/components/ui/button';
-  import { Card, CardContent } from '$lib/components/ui/card';
-  import { toast } from 'svelte-sonner';
-  import { PartyPopper } from '@lucide/svelte';
+  import { onMount } from "svelte";
+  import { ulid } from "ulid"; // Keep ulid if used elsewhere, or remove if unused. It seems used in getInitialResponses if options are dynamic but here options come from parsed KDL. Wait, ulid was used in the duplicated parseKdlForm. Since we are using shared parseKdlForm, we might not need ulid here unless referenced elsewhere. Checking... usage was inside duplicated parseKdlForm. So I can probably remove it from imports, but to be safe/minimal I will leave it or remove if unused. The shared kdl.ts imports ulid.
+  import InputView from "$lib/components/viewer/questions/input.svelte";
+  import TextareaView from "$lib/components/viewer/questions/textarea.svelte";
+  import RadioView from "$lib/components/viewer/questions/radio.svelte";
+  import CheckboxView from "$lib/components/viewer/questions/checkbox.svelte";
+  import FileUploadView from "$lib/components/viewer/questions/file-upload.svelte";
+  import SelectView from "$lib/components/viewer/questions/select.svelte";
+  import DateView from "$lib/components/viewer/questions/date.svelte";
+  import { Button } from "$lib/components/ui/button";
+  import { Card, CardContent } from "$lib/components/ui/card";
+  import { toast } from "svelte-sonner";
+  import { PartyPopper } from "@lucide/svelte";
+  import type { Question, FormConfig } from "$lib/types/form";
+  import { parseKdlForm } from "$lib/utils/kdl";
 
   export let form: any;
 
-  interface Option {
-    id: string;
-    value: string;
-    label: string;
-  }
-
-  type QuestionType =
-    | 'input'
-    | 'textarea'
-    | 'radio'
-    | 'checkbox'
-    | 'file'
-    | 'select'
-    | 'date'
-    | 'section-header';
-
-  interface Question {
-    id: string;
-    type: QuestionType;
-    title: string;
-    required: boolean;
-    description?: string;
-    options?: Option[];
-    placeholder?: string;
-    validations?: {
-      'max-chars'?: number;
-      'min-chars'?: number;
-      regex?: string;
-    };
-    'max-file-size'?: number;
-    'max-files'?: number;
-    'allowed-types'?: string[];
-  }
-
-  interface FormConfig {
-    title: string;
-    description: string;
-    visibility: string;
-  }
-
   let formConfig: FormConfig = {
-    title: '',
-    description: '',
-    visibility: 'public'
+    title: "",
+    description: "",
+    visibility: "public",
   };
   let questions: Question[] = [];
   let responses: Record<string, string> = {};
@@ -69,112 +30,16 @@
   let userReachedLimit = false;
   let error: string | null = null;
 
-  function parseKdlValue(node: any): string {
-    if (node === null || node === undefined) return '';
-    if (typeof node === 'string') return node;
-    if (typeof node.value === 'string') return node.value;
-    if (typeof node.value === 'number' || typeof node.value === 'boolean') return String(node.value);
-    return String(node);
-  }
-
-  function safeString(val: any): string {
-    if (val === null || val === undefined) return '';
-    if (typeof val === 'string') return val;
-    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
-    return '';
-  }
-
-  function parseKdlForm(kdl: string) {
-    const ast = kdljs.parse(kdl);
-    if (!ast || !ast.output || !ast.output.length) throw new Error('Invalid KDL');
-    const formNode = ast.output.find((n: any) => n.name === 'form');
-    if (!formNode) throw new Error('No form node');
-    const config: FormConfig = {
-      title: '',
-      description: '',
-      visibility: 'public'
-    };
-    const qs: Question[] = [];
-    for (const child of formNode.children) {
-      if (child.name === 'title') config.title = parseKdlValue(child.values[0]);
-      else if (child.name === 'description') config.description = parseKdlValue(child.values[0]);
-      else if (child.name === 'visibility') config.visibility = parseKdlValue(child.values[0]);
-      else if (child.name === 'question') {
-        const q: Question = {
-          id: '',
-          type: 'input',
-          title: '',
-          required: false
-        };
-        if (child.properties && typeof child.properties === 'object') {
-          for (const key in child.properties) {
-            const value = child.properties[key];
-            if (key === 'id') q.id = safeString(value);
-            else if (key === 'type') {
-              let t = safeString(value);
-              if (t === 'multiple_choice') t = 'radio';
-              if (t === 'text') t = 'input';
-              if (t === 'textarea') t = 'textarea';
-              q.type = t as QuestionType;
-            }
-          }
-        }
-        if (Array.isArray(child.values) && child.values.includes('required')) {
-          q.required = true;
-        }
-        if (child.children) {
-          for (const c of child.children) {
-            if (c.name === 'title') q.title = parseKdlValue(c.values[0]);
-            else if (c.name === 'description') q.description = parseKdlValue(c.values[0]);
-            else if (c.name === 'placeholder') q.placeholder = parseKdlValue(c.values[0]);
-            else if (c.name === 'max-file-size') {
-              q['max-file-size'] = Number(parseKdlValue(c.values[0]));
-            }
-            else if (c.name === 'max-files') {
-              q['max-files'] = Number(parseKdlValue(c.values[0]));
-            }
-            else if (c.name === 'allowed-types') {
-              q['allowed-types'] = c.values?.map((v: any) => parseKdlValue(v)) || [];
-            }
-            else if (c.name === 'option') {
-              if (!q.options) q.options = [];
-              let id = '', value = '', label = '';
-              if (c.properties && typeof c.properties === 'object') {
-                for (const key in c.properties) {
-                  const v = c.properties[key];
-                  if (key === 'value') value = safeString(v);
-                  else if (key === 'label') label = safeString(v);
-                  else if (key === 'id') id = safeString(v);
-                }
-              }
-              q.options.push({ id: id || ulid(), value, label });
-            }
-            else if (c.name === 'validations') {
-              q.validations = {};
-              for (const v of c.children || []) {
-                if (v.name === 'regex') q.validations.regex = parseKdlValue(v.values[0]);
-                else if (v.name === 'min-chars') q.validations['min-chars'] = Number(parseKdlValue(v.values[0]));
-                else if (v.name === 'max-chars') q.validations['max-chars'] = Number(parseKdlValue(v.values[0]));
-              }
-            }
-          }
-        }
-        qs.push(q);
-      }
-    }
-    return { config, qs };
-  }
-
   async function loadFormKdl() {
     try {
       isLoading = true;
       error = null;
       const kdl = form.structure;
-      const { config, qs } = parseKdlForm(kdl);
+      const { config, questions: qs } = parseKdlForm(kdl);
       formConfig = config;
       questions = qs;
     } catch (e) {
-      error = 'Failed to load form.';
+      error = "Failed to load form.";
     } finally {
       isLoading = false;
     }
@@ -187,8 +52,8 @@
   function getInitialResponses() {
     const initialResponses: Record<string, string> = {};
     for (const q of questions) {
-      if (q.type === 'checkbox') initialResponses[q.id] = '[]';
-      else initialResponses[q.id] = '';
+      if (q.type === "checkbox") initialResponses[q.id] = "[]";
+      else initialResponses[q.id] = "";
     }
     return initialResponses;
   }
@@ -207,14 +72,21 @@
     isSubmitting = true;
     error = null;
     try {
-      const startRes = await fetch(`/api/forms/${form.id}/responses`, { method: 'POST' });
+      const startRes = await fetch(`/api/forms/${form.id}/responses`, {
+        method: "POST",
+      });
       if (!startRes.ok) {
         const errorText = await startRes.text();
-        if (errorText.includes('Maximum responses submitted') || errorText.includes('form-closed')) {
+        if (
+          errorText.includes("Maximum responses submitted") ||
+          errorText.includes("form-closed")
+        ) {
           userReachedLimit = true;
-          throw new Error('You have reached the maximum number of individual responses allowed for this form.');
+          throw new Error(
+            "You have reached the maximum number of individual responses allowed for this form.",
+          );
         }
-        throw new Error('Could not start response');
+        throw new Error("Could not start response");
       }
       const responseObj = await startRes.json();
       const responseId = responseObj.id;
@@ -222,10 +94,10 @@
         let valueToSubmit: any;
         const rawValue = responses[q.id];
 
-        if (q.type === 'radio') {
+        if (q.type === "radio") {
           const selectedOption = q.options?.find((opt) => opt.id === rawValue);
-          valueToSubmit = selectedOption ? selectedOption.value : '';
-        } else if (q.type === 'checkbox') {
+          valueToSubmit = selectedOption ? selectedOption.value : "";
+        } else if (q.type === "checkbox") {
           const selectedIds = JSON.parse(rawValue);
           valueToSubmit =
             q.options
@@ -235,33 +107,41 @@
           valueToSubmit = rawValue;
         }
 
-        const upsertRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/answers`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q.id, value: JSON.stringify(valueToSubmit) })
-        });
-        if (!upsertRes.ok) throw new Error('Could not save answer');
+        const upsertRes = await fetch(
+          `/api/forms/${form.id}/responses/${responseId}/answers`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question: q.id,
+              value: JSON.stringify(valueToSubmit),
+            }),
+          },
+        );
+        if (!upsertRes.ok) throw new Error("Could not save answer");
       }
-      const submitRes = await fetch(`/api/forms/${form.id}/responses/${responseId}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ "save": true })
-      });
-      if (!submitRes.ok) throw new Error('Could not submit response');
-      toast.success('Form submitted successfully!');
+      const submitRes = await fetch(
+        `/api/forms/${form.id}/responses/${responseId}/submit`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ save: true }),
+        },
+      );
+      if (!submitRes.ok) throw new Error("Could not submit response");
+      toast.success("Form submitted successfully!");
       isSubmitted = true;
     } catch (e: any) {
-      toast.error(e.message || 'Submission failed');
+      toast.error(e.message || "Submission failed");
     } finally {
       isSubmitting = false;
     }
-    
   }
 </script>
 
 <svelte:head>
-  <title>{formConfig.title || 'Form'} - Form Viewer</title>
-  <meta name="description" content={formConfig.description || 'Form viewer'} />
+  <title>{formConfig.title || "Form"} - Form Viewer</title>
+  <meta name="description" content={formConfig.description || "Form viewer"} />
 </svelte:head>
 
 <div class="min-h-screen bg-background">
@@ -269,15 +149,29 @@
     {#if isLoading}
       <div class="flex items-center justify-center py-12">
         <div class="text-center space-y-4">
-          <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div
+            class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"
+          ></div>
           <p class="text-muted-foreground">Loading form...</p>
         </div>
       </div>
     {:else if error}
       <div class="text-center py-12">
-        <div class="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        <div
+          class="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4"
+        >
+          <svg
+            class="w-6 h-6 text-destructive"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+            ></path>
           </svg>
         </div>
         <h3 class="text-lg font-semibold mb-2">Error Loading Form</h3>
@@ -285,11 +179,15 @@
       </div>
     {:else if isSubmitted}
       <div class="text-center py-12">
-        <div class="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div
+          class="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6"
+        >
           <PartyPopper class="w-8 h-8 text-green-600 dark:text-green-400" />
         </div>
         <h2 class="text-2xl font-bold mb-4">Thank you for submitting!</h2>
-        <p class="text-muted-foreground mb-6">Your response has been recorded successfully.</p>
+        <p class="text-muted-foreground mb-6">
+          Your response has been recorded successfully.
+        </p>
         {#if form.individual_limit > 1 && !userReachedLimit}
           <Button onclick={handleReset} variant="outline">
             Submit Another Response
@@ -300,7 +198,7 @@
       <div class="space-y-8">
         <div class="space-y-3">
           <h1 class="text-3xl font-bold tracking-tight">{form.title}</h1>
-          {#if form.description && form.description !== 'Add a description'}
+          {#if form.description && form.description !== "Add a description"}
             <p class="text-lg text-muted-foreground leading-relaxed">
               {form.description}
             </p>
@@ -309,66 +207,85 @@
         <form on:submit|preventDefault={handleSubmit}>
           <div class="space-y-6">
             {#each questions as question (question.id)}
-              {#if question.type === 'section-header'}
+              {#if question.type === "section-header"}
                 <div class="px-6 py-4 bg-muted/20 border rounded-lg">
-                  <h3 class="text-lg font-semibold text-foreground mb-2">{question.title}</h3>
+                  <h3 class="text-lg font-semibold text-foreground mb-2">
+                    {question.title}
+                  </h3>
                   {#if question.description}
-                    <p class="text-sm text-muted-foreground">{question.description}</p>
+                    <p class="text-sm text-muted-foreground">
+                      {question.description}
+                    </p>
                   {/if}
                 </div>
               {:else}
                 <div class="p-6 border rounded-lg bg-card shadow-xs space-y-2">
                   <div class="font-medium text-base mb-4">
-                    {question.title}{#if question.required}<span class="text-destructive ml-1">*</span>{/if}
+                    {question.title}{#if question.required}<span
+                        class="text-destructive ml-1">*</span
+                      >{/if}
                   </div>
-                {#if question.type === 'input'}
-                  <InputView {question} bind:value={responses[question.id]} />
-                {:else if question.type === 'textarea'}
-                  <TextareaView {question} bind:value={responses[question.id]} />
-                {:else if question.type === 'radio'}
-                  <RadioView
-                    question={{
-                      id: question.id,
-                      title: question.title,
-                      required: question.required,
-                      options: question.options ?? []
-                    }}
-                    bind:value={responses[question.id]}
-                  />
-                {:else if question.type === 'checkbox'}
-                  <CheckboxView
-                    question={{
-                      id: question.id,
-                      title: question.title,
-                      required: question.required,
-                      options: question.options ?? []
-                    }}
-                    bind:value={responses[question.id]}
-                  />
-                {:else if question.type === 'file'}
-                  <FileUploadView {question} bind:value={responses[question.id]} />
-                {:else if question.type === 'select'}
-                  <SelectView {question} bind:value={responses[question.id]} />
-                {:else if question.type === 'date'}
-                  <DateView {question} bind:value={responses[question.id]} />
-                {:else}
-                  {#if question.options && question.options.length > 0}
-                    <div class="mt-2">
-                      <div class="font-semibold text-xs mb-1">Options:</div>
-                      <ul class="list-disc ml-6">
-                        {#each question.options as opt}
-                          <li>{opt.label}</li>
-                        {/each}
-                      </ul>
-                    </div>
+                  {#if question.type === "input"}
+                    <InputView {question} bind:value={responses[question.id]} />
+                  {:else if question.type === "textarea"}
+                    <TextareaView
+                      {question}
+                      bind:value={responses[question.id]}
+                    />
+                  {:else if question.type === "radio"}
+                    <RadioView
+                      question={{
+                        id: question.id,
+                        title: question.title,
+                        required: question.required,
+                        options: question.options ?? [],
+                      }}
+                      bind:value={responses[question.id]}
+                    />
+                  {:else if question.type === "checkbox"}
+                    <CheckboxView
+                      question={{
+                        id: question.id,
+                        title: question.title,
+                        required: question.required,
+                        options: question.options ?? [],
+                      }}
+                      bind:value={responses[question.id]}
+                    />
+                  {:else if question.type === "file"}
+                    <FileUploadView
+                      {question}
+                      bind:value={responses[question.id]}
+                    />
+                  {:else if question.type === "select"}
+                    <SelectView
+                      {question}
+                      bind:value={responses[question.id]}
+                    />
+                  {:else if question.type === "date"}
+                    <DateView {question} bind:value={responses[question.id]} />
+                  {:else}
+                    {#if question.options && question.options.length > 0}
+                      <div class="mt-2">
+                        <div class="font-semibold text-xs mb-1">Options:</div>
+                        <ul class="list-disc ml-6">
+                          {#each question.options as opt}
+                            <li>{opt.label}</li>
+                          {/each}
+                        </ul>
+                      </div>
+                    {/if}
+                    {#if question.placeholder}
+                      <div class="mt-2 text-xs text-muted-foreground">
+                        Placeholder: {question.placeholder}
+                      </div>
+                    {/if}
+                    {#if question.validations}
+                      <div class="mt-2 text-xs text-muted-foreground">
+                        Validations: {JSON.stringify(question.validations)}
+                      </div>
+                    {/if}
                   {/if}
-                  {#if question.placeholder}
-                    <div class="mt-2 text-xs text-muted-foreground">Placeholder: {question.placeholder}</div>
-                  {/if}
-                  {#if question.validations}
-                    <div class="mt-2 text-xs text-muted-foreground">Validations: {JSON.stringify(question.validations)}</div>
-                  {/if}
-                {/if}
                 </div>
               {/if}
             {/each}
@@ -379,26 +296,26 @@
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-2">
                     <span class="text-sm text-muted-foreground">
-                      {questions.length} question{questions.length !== 1 ? 's' : ''}
+                      {questions.length} question{questions.length !== 1
+                        ? "s"
+                        : ""}
                     </span>
                   </div>
                   <div class="flex gap-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onclick={handleReset}
                       disabled={isSubmitting}
                     >
                       Reset Form
                     </Button>
-                    <Button 
-                      type="submit" 
-                      size="sm"
-                      disabled={isSubmitting}
-                    >
+                    <Button type="submit" size="sm" disabled={isSubmitting}>
                       {#if isSubmitting}
-                        <div class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <div
+                          class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"
+                        ></div>
                         Submitting...
                       {:else}
                         Submit Form
