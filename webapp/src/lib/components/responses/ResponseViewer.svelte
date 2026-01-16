@@ -1,7 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import * as kdljs from 'kdljs';
-  import { ulid } from 'ulid';
   import InputView from '$lib/components/viewer/questions/input.svelte';
   import TextareaView from '$lib/components/viewer/questions/textarea.svelte';
   import RadioView from './questions/radio.svelte';
@@ -9,46 +7,10 @@
   import FileUploadView from './questions/file.svelte';
   import SelectView from '$lib/components/viewer/questions/select.svelte';
   import DateView from './questions/date.svelte';
+  import { parseKdlForm } from '$lib/utils/kdl';
+  import type { Question, FormConfig } from '$lib/types/form';
 
   let { form, answers }: { form: any; answers: any[] } = $props();
-
-  interface Option {
-    id: string;
-    value: string;
-    label: string;
-  }
-
-  type QuestionType =
-    | 'input'
-    | 'textarea'
-    | 'radio'
-    | 'checkbox'
-    | 'file'
-    | 'select'
-    | 'date';
-
-  interface Question {
-    id: string;
-    type: QuestionType;
-    title: string;
-    required: boolean;
-    options?: Option[];
-    placeholder?: string;
-    validations?: {
-      'max-chars'?: number;
-      'min-chars'?: number;
-      regex?: string;
-    };
-    'max-file-size'?: number;
-    'max-files'?: number;
-    'allowed-types'?: string[];
-  }
-
-  interface FormConfig {
-    title: string;
-    description: string;
-    visibility: string;
-  }
 
   let formConfig = $state<FormConfig>({
     title: '',
@@ -59,101 +21,6 @@
   let responses = $state<Record<string, string>>({});
   let isLoading = $state(true);
   let error = $state<string | null>(null);
-
-  function parseKdlValue(node: any): string {
-    if (node === null || node === undefined) return '';
-    if (typeof node === 'string') return node;
-    if (typeof node.value === 'string') return node.value;
-    if (typeof node.value === 'number' || typeof node.value === 'boolean') return String(node.value);
-    return String(node);
-  }
-
-  function safeString(val: any): string {
-    if (val === null || val === undefined) return '';
-    if (typeof val === 'string') return val;
-    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
-    return '';
-  }
-
-  function parseKdlForm(kdl: string) {
-    const ast = kdljs.parse(kdl);
-    if (!ast || !ast.output || !ast.output.length) throw new Error('Invalid KDL');
-    const formNode = ast.output.find((n: any) => n.name === 'form');
-    if (!formNode) throw new Error('No form node');
-    const config: FormConfig = {
-      title: '',
-      description: '',
-      visibility: 'public'
-    };
-    const qs: Question[] = [];
-    for (const child of formNode.children) {
-      if (child.name === 'title') config.title = parseKdlValue(child.values[0]);
-      else if (child.name === 'description') config.description = parseKdlValue(child.values[0]);
-      else if (child.name === 'visibility') config.visibility = parseKdlValue(child.values[0]);
-      else if (child.name === 'question') {
-        const q: Question = {
-          id: '',
-          type: 'input',
-          title: '',
-          required: false
-        };
-        if (child.properties && typeof child.properties === 'object') {
-          for (const key in child.properties) {
-            const value = child.properties[key];
-            if (key === 'id') q.id = safeString(value);
-            else if (key === 'type') {
-              let t = safeString(value);
-              if (t === 'multiple_choice') t = 'radio';
-              if (t === 'text') t = 'input';
-              if (t === 'textarea') t = 'textarea';
-              q.type = t as QuestionType;
-            }
-          }
-        }
-        if (Array.isArray(child.values) && child.values.includes('required')) {
-          q.required = true;
-        }
-        if (child.children) {
-          for (const c of child.children) {
-            if (c.name === 'title') q.title = parseKdlValue(c.values[0]);
-            else if (c.name === 'placeholder') q.placeholder = parseKdlValue(c.values[0]);
-            else if (c.name === 'max-file-size') {
-              q['max-file-size'] = Number(parseKdlValue(c.values[0]));
-            } else if (c.name === 'max-files') {
-              q['max-files'] = Number(parseKdlValue(c.values[0]));
-            } else if (c.name === 'allowed-types') {
-              q['allowed-types'] = c.values?.map((v: any) => parseKdlValue(v)) || [];
-            } else if (c.name === 'option') {
-              if (!q.options) q.options = [];
-              let id = '',
-                value = '',
-                label = '';
-              if (c.properties && typeof c.properties === 'object') {
-                for (const key in c.properties) {
-                  const v = c.properties[key];
-                  if (key === 'value') value = safeString(v);
-                  else if (key === 'label') label = safeString(v);
-                  else if (key === 'id') id = safeString(v);
-                }
-              }
-              q.options.push({ id: id || ulid(), value, label });
-            } else if (c.name === 'validations') {
-              q.validations = {};
-              for (const v of c.children || []) {
-                if (v.name === 'regex') q.validations.regex = parseKdlValue(v.values[0]);
-                else if (v.name === 'min-chars')
-                  q.validations['min-chars'] = Number(parseKdlValue(v.values[0]));
-                else if (v.name === 'max-chars')
-                  q.validations['max-chars'] = Number(parseKdlValue(v.values[0]));
-              }
-            }
-          }
-        }
-        qs.push(q);
-      }
-    }
-    return { config, qs };
-  }
 
   function populateResponses() {
     const populatedResponses: Record<string, string> = {};
@@ -194,9 +61,9 @@
   onMount(() => {
     try {
       const kdl = form.structure;
-      const { config, qs } = parseKdlForm(kdl);
-      formConfig = config;
-      questions = qs;
+      const result = parseKdlForm(kdl);
+      formConfig = result.config;
+      questions = result.questions;
       populateResponses();
     } catch (e) {
       error = 'Failed to load form and answers.';

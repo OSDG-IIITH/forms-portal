@@ -1,16 +1,21 @@
 <script lang="ts">
-	import FormItem from './form-item.svelte';
-	import { createEventDispatcher } from 'svelte';
+	import FormItem from "./form-item.svelte";
+	import { createEventDispatcher } from "svelte";
+	import type { DashboardForm } from "$lib/types/dashboard";
 
 	const dispatch = createEventDispatcher();
 
-	export let forms: any[];
-	export let loading: boolean;
-	export let userHandle: string;
-	export let animationDelay: number = 40;
+	interface Props {
+		forms: DashboardForm[];
+		loading: boolean;
+		userHandle: string;
+		animationDelay?: number;
+	}
+
+	let { forms, loading, userHandle, animationDelay = 40 }: Props = $props();
 
 	function handleDelete(e: CustomEvent<{ id: string | number }>) {
-		dispatch('delete', e.detail);
+		dispatch("delete", e.detail);
 	}
 </script>
 
@@ -23,8 +28,19 @@
 {:else}
 	<div class="space-y-0.5">
 		{#each forms as form, i}
-			<div class="animate-in fade-in-0 slide-in-from-left-4 duration-400 ease-out" style="animation-delay: {i * animationDelay}ms; animation-fill-mode: both;">
-				<FormItem {form} variant="created" viewMode="list" {userHandle} class="w-full" on:delete={handleDelete} />
+			<div
+				class="animate-in fade-in-0 slide-in-from-left-4 duration-400 ease-out"
+				style="animation-delay: {i *
+					animationDelay}ms; animation-fill-mode: both;"
+			>
+				<FormItem
+					{form}
+					variant="created"
+					viewMode="list"
+					{userHandle}
+					class="w-full"
+					on:delete={handleDelete}
+				/>
 			</div>
 		{/each}
 	</div>
