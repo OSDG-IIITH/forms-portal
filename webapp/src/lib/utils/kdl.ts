@@ -1,6 +1,6 @@
 import * as kdljs from 'kdljs';
 import { ulid } from 'ulid';
-import type { Question, QuestionType, FormConfig } from '$lib/types/form';
+import { type Question, type QuestionType, type FormConfig, QuestionSchema, FormConfigSchema } from '$lib/types/form';
 
 export function parseKdlValue(node: any): string {
     if (node === null || node === undefined) return '';
@@ -154,8 +154,9 @@ export function parseKdlForm(kdl: string): { config: FormConfig; questions: Ques
                     }
                 }
             }
-            questions.push(q);
+            questions.push(QuestionSchema.parse(q));
         }
     }
+    FormConfigSchema.parse(config);
     return { config, questions };
 }

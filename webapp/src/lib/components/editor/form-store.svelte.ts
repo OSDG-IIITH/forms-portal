@@ -1,8 +1,9 @@
 import { ulid } from 'ulid';
 import * as kdljs from 'kdljs';
 import { Time } from '@internationalized/date';
+import { z } from 'zod';
 import { parseKdlForm, safeString } from '$lib/utils/kdl';
-import type { Question, QuestionType, Option, FormData } from '$lib/types/form';
+import { QuestionSchema, type Question, type QuestionType, type Option, type FormData } from '$lib/types/form';
 
 // store creation function
 export function createFormStore(initialForm: any) {
@@ -86,48 +87,40 @@ export function createFormStore(initialForm: any) {
 	// validation
 
 	function validateQuestions() {
+		// Reset all errors
 		for (const question of questions) {
 			question.error = undefined;
-
-			if (!question.title || question.title.trim() === '') {
-				question.error = "Question text cannot be empty.";
-			}
-
-			if (question.options && (question.type === 'radio' || question.type === 'checkbox' || question.type === 'select')) {
-				const seenLabels = new Set<string>();
-
+			if (question.options) {
 				for (const option of question.options) {
 					option.error = undefined;
-
-					if (!option.label || option.label.trim() === '') {
-						option.error = "Option text cannot be empty.";
-						continue;
-					}
-
-					const trimmedLabel = option.label.trim().toLowerCase();
-					if (seenLabels.has(trimmedLabel)) {
-						option.error = "Duplicate option found.";
-					} else {
-						seenLabels.add(trimmedLabel);
-					}
 				}
+			}
+		}
 
-				const labelCounts = new Map<string, Option[]>();
-				for (const option of question.options) {
-					if (option.label && option.label.trim() !== '') {
-						const trimmedLabel = option.label.trim().toLowerCase();
-						if (!labelCounts.has(trimmedLabel)) {
-							labelCounts.set(trimmedLabel, []);
-						}
-						labelCounts.get(trimmedLabel)!.push(option);
-					}
-				}
+		// Parse using Zod
+		const result = z.array(QuestionSchema).safeParse(questions);
 
-				for (const [label, options] of labelCounts) {
-					if (options.length > 1) {
-						for (const option of options) {
-							option.error = "Duplicate option found.";
-						}
+		if (!result.success) {
+			for (const issue of result.error.issues) {
+				// Path structure: [measure_index, "field", ...]
+				// e.g. [0, "title"] -> question 0 title error
+				// e.g. [0, "options", 1, "error"] -> question 0, option 1, error field (from superRefine)
+				// e.g. [0, "options", 1, "label"] -> question 0, option 1, label error
+
+				const qIndex = issue.path[0] as number;
+				if (typeof qIndex !== 'number' || !questions[qIndex]) continue;
+
+				const field = issue.path[1];
+
+				if (field === 'title') {
+					questions[qIndex].error = issue.message;
+				} else if (field === 'options') {
+					const optIndex = issue.path[2] as number;
+					if (typeof optIndex === 'number' && questions[qIndex].options?.[optIndex]) {
+						// Identify if it's a label error or custom duplicate error
+						// Our schema puts duplicate errors on "error" path, label emptiness on "label" path
+						// But honestly, we just want to set the option's error property.
+						questions[qIndex].options![optIndex].error = issue.message;
 					}
 				}
 			}
