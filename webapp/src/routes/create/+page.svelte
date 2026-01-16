@@ -2,6 +2,19 @@
   import FormEditor from '$lib/components/editor/FormEditor.svelte';
   import { toast } from 'svelte-sonner';
   import { Time } from '@internationalized/date';
+  import { PartyPopper, Copy } from '@lucide/svelte';
+  import { Button } from '$lib/components/ui/button';
+  import { CopyButton } from '$lib/components/ui/copy-button';
+  import { onMount } from 'svelte';
+
+  let formCreated = false;
+  let sharableLink = '';
+  let editLink = '';
+  let fullSharableLink = '';
+
+  onMount(() => {
+    // onMount is used to ensure window object is available
+  });
 
   function slugify(title: string, suffix = 0): string {
     let base = title
@@ -19,28 +32,25 @@
     visibility: 'private',
     structure: ''
   };
-
   async function handleCreate(event: CustomEvent) {
     const { formData, questions, kdl } = event.detail;
     let suffix = 0;
-    
     const formatDateTime = (dateStr: string | undefined, time: Time | undefined): string | null => {
       if (!dateStr || dateStr.trim() === '') return null;
       try {
         const hours = time?.hour ?? 0;
         const minutes = time?.minute ?? 0;
         const seconds = 0;
-        
+
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return null;
-        
+
         date.setHours(hours, minutes, seconds, 0);
         return date.toISOString();
       } catch {
         return null;
       }
     };
-
     for (let attempt = 0; attempt < 100; attempt++) {
       const payload = {
         title: formData.title || 'Untitled Form',
@@ -50,11 +60,15 @@
         opens: formatDateTime(formData.opens, formData.opensTime),
         closes: formatDateTime(formData.closes, formData.closesTime),
         anonymous: Boolean(formData.anonymous),
-        max_responses: formData.max_responses !== null && formData.max_responses !== undefined ? Number(formData.max_responses) : null,
+        max_responses:
+          formData.max_responses !== null && formData.max_responses !== undefined
+            ? Number(formData.max_responses)
+            : null,
         individual_limit: Number(formData.individual_limit) || 1,
         editable_responses: Boolean(formData.editable_responses)
       };
-      let res, text = '';
+      let res,
+        text = '';
       try {
         res = await fetch(`/api/forms`, {
           method: 'POST',
@@ -82,7 +96,10 @@
           }
         } catch {}
         if (handle && slug) {
-          window.location.href = `/${handle}/${slug}/edit`;
+          sharableLink = `/${handle}/${slug}`;
+          editLink = `/${handle}/${slug}/edit`;
+          fullSharableLink = window.location.origin + sharableLink;
+          formCreated = true;
         } else {
           toast.success('Form created successfully!');
         }
@@ -99,12 +116,39 @@
       toast.error('Error creating form', { description: text || 'Failed to create form.' });
       return;
     }
-    toast.error('Error creating form', { description: 'Could not generate a unique title/slug after many attempts.' });
+    toast.error('Error creating form', {
+      description: 'Could not generate a unique title/slug after many attempts.'
+    });
   }
 </script>
 
 <div class="min-h-screen bg-background">
-  <main>
-    <FormEditor {form} on:create={handleCreate} mode="create" />
+  <main class="container mx-auto max-w-4xl px-6 py-8 pt-24">
+    {#if formCreated}
+      <div class="text-center py-12">
+        <div
+          class="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6"
+        >
+          <PartyPopper class="w-8 h-8 text-green-600 dark:text-green-400" />
+        </div>
+        <h2 class="text-2xl font-bold mb-4">Form Created!</h2>
+        <p class="text-muted-foreground mb-6">Your form has been created successfully.</p>
+
+        <div class="mt-8 flex flex-col items-center gap-4">
+          <CopyButton text={fullSharableLink} size="sm" variant="outline">
+            <span class="font-mono text-sm font-light truncate">{fullSharableLink}</span>
+            {#snippet icon()}
+              <Copy class="h-3.5 w-3.5" />
+            {/snippet}
+          </CopyButton>
+          <div class="flex items-center gap-4">
+            <Button href={editLink} variant="default">Edit Form</Button>
+            <Button href={sharableLink} variant="secondary" target="_blank">View Form</Button>
+          </div>
+        </div>
+      </div>
+    {:else}
+      <FormEditor {form} on:create={handleCreate} mode="create" />
+    {/if}
   </main>
 </div>

@@ -57,14 +57,16 @@
     if (event.detail.open) {
       activeTab = 'comments';
     }
-    handlePanelChange(event);
+    panelOpen = event.detail.open;
+    dispatch('panelchange', event.detail);
   }
 
   function handleSettingsOpenChange(event: CustomEvent<{ open: boolean }>) {
     if (event.detail.open) {
       activeTab = 'settings';
     }
-    handlePanelChange(event);
+    panelOpen = event.detail.open;
+    dispatch('panelchange', event.detail);
   }
 
   $effect(() => {
@@ -123,6 +125,7 @@
       <Panel.Trigger
         class={buttonVariants({ variant: panelOpen && activeTab === 'comments' ? 'default' : 'outline' }) + ' flex items-center gap-2'}
         aria-label="Form comments"
+        onclick={() => { activeTab = 'comments'; }}
       >
         <IconMessage class="size-5" />
       </Panel.Trigger>
@@ -139,6 +142,7 @@
       <Panel.Trigger
         class={buttonVariants({ variant: panelOpen && activeTab === 'settings' ? 'default' : 'outline' }) + ' flex items-center gap-2'}
         aria-label="Form settings"
+        onclick={() => { activeTab = 'settings'; }}
       >
         <IconSettings class="size-5" />
       </Panel.Trigger>
