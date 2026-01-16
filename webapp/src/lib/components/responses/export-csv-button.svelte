@@ -32,6 +32,11 @@
     selectedColumns = newSelectedColumns;
   }
 
+  function escapeCSV(val: any): string {
+    const stringValue = val === null || val === undefined ? "" : String(val);
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+
   function decodeBase64Answer(encodedValue: string): string {
     try {
       if (!encodedValue || typeof encodedValue !== 'string') return '';
@@ -48,7 +53,6 @@
         return decoded;
       }
     } catch (e) {
-      console.warn('Failed to decode base64 answer:', e);
       return String(encodedValue);
     }
   }
@@ -68,7 +72,6 @@
       
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     } catch (e) {
-      console.warn('Failed to format timestamp:', e);
       return timestamp;
     }
   }
@@ -85,7 +88,6 @@
             return { responseId: response.id, answers: data.data || [] };
           }
         } catch (e) {
-          console.warn(`Failed to fetch answers for response ${response.id}:`, e);
         }
         return { responseId: response.id, answers: [] };
       })
@@ -112,28 +114,27 @@
         }
       }
       
-      const csvRows = [headers.join(',')];
+      const csvRows = [headers.map(escapeCSV).join(',')];
       
       for (const response of responses) {
         const row = [];
         const answers = answersMap.get(response.id) || [];
         const answerMap = new Map(answers.map((a: any) => [a.question, a.value]));
         
-        if (selectedColumns.responseId) row.push(`"${response.id}"`);
-        if (selectedColumns.respondent) row.push(`"${(respondentMap?.[response.respondent]?.name) || response.respondent || 'Anonymous'}"`);
-        if (selectedColumns.status) row.push(`"${response.status || 'Unknown'}"`);
-        if (selectedColumns.started) row.push(`"${formatTimestamp(response.started || '')}"`);
-        if (selectedColumns.submitted) row.push(`"${formatTimestamp(response.submitted || '')}"`);
+        if (selectedColumns.responseId) row.push(response.id);
+        if (selectedColumns.respondent) row.push((respondentMap?.[response.respondent]?.name) || response.respondent || 'Anonymous');
+        if (selectedColumns.status) row.push(response.status || 'Unknown');
+        if (selectedColumns.started) row.push(formatTimestamp(response.started || ''));
+        if (selectedColumns.submitted) row.push(formatTimestamp(response.submitted || ''));
         
         for (const q of questions) {
           if (selectedColumns[q.id]) {
             const answer = answerMap.get(q.id) || '';
-            let displayValue = answer ? decodeBase64Answer(String(answer)) : '';
-            row.push(`"${displayValue.replace(/"/g, '""')}"`);
+            row.push(answer ? decodeBase64Answer(String(answer)) : '');
           }
         }
         
-        csvRows.push(row.join(','));
+        csvRows.push(row.map(escapeCSV).join(','));
       }
       
       const csvContent = csvRows.join('\n');
@@ -150,7 +151,6 @@
       
       exportDialogOpen = false;
     } catch (error) {
-      console.error('Export failed:', error);
       alert('Failed to export responses. Please try again.');
     }
   }
