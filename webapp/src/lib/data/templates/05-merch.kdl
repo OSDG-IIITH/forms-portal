@@ -1,0 +1,40 @@
+form {
+    version 1
+    title "Merch"
+    description "Order merchandise"
+    question type="input" required {
+        title "Name"
+        placeholder "Your Name"
+    }
+    question type="input" required {
+        title "Email"
+        placeholder "your@email.com"
+    }
+    question type="input" required {
+        title "Phone Number"
+        placeholder "+91 XXXXXXXXXX"
+    }
+    question type="radio" required {
+        title "Item Type"
+        option value="tshirt" label="Club T-Shirt"
+        option value="hoodie" label="Club Hoodie"
+        option value="mug" label="Club Mug"
+        option value="stickers" label="Sticker Pack"
+    }
+    question type="select" required {
+        title "Size (for apparel)"
+        option value="na" label="N/A (Mug/Stickers)"
+        option value="s" label="Small"
+        option value="m" label="Medium"
+        option value="l" label="Large"
+        option value="xl" label="Extra Large"
+        option value="xxl" label="XXL"
+    }
+    question type="textarea" required {
+        title "Shipping Address"
+        placeholder "Room No, Hostel, Institute..."
+    }
+    question type="file" required {
+        title "Payment Screenshot"
+    }
+}

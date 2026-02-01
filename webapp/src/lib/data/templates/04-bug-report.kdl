@@ -1,0 +1,29 @@
+form {
+  version 1
+  title "Bug Report"
+  description "Report an issue you encountered"
+  question type="input" required {
+    title "Issue Title"
+    placeholder "Brief summary of the issue"
+  }
+  question type="textarea" required {
+    title "Description"
+    placeholder "Steps to reproduce, expected behavior, etc."
+  }
+  question type="select" {
+    title "Severity"
+    option value="low" label="Low"
+    option value="medium" label="Medium"
+    option value="high" label="High"
+    option value="critical" label="Critical"
+  }
+  question type="input" {
+    title "Browser / OS"
+    placeholder "Chrome on Linux"
+  }
+  question type="file" {
+    title "Screenshots"
+    "max-file-size" 5
+    "max-files" 3
+  }
+}

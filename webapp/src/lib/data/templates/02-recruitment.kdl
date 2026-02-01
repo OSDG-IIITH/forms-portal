@@ -1,0 +1,42 @@
+form {
+    version 1
+    title "Club Recruitment"
+    description "Apply to join our student club"
+    question type="input" required {
+        title "Name"
+        placeholder "Your Name"
+    }
+    question type="input" required {
+        title "Email"
+        placeholder "your@email.com"
+    }
+    question type="input" required {
+        title "Roll Number"
+        placeholder "10 digit roll number"
+    }
+    question type="select" required {
+        title "Year of Study"
+        option value="1" label="UG1"
+        option value="2" label="UG2"
+        option value="3" label="UG3"
+        option value="4" label="UG4"
+        option value="5" label="UG5+"
+        option value="6" label="PG"
+    }
+    question type="checkbox" {
+        title "What teams are you interested in?"
+        option value="logistics" label="Logistics"
+        option value="marketing" label="Marketing"
+        option value="design" label="Design"
+        option value="tech" label="Tech"
+        option value="corporate" label="Corporate"
+    }
+    question type="textarea" required {
+        title "Why do you want to join?"
+        placeholder "Tell us about your motivation..."
+    }
+    question type="input" {
+        title "Portfolio / GitHub Link"
+        placeholder "https://github.com/username"
+    }
+}

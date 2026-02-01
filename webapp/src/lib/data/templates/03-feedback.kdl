@@ -1,0 +1,27 @@
+form {
+  version 1
+  title "Feedback Form"
+  description "Gather feedback from your users"
+  question type="input" required {
+    title "What is your name?"
+    placeholder "Jane Doe"
+    validations {
+      "max-chars" 100
+    }
+  }
+  question type="textarea" required {
+    title "Please share your feedback"
+    placeholder "I really like..."
+    validations {
+      "min-chars" 10
+      "max-chars" 1000
+    }
+  }
+  question type="radio" {
+    title "How would you rate your experience?"
+    option value="excellent" label="Excellent"
+    option value="good" label="Good"
+    option value="average" label="Average"
+    option value="poor" label="Poor"
+  }
+}

@@ -114,6 +114,7 @@ export function parseKdlForm(kdl: string): { config: FormConfig; questions: Ques
                     }
                 }
             }
+            if (!q.id) q.id = ulid();
             if (Array.isArray(child.values) && child.values.includes('required')) {
                 q.required = true;
             }

@@ -10,10 +10,10 @@ const config = {
 			fallback: 'index.html',
 			strict: false
 		}),
-		prerender: {
-			entries: ['/'],
-			handleUnseenRoutes: 'ignore'
-		}
+		// prerender: {
+		// 	entries: ['/'],
+		// 	handleUnseenRoutes: 'ignore'
+		// }
 	}
 };
 

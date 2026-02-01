@@ -1,0 +1,13 @@
+form {
+    version 1
+    title "Event Registration"
+    description "Register for our upcoming event"
+    question type="input" required {
+        title "Full Name"
+        placeholder "Your Name"
+    }
+    question type="input" required {
+        title "Email"
+        placeholder "your@email.com"
+    }
+}
