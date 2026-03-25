@@ -17,10 +17,10 @@
   import { createEventDispatcher, setContext } from "svelte";
   import type { Time } from "@internationalized/date";
   import { createFormStore, type FormStore } from "./form-store.svelte";
-  import type { QuestionType } from "$lib/types/form";
+  import type { EditorForm, FormData, Question, QuestionType } from "$lib/types/form";
   import { generateFormKdl } from "$lib/utils/kdl";
 
-  const { form, mode = "edit" }: { form: any; mode?: "create" | "edit" } =
+  const { form, mode = "edit" }: { form: EditorForm; mode?: "create" | "edit" } =
     $props();
 
   const store: FormStore = createFormStore(form);
@@ -67,7 +67,7 @@
   ];
 
   const dispatch = createEventDispatcher<{
-    create: { formData: any; questions: any[]; kdl: string };
+    create: { formData: FormData; questions: Question[]; kdl: string };
   }>();
 
   let isPanelOpen = $state(false);
@@ -184,9 +184,9 @@
       }
 
       toast.success("Form saved successfully");
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error("Error saving form", {
-        description: e.message || "Failed to save form.",
+        description: e instanceof Error ? e.message : "Failed to save form.",
       });
     } finally {
       isSaving = false;

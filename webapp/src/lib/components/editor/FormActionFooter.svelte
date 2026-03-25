@@ -1,10 +1,13 @@
 <script lang="ts">
   import { Card, CardContent } from '$lib/components/ui/card';
   import { Button } from '$lib/components/ui/button';
-  export let questionsLength;
-  export let isSaving;
-  export let isFormValid;
-  export let saveForm;
+
+  const { questionsLength, isSaving, isFormValid, saveForm }: {
+    questionsLength: number;
+    isSaving: boolean;
+    isFormValid: boolean;
+    saveForm: () => void | Promise<void>;
+  } = $props();
 </script>
 
 <Card class="py-0">

@@ -88,6 +88,19 @@ export const FormDataSchema = z.object({
 
 export type FormData = z.infer<typeof FormDataSchema>;
 
+export type EditorForm = {
+	id?: string;
+	title?: string;
+	description?: string | null;
+	structure?: string;
+	opens?: string | null;
+	closes?: string | null;
+	anonymous?: boolean | null;
+	max_responses?: number | null;
+	individual_limit?: number | null;
+	editable_responses?: boolean | null;
+};
+
 export const FormConfigSchema = z.object({
 	title: z.string(),
 	description: z.string(),

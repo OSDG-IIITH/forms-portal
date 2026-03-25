@@ -3,10 +3,10 @@ import * as kdljs from 'kdljs';
 import { Time } from '@internationalized/date';
 import { z } from 'zod';
 import { parseKdlForm, safeString } from '$lib/utils/kdl';
-import { QuestionSchema, type Question, type QuestionType, type Option, type FormData } from '$lib/types/form';
+import { QuestionSchema, type Question, type QuestionType, type Option, type FormData, type EditorForm } from '$lib/types/form';
 
 // store creation function
-export function createFormStore(initialForm: any) {
+export function createFormStore(initialForm: EditorForm | null | undefined) {
 	const formData = $state<FormData>({
 		title: 'Untitled Form',
 		description: 'Add a description',

@@ -2,9 +2,19 @@
   import Card from '$lib/components/ui/card/card.svelte';
   import { Button } from '$lib/components/ui/button';
   import { IconPlus } from '@tabler/icons-svelte';
-  export let questionTypeButtons;
-  export let addQuestion;
-  export let questionsLength;
+  import type { QuestionType } from '$lib/types/form';
+
+  type QuestionTypeButton = {
+    type: QuestionType;
+    icon: typeof IconPlus;
+    label: string;
+  };
+
+  const { questionTypeButtons, addQuestion, questionsLength }: {
+    questionTypeButtons: QuestionTypeButton[];
+    addQuestion: (type: QuestionType) => void;
+    questionsLength: number;
+  } = $props();
 </script>
 
 {#if questionsLength > 0}
@@ -15,7 +25,7 @@
         <p class="text-sm text-muted-foreground">Choose a question type</p>
       </div>
       <div class="flex flex-wrap justify-center gap-2">
-        {#each questionTypeButtons as { type, icon: Icon, label }}
+        {#each questionTypeButtons as { type, icon: Icon, label } (type)}
           <Button
             variant="outline"
             size="sm"
@@ -39,7 +49,7 @@
       Get started by adding questions to your form
     </p>
     <div class="flex flex-wrap justify-center gap-3 max-w-xl">
-      {#each questionTypeButtons as { type, icon: Icon, label }}
+      {#each questionTypeButtons as { type, icon: Icon, label } (type)}
         <Button
           variant="outline"
           size="sm"
