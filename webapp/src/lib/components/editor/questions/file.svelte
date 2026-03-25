@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
-  import { Checkbox } from '$lib/components/ui/checkbox';
   import * as Select from '$lib/components/ui/select';
+  import Basics from './basics.svelte';
   import { getContext } from 'svelte';
   import type { FormStore } from '../form-store.svelte';
 
@@ -86,18 +86,17 @@
 
 {#if question}
 <div class="space-y-4">
-  <div class="space-y-2">
-    <Label for="question-{question.id}">Question Text</Label>
-    <Input
-      id="question-{question.id}"
-      placeholder="Enter your question here"
-      value={question.title}
-      oninput={(e) => store.updateQuestion(questionId, { title: e.currentTarget.value })}
-    />
-    {#if question.error}
-      <p class="text-destructive text-sm">{question.error}</p>
-    {/if}
-  </div>
+  <Basics
+    questionId={question.id}
+    title={question.title}
+    error={question.error}
+    required={question.required}
+    requiredLabel="Required field"
+    requiredClass="text-sm font-normal cursor-pointer"
+    requiredContainerClass="flex items-center space-x-2"
+    onTitleChange={(value) => store.updateQuestion(questionId, { title: value })}
+    onRequiredChange={(value) => store.updateQuestion(questionId, { required: value })}
+  />
 
   <div class="space-y-4 p-4 border rounded-md bg-muted/20">
     <Label class="text-sm font-medium">File Upload Settings</Label>
@@ -177,17 +176,6 @@
         </p>
       </div>
     {/if}
-  </div>
-
-  <div class="flex items-center space-x-2">
-    <Checkbox
-      id="required-{question.id}"
-      checked={question.required}
-      onCheckedChange={(v) => store.updateQuestion(questionId, { required: !!v })}
-    />
-    <Label for="required-{question.id}" class="text-sm font-normal cursor-pointer">
-      Required field
-    </Label>
   </div>
 </div>
 {/if}

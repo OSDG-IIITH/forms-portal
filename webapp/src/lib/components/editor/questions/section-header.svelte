@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
   import { Textarea } from '$lib/components/ui/textarea';
+  import Basics from './basics.svelte';
   import { getContext } from 'svelte';
   import type { FormStore } from '../form-store.svelte';
 
@@ -13,18 +13,16 @@
 
 {#if question}
 <div class="space-y-4">
-  <div class="space-y-2">
-    <Label for="section-title-{question.id}">Section Title</Label>
-    <Input
-      id="section-title-{question.id}"
-      placeholder="Enter section title"
-      value={question.title}
-      oninput={(e) => store.updateQuestion(questionId, { title: e.currentTarget.value })}
-    />
-    {#if question.error}
-      <p class="text-destructive text-sm">{question.error}</p>
-    {/if}
-  </div>
+  <Basics
+    questionId={question.id}
+    title={question.title}
+    error={question.error}
+    required={false}
+    titleLabel="Section Title"
+    titlePlaceholder="Enter section title"
+    showRequired={false}
+    onTitleChange={(value) => store.updateQuestion(questionId, { title: value })}
+  />
 
   <div class="space-y-2">
     <Label for="section-description-{question.id}">Section Description</Label>
