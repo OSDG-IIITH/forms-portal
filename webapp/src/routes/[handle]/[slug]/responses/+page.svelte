@@ -7,49 +7,54 @@
   import Card from "$lib/components/ui/card/card.svelte";
   import ExportCsvButton from "$lib/components/responses/export-csv-button.svelte";
   import * as kdljs from 'kdljs';
-  
-  export let data: PageData;
-  
-  const responsesData = data.responses.map((r: any) => ({
+
+  let { data }: { data: PageData } = $props();
+
+  const responsesData = $derived(data.responses.map((r: any) => ({
     ...r,
     respondentName: data.respondentMap?.[r.respondent]?.name
-  }));
+  })));
 
-  const uniqueRespondentIds = new Set(data.responses.map((r: any) => r.respondent));
+  const uniqueRespondentIds = $derived(new Set(responsesData.map((r: any) => r.respondent).filter(Boolean)));
 
-  const latestResponse = data.responses
-    .filter((r: any) => r.submitted || r.started)
-    .sort((a: any, b: any) => {
-      const aDate = new Date(a.submitted || a.started).getTime();
-      const bDate = new Date(b.submitted || b.started).getTime();
-      return bDate - aDate;
-    })[0];
-  const lastResponseTime = latestResponse ? (latestResponse.submitted || latestResponse.started) : "-";
+  const latestResponse = $derived.by(() => {
+    return [...responsesData]
+      .filter((r: any) => r.submitted || r.started)
+      .sort((a: any, b: any) => {
+        const aDate = new Date(a.submitted || a.started).getTime();
+        const bDate = new Date(b.submitted || b.started).getTime();
+        return bDate - aDate;
+      })[0];
+  });
 
-  let questions: any[] = [];
-  try {
-    if (data.form?.structure) {
+  const lastResponseTime = $derived(latestResponse ? (latestResponse.submitted || latestResponse.started) : "-");
+
+  const totalResponses = $derived(data.pagination?.total ?? responsesData.length);
+
+  const questions = $derived.by(() => {
+    try {
+      if (!data.form?.structure) return [];
+
       const ast = kdljs.parse(data.form.structure);
       const formNode = ast?.output?.find((n: any) => n.name === 'form');
-      if (formNode) {
-        questions = formNode.children?.filter((child: any) => child.name === 'question').map((child: any) => {
-          const q: any = { id: '', title: '', type: 'input' };
-          if (child.properties) {
-            q.id = child.properties.id || '';
-            q.type = child.properties.type || 'input';
-          }
-          const titleNode = child.children?.find((c: any) => c.name === 'title');
-          if (titleNode?.values?.[0]) {
-            q.title = typeof titleNode.values[0] === 'string' ? titleNode.values[0] : 
-                     titleNode.values[0]?.value || '';
-          }
-          return q;
-        }) || [];
-      }
+      if (!formNode) return [];
+
+      return formNode.children?.filter((child: any) => child.name === 'question').map((child: any) => {
+        const q: any = { id: '', title: '', type: 'input' };
+        if (child.properties) {
+          q.id = child.properties.id || '';
+          q.type = child.properties.type || 'input';
+        }
+        const titleNode = child.children?.find((c: any) => c.name === 'title');
+        if (titleNode?.values?.[0]) {
+          q.title = typeof titleNode.values[0] === 'string' ? titleNode.values[0] : titleNode.values[0]?.value || '';
+        }
+        return q;
+      }) || [];
+    } catch {
+      return [];
     }
-  } catch (e) {
-    console.warn('Failed to parse form questions:', e);
-  }
+  });
 </script>
 
 <div class="container mx-auto pt-24 px-8 py-8 min-h-screen space-y-8">
@@ -57,7 +62,7 @@
     <div class="flex flex-col gap-4 h-full">
       <div class="flex-1">
         <SummaryCard 
-          totalResponses={responsesData.length} 
+          {totalResponses}
           uniqueRespondents={uniqueRespondentIds.size}
           lastResponse={lastResponseTime}
           opens={data.form?.opens}
@@ -86,5 +91,11 @@
       </div>
     </div>
   </div>
-  <DataTable data={responsesData} {columns} />
+  <DataTable
+    data={responsesData}
+    {columns}
+    pageNumber={data.page ?? 1}
+    pageSize={data.limit ?? 20}
+    totalCount={data.pagination?.total ?? responsesData.length}
+  />
 </div>

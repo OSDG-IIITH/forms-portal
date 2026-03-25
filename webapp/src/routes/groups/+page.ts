@@ -1,10 +1,19 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
-import type { Group } from '$lib/components/groups/columns';
+import type { Group } from '$lib/types/group';
 
-export const load: PageLoad = async ({ fetch }) => {
+function readInt(value: string | null, fallback: number, min = 1, max = 100) {
+	const parsed = Number.parseInt(value ?? '', 10);
+	if (!Number.isFinite(parsed)) return fallback;
+	return Math.min(max, Math.max(min, parsed));
+}
+
+export const load: PageLoad = async ({ fetch, url }) => {
 	try {
-		const groupsResponse = await fetch('/api/groups', { credentials: 'include' });
+		const page = readInt(url.searchParams.get('page'), 1, 1, Number.MAX_SAFE_INTEGER);
+		const limit = readInt(url.searchParams.get('limit'), 20);
+		const offset = (page - 1) * limit;
+		const groupsResponse = await fetch(`/api/groups?limit=${limit}&offset=${offset}`, { credentials: 'include' });
 
 		if (!groupsResponse.ok) {
 			throw error(groupsResponse.status, 'Failed to fetch groups');
@@ -36,7 +45,9 @@ export const load: PageLoad = async ({ fetch }) => {
 
 		return {
 			groups: groupsWithNames,
-			pagination: groupsData.pagination
+			pagination: groupsData.pagination,
+			page,
+			limit
 		};
 	} catch (e: any) {
 		if (e.status) {

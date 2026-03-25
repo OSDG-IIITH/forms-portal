@@ -11,7 +11,7 @@
 	async function handleGroupCreated() {
 		loading = true;
 		try {
-			await invalidate('/api/groups');
+			await invalidate((url) => url.pathname === '/api/groups');
 		} catch (error) {
 			console.error('Failed to reload groups:', error);
 		} finally {
@@ -28,7 +28,14 @@
 	{#if loading}
 		<div class="text-center py-8 text-muted-foreground">Loading...</div>
 	{:else if data.groups}
-		<DataTable data={data.groups} {columns} onGroupCreated={handleGroupCreated} />
+		<DataTable
+			data={data.groups}
+			{columns}
+			onGroupCreated={handleGroupCreated}
+			pageNumber={data.page ?? 1}
+			pageSize={data.limit ?? 20}
+			totalCount={data.pagination?.total ?? data.groups.length}
+		/>
 	{:else}
 		<div class="text-center py-8 text-muted-foreground">No groups found.</div>
 	{/if}
