@@ -1,5 +1,6 @@
 <script>
   import ThemeSwitcher from "./theme-switcher.svelte";
+  import UserProfile from "./user-profile.svelte";
   import { page } from "$app/stores";
   import { Button } from '$lib/components/ui/button';
   import { IconMenu2 } from '@tabler/icons-svelte';
@@ -62,6 +63,7 @@
           </button>
         {/if}
         <ThemeSwitcher />
+        <UserProfile />
       </div>
     </div>
   </div>
