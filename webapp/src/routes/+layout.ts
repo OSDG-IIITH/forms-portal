@@ -13,5 +13,6 @@ export const load: LayoutLoad = async ({ fetch, url }) => {
 	if (res.status !== 200) {
 		throw redirect(302, '/api/auth/login');
 	}
-	return {};
+	const user = await res.json();
+	return { user };
 };
