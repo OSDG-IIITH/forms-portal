@@ -20,8 +20,7 @@ func getLoginUrl() string {
 }
 
 func getLogoutUrl() string {
-	return utils.Config.CasBaseUrl +
-		"/logout?service=" + url.QueryEscape(utils.Config.FrontendUrl+"/logged-out")
+	return utils.Config.FrontendUrl + "/logged-out"
 }
 
 func getValidationUrl(ticket string) string {
