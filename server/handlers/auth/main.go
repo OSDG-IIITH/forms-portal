@@ -20,7 +20,7 @@ func getLoginUrl() string {
 }
 
 func getLogoutUrl() string {
-	return utils.Config.CasBaseUrl + "/logout"
+	return utils.Config.FrontendUrl + "/logged-out"
 }
 
 func getValidationUrl(ticket string) string {
@@ -124,6 +124,7 @@ func Callback(c echo.Context) error {
 }
 
 func Logout(c echo.Context) error {
+	c.SetCookie(utils.DeletionCookie())
 	return c.Redirect(http.StatusFound, getLogoutUrl())
 }
 
